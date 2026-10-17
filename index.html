@@ -126,6 +126,9 @@ window.addEventListener('keydown', e => {
   if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code)) e.preventDefault();
   keys[e.code] = true;
   if (e.code === 'KeyZ' && !e.repeat) { e.preventDefault(); toggleFullscreen(); }
+  if (e.code === 'KeyX' && !e.repeat && gameState === 'PLAYING') { e.preventDefault(); openShop(); }
+  if (e.code === 'KeyC' && !e.repeat && gameState === 'PLAYING') { e.preventDefault(); openCoinShop(); }
+  if (e.code === 'KeyV' && !e.repeat && gameState === 'PLAYING' && (shopPanel.classList.contains('open') || coinShopPanel.classList.contains('open'))) { e.preventDefault(); shopPanel.classList.remove('open'); coinShopPanel.classList.remove('open'); paused = false; }
   if (e.code === 'Enter' && gameState !== 'PLAYING') startGame();
   if (e.code === 'KeyQ' && !e.repeat && gameState === 'PLAYING' && currentGame === 'galaga' && galagaState.selectedShip === 'nova') activateNovaArtillery();
   if (e.code === 'KeyL' && !e.repeat && currentGame === 'galaga') { galagaState.coinsCollected = (galagaState.coinsCollected || 0) + 50000; galagaState.score = (galagaState.score || 0) + 5000000; saveCoinWallet(); if (typeof refreshCoinShop === 'function') refreshCoinShop(); if (typeof refreshShop === 'function') refreshShop(); const status = document.getElementById('status'); if (status) status.textContent = 'CHEAT ACTIVATED: +50,000 coins and +5,000,000 points!'; playSfx('powerup'); }
