@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ultimate 15-in-1 Retro Arcade</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        * {
+            font-family: 'Press Start 2P', monospace;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* CRT Screen Filter Effects */
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 40;
+            background-size: 100% 3px, 6px 100%;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .crt-off::before {
+            display: none !important;
+        }
+
+        .neon-cyan { text-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff, 0 0 20px #00f3ff; }
+        .neon-pink { text-shadow: 0 0 5px #ff007f, 0 0 10px #ff007f, 0 0 20px #ff007f; }
+        .neon-yellow { text-shadow: 0 0 5px #ffdd00, 0 0 10px #ffdd00; }
+
+        .arcade-box {
+            border: 4px solid #00f3ff;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.4), inset 0 0 15px rgba(0, 0, 0, 0.9);
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #05050a; }
+        ::-webkit-scrollbar-thumb { background: #ff007f; border-radius: 3px; }
+
+        .touch-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #00f3ff;
+            color: #00f3ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 1.25rem;
+            user-select: none;
+        }
+        .touch-btn:active {
+            background: #00f3ff;
+            color: #000;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col justify-between overflow-x-hidden crt relative select-none" id="app-body">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-gray-900/90 border-b-2 border-cyan-500 p-3 sm:p-4 flex flex-wrap justify-between items-center z-50 relative gap-2 backdrop-blur">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="showHub()">
+            <i class="fa-solid fa-gamepad text-cyan-400 text-2xl sm:text-3xl animate-pulse"></i>
+            <div>
+                <h1 class="text-xs sm:text-base text-cyan-400 neon-cyan font-bold">ARCADE 15-IN-1</h1>
+                <p class="text-[8px] sm:text-[9px] text-pink-500">DYNAMIC ANIMATED ENGINE</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 sm:space-x-3 text-[9px] sm:text-xs">
+            <button onclick="toggleAudio()" id="audio-toggle" class="bg-gray-800 hover:bg-gray-700 border border-pink-500 px-2 sm:px-3 py-1.5 rounded text-pink-400">
+                <i class="fa-solid fa-volume-high" id="audio-icon"></i> <span id="audio-txt">SFX: ON</span>
+            </button>
+            <button onclick="toggleCRT()" class="bg-gray-800 hover:bg-gray-700 border border-cyan-500 px-2 sm:px-3 py-1.5 rounded text-cyan-400">
+                <i class="fa-solid fa-tv"></i> <span id="crt-txt">CRT: ON</span>
+            </button>
+            <button onclick="toggleLeaderboard()" class="bg-yellow-600 hover:bg-yellow-500 border border-yellow-300 px-2 sm:px-3 py-1.5 rounded text-black font-bold">
+                <i class="fa-solid fa-trophy"></i> LEADERBOARD
+            </button>
+            <button onclick="showHub()" id="home-btn" class="hidden bg-pink-600 hover:bg-pink-500 text-white px-3 py-1.5 rounded font-bold shadow-lg">
+                <i class="fa-solid fa-house"></i> MENU
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Arcade Viewport -->
+    <main class="flex-grow flex flex-col items-center justify-center p-2 sm:p-4 z-10 relative max-w-6xl mx-auto w-full">
+
+        <!-- MAIN MENU LAUNCHER HUB -->
+        <div id="hub-view" class="w-full flex flex-col items-center my-2">
+            <div class="text-center mb-4 sm:mb-6">
+                <h2 class="text-lg sm:text-2xl md:text-3xl text-pink-500 neon-pink mb-1">SELECT A GAME</h2>
+                <p class="text-[9px] sm:text-xs text-yellow-400 neon-yellow animate-pulse">16 FULLY ANIMATED CLASSICS</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 w-full" id="arcade-grid">
+                <!-- Dynamically populated by JS -->
+            </div>
+        </div>
+
+        <!-- LEADERBOARD MODAL -->
+        <div id="leaderboard-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center p-4">
+            <div class="bg-gray-900 border-2 border-yellow-400 p-4 sm:p-6 rounded-xl max-w-lg w-full arcade-box relative flex flex-col items-center">
+                <button onclick="toggleLeaderboard()" class="absolute top-3 right-3 text-pink-500 hover:text-pink-300 text-lg"><i class="fa-solid fa-xmark"></i></button>
+                <h2 class="text-yellow-400 neon-yellow text-sm sm:text-lg mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-yellow-300"></i> WORLDWIDE TOP 10
+                </h2>
+                
+                <select id="leaderboard-game-select" onchange="loadLeaderboard(this.value)" class="bg-black text-cyan-400 border border-cyan-400 p-2 rounded mb-4 text-[10px] sm:text-xs w-full text-center outline-none">
+                    <!-- Populated by JS -->
+                </select>
+
+                <div class="w-full max-h-60 overflow-y-auto border border-gray-800 rounded p-2 bg-black/60">
+                    <table class="w-full text-left text-[9px] sm:text-xs">
+                        <thead>
+                            <tr class="text-pink-500 border-b border-gray-800">
+                                <th class="p-1">#</th>
+                                <th class="p-1">INITIALS</th>
+                                <th class="p-1 text-right">SCORE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-list" class="divide-y divide-gray-900">
+                            <tr><td colspan="3" class="text-center py-4 text-gray-500">Loading scores...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME PLAYING DISPLAY -->
+        <div id="game-view" class="hidden w-full flex-col items-center justify-center relative">
+            <div class="w-full max-w-3xl flex justify-between items-center mb-2 px-1 text-[9px] sm:text-xs">
+                <div id="hud-title" class="text-cyan-400 neon-cyan font-bold">GAME TITLE</div>
+                <div class="text-yellow-400">SCORE: <span id="hud-score">0</span> | BEST: <span id="hud-best">0</span></div>
+            </div>
+
+            <div class="relative bg-black arcade-box p-1 sm:p-2 flex flex-col items-center justify-center w-full max-w-3xl rounded-xl overflow-hidden min-h-[380px]">
+                <canvas id="game-canvas" width="600" height="400" class="w-full h-auto bg-black border border-gray-900 rounded object-contain max-h-[70vh]"></canvas>
+
+                <div id="overlay" class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center p-4 text-center z-30 rounded-lg">
+                    <h3 id="overlay-title" class="text-base sm:text-xl text-pink-500 neon-pink mb-2">GAME TITLE</h3>
+                    <p id="overlay-desc" class="text-[10px] sm:text-xs text-cyan-300 mb-4 max-w-md leading-relaxed">Instructions here</p>
+
+                    <!-- Score Entry Form (shown on game over) -->
+                    <div id="score-submit-box" class="hidden flex flex-col items-center gap-2 mb-4 bg-gray-900/80 p-3 rounded-lg border border-pink-500">
+                        <label class="text-[9px] sm:text-[10px] text-yellow-300">ENTER YOUR 3-LETTER INITIALS:</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="player-initials" maxlength="3" placeholder="AAA" class="bg-black border-2 border-cyan-400 text-cyan-300 text-center font-bold px-3 py-1 rounded w-24 text-sm sm:text-base tracking-widest uppercase outline-none focus:border-pink-500">
+                            <button id="submit-score-btn" onclick="submitScoreAction()" class="bg-pink-600 hover:bg-pink-500 text-white font-bold px-3 py-1 rounded text-xs transition">SUBMIT</button>
+                        </div>
+                        <p id="score-status-msg" class="text-[8px] text-gray-400"></p>
+                    </div>
+
+                    <button onclick="launchCurrentGame()" class="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-5 py-3 rounded-lg text-xs sm:text-sm transition transform hover:scale-105 shadow-lg">
+                        <i class="fa-solid fa-play mr-2"></i>PLAY AGAIN
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Touch Controls -->
+            <div id="mobile-dpad" class="w-full max-w-3xl mt-3 grid grid-cols-3 gap-2 sm:hidden px-2">
+                <div class="flex flex-col gap-1 items-center justify-center">
+                    <button id="btn-u" class="touch-btn w-12 h-12"><i class="fa-solid fa-arrow-up"></i></button>
+                    <div class="flex gap-1">
+                        <button id="btn-l" class="touch-btn w-12 h-12"><i class="fa-solid fa-arrow-left"></i></button>
+                        <button id="btn-r" class="touch-btn w-12 h-12"><i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                    <button id="btn-d" class="touch-btn w-12 h-12"><i class="fa-solid fa-arrow-down"></i></button>
+                </div>
+                <div class="col-span-2 flex items-center justify-center gap-2">
+                    <button id="btn-act" class="w-24 h-24 bg-pink-600/80 active:bg-pink-400 border-2 border-pink-300 rounded-full text-xs font-bold shadow-xl flex items-center justify-center">ACTION / JUMP</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-950 border-t border-gray-900 p-2 text-center text-[8px] text-gray-500 z-50">
+        ULTIMATE 16-IN-1 RETRO ENGINE &bull; CANVAS 2D & WEBAUDIO SYNTH
+    </footer>
+
+    <!-- Firebase Storage Setup -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'arcade-16-in-1';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "demo", authDomain: "demo", projectId: "demo" };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const res = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = res.user;
+                } else {
+                    const res = await signInAnonymously(auth);
+                    currentUser = res.user;
+                }
+            } catch(e) {
+                console.warn("Auth initialization error:", e);
+            }
+        }
+        initAuth();
+
+        window.submitGlobalScore = async function(gameId, score, initials) {
+            if (!currentUser || score <= 0) return false;
+            try {
+                const leaderboardsRef = collection(db, 'artifacts', appId, 'public', 'data', `leaderboard_${gameId}`);
+                await addDoc(leaderboardsRef, {
+                    player: (initials || 'AAA').toUpperCase().substring(0, 3),
+                    score: Number(score),
+                    timestamp: Date.now()
+                });
+                return true;
+            } catch(e) {
+                console.warn("Score save error:", e);
+                return false;
+            }
+        };
+
+        window.fetchGlobalLeaderboard = async function(gameId) {
+            if (!currentUser) return [];
+            try {
+                const leaderboardsRef = collection(db, 'artifacts', appId, 'public', 'data', `leaderboard_${gameId}`);
+                const snap = await getDocs(leaderboardsRef);
+                let list = [];
+                snap.forEach(doc => list.push(doc.data()));
+                list.sort((a,b) => b.score - a.score);
+                return list.slice(0, 10);
+            } catch(e) {
+                console.warn("Fetch leaderboard error:", e);
+                return [];
+            }
+        };
+    </script>
+
+    <script>
+        class SoundEngine {
+            constructor() { this.ctx = null; this.muted = false; }
+            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+            
+            playTone(freq, type, duration, vol = 0.1) {
+                if (this.muted) return; this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + duration);
+                } catch(e){}
+            }
+
+            beep() { this.playTone(400, 'sine', 0.05, 0.05); }
+            eat() { this.playTone(600, 'triangle', 0.05, 0.08); }
+            laser() {
+                if (this.muted) return; this.init();
+                try {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.15);
+                } catch(e){}
+            }
+            jump() {
+                if (this.muted) return; this.init();
+                try {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(500, this.ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+                } catch(e){}
+            }
+            bossSiren() {
+                if (this.muted) return; this.init();
+                try {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(450, this.ctx.currentTime + 0.4);
+                    gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.4);
+                } catch(e){}
+            }
+            powerup() {
+                if (this.muted) return; this.init();
+                try {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(900, this.ctx.currentTime + 0.25);
+                    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.25);
+                } catch(e){}
+            }
+            explode() {
+                if (this.muted) return; this.init();
+                try {
+                    const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(20, this.ctx.currentTime + 0.35);
+                    gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 0.35);
+                } catch(e){}
+            }
+        }
+        const sfx = new SoundEngine();
+
+        function toggleAudio() {
+            sfx.muted = !sfx.muted;
+            document.getElementById('audio-txt').innerText = sfx.muted ? 'SFX: OFF' : 'SFX: ON';
+            document.getElementById('audio-icon').className = sfx.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+        }
+
+        function toggleCRT() {
+            const body = document.getElementById('app-body');
+            body.classList.toggle('crt');
+            body.classList.toggle('crt-off');
+            document.getElementById('crt-txt').innerText = body.classList.contains('crt') ? 'CRT: ON' : 'CRT: OFF';
+        }
+
+        let screenShake = 0;
+        function triggerShake(intensity = 10) { screenShake = intensity; }
+
+        function applyShake(ctx) {
+            if (screenShake > 0) {
+                const rx = (Math.random() - 0.5) * screenShake;
+                const ry = (Math.random() - 0.5) * screenShake;
+                ctx.translate(rx, ry);
+                screenShake *= 0.85;
+                if (screenShake < 0.5) screenShake = 0;
+            }
+        }
+
+        class ParticleEngine {
+            constructor() { this.particles = []; this.texts = []; }
+            spawn(x, y, color, count = 10, speed = 4) {
+                for(let i=0; i<count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const spd = Math.random() * speed + 1;
+                    this.particles.push({
+                        x, y, vx: Math.cos(angle)*spd, vy: Math.sin(angle)*spd,
+                        color, size: Math.random()*5+2, life: 1, decay: Math.random()*0.03 + 0.02
+                    });
+                }
+            }
+            spawnText(x, y, str, color = '#ffdd00') {
+                this.texts.push({ x, y, str, color, life: 1, vy: -1 });
+            }
+            updateAndDraw(ctx) {
+                for(let i=this.particles.length-1; i>=0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.vx; p.y += p.vy;
+                    p.life -= p.decay;
+                    if (p.life <= 0) { this.particles.splice(i,1); continue; }
+                    ctx.globalAlpha = p.life;
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                }
+                for(let i=this.texts.length-1; i>=0; i--) {
+                    const t = this.texts[i];
+                    t.y += t.vy; t.life -= 0.025;
+                    if (t.life <= 0) { this.texts.splice(i,1); continue; }
+                    ctx.globalAlpha = t.life;
+                    ctx.fillStyle = t.color;
+                    ctx.font = '10px "Press Start 2P"';
+                    ctx.fillText(t.str, t.x, t.y);
+                }
+                ctx.globalAlpha = 1;
+            }
+        }
+        const particles = new ParticleEngine();
+
+        // Game Catalog Metadata
+        const GAMES = [
+            { id: 'mindgrid', title: 'MIND GRID PUZZLE', desc: 'Ultra-hard sequence memory matrix puzzle!', icon: 'fa-brain', color: 'from-violet-600 to-fuchsia-900' },
+            { id: 'galaga', title: 'GALAGA SHOOTER', desc: 'Shoot down alien waves & defeat multi-stage bosses!', icon: 'fa-shuttle-space', color: 'from-purple-600 to-indigo-800' },
+            { id: 'pacman', title: 'PAC-MAN MINI', desc: 'Chomp dots & evade ghosts in scaling mazes.', icon: 'fa-ghost', color: 'from-yellow-500 to-amber-700' },
+            { id: 'battleship', title: 'SINK THE SHIP', desc: 'Tactical naval targeting against fleet bosses.', icon: 'fa-ship', color: 'from-blue-600 to-cyan-800' },
+            { id: 'crash', title: 'CRASH RUNNER', desc: 'Spin-attack TNT crates & dodge boulders!', icon: 'fa-paw', color: 'from-orange-500 to-red-700' },
+            { id: 'spaceinvaders', title: 'SPACE INVADERS', desc: 'Defend Earth against invading alien armadas.', icon: 'fa-robot', color: 'from-green-600 to-emerald-800' },
+            { id: 'tetris', title: 'TETRIS BLOCK', desc: 'Clear lines before blocks reach the top.', icon: 'fa-cubes', color: 'from-cyan-500 to-blue-700' },
+            { id: 'snake', title: 'RETRO SNAKE', desc: 'Eat apples and grow your snake without crashing.', icon: 'fa-staff-snake', color: 'from-emerald-500 to-teal-800' },
+            { id: 'frogger', title: 'FROG CROSSER', desc: 'Cross busy highways & rivers safely.', icon: 'fa-frog', color: 'from-lime-600 to-green-800' },
+            { id: 'breakout', title: 'BRICK BREAKER', desc: 'Smash all bricks with bouncing balls.', icon: 'fa-border-all', color: 'from-pink-600 to-rose-800' },
+            { id: 'pong', title: 'PONG CLASSIC', desc: 'Retro 2P paddle ball showdown against AI.', icon: 'fa-table-tennis-paddle-ball', color: 'from-gray-600 to-slate-800' },
+            { id: 'asteroids', title: 'ASTEROIDS 360', desc: 'Rotate, thrust & blast space rocks to dust.', icon: 'fa-meteor', color: 'from-amber-600 to-yellow-800' },
+            { id: 'centipede', title: 'CENTIPEDE BUG', desc: 'Shoot segment bugs as they weave down.', icon: 'fa-bug', color: 'from-red-600 to-pink-800' },
+            { id: 'donkeykong', title: 'BARREL JUMPER', desc: 'Climb ladders and jump over rolling barrels.', icon: 'fa-drum', color: 'from-yellow-600 to-orange-800' },
+            { id: 'flappy', title: 'FLAPPY BIRD', desc: 'Flap through pipe gaps without crashing.', icon: 'fa-dove', color: 'from-sky-500 to-blue-700' },
+            { id: 'racer', title: 'OUTRUN RACER', desc: 'Speed down pseudo-3D highways evading traffic.', icon: 'fa-car-side', color: 'from-fuchsia-600 to-purple-900' }
+        ];
+
+        let activeGameId = null;
+        let animFrameId = null;
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        const keys = { u: false, d: false, l: false, r: false, act: false };
+
+        window.addEventListener('keydown', e => {
+            if(['ArrowUp','KeyW'].includes(e.code)) keys.u = true;
+            if(['ArrowDown','KeyS'].includes(e.code)) keys.d = true;
+            if(['ArrowLeft','KeyA'].includes(e.code)) keys.l = true;
+            if(['ArrowRight','KeyD'].includes(e.code)) keys.r = true;
+            if(['Space','KeyJ','Enter'].includes(e.code)) keys.act = true;
+        });
+
+        window.addEventListener('keyup', e => {
+            if(['ArrowUp','KeyW'].includes(e.code)) keys.u = false;
+            if(['ArrowDown','KeyS'].includes(e.code)) keys.d = false;
+            if(['ArrowLeft','KeyA'].includes(e.code)) keys.l = false;
+            if(['ArrowRight','KeyD'].includes(e.code)) keys.r = false;
+            if(['Space','KeyJ','Enter'].includes(e.code)) keys.act = false;
+        });
+
+        function toggleLeaderboard() {
+            const modal = document.getElementById('leaderboard-modal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                const select = document.getElementById('leaderboard-game-select');
+                select.innerHTML = GAMES.map(g => `<option value="${g.id}">${g.title}</option>`).join('');
+                if (activeGameId) select.value = activeGameId;
+                loadLeaderboard(select.value);
+            }
+        }
+
+        async function loadLeaderboard(gameId) {
+            const listEl = document.getElementById('leaderboard-list');
+            listEl.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-cyan-400 animate-pulse">Loading top players...</td></tr>';
+            const topScores = await window.fetchGlobalLeaderboard(gameId);
+            if (!topScores || topScores.length === 0) {
+                listEl.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">No scores logged yet! Be the first!</td></tr>';
+                return;
+            }
+            listEl.innerHTML = topScores.map((s, idx) => `
+                <tr class="${idx === 0 ? 'text-yellow-400 font-bold' : 'text-gray-300'}">
+                    <td class="p-1">#${idx + 1}</td>
+                    <td class="p-1">${s.player}</td>
+                    <td class="p-1 text-right text-cyan-400">${s.score}</td>
+                </tr>
+            `).join('');
+        }
+
+        function triggerGameOver(score) {
+            sfx.explode();
+            saveScore(score);
+            if (window.submitGlobalScore && activeGameId) {
+                window.submitGlobalScore(activeGameId, score);
+            }
+            document.getElementById('overlay-title').innerText = "GAME OVER";
+            document.getElementById('overlay-desc').innerText = `FINAL SCORE: ${score}`;
+            document.getElementById('overlay').classList.remove('hidden');
+        }
+
+        // 16. MIND GRID PUZZLE (ULTRA HARD)
+        function runMindGrid() {
+            canvas.width = 600; canvas.height = 400;
+            let level = 1, score = 0, state = 'MEMORIZE'; // MEMORIZE, REPEAT, GAMEOVER
+            let gridDim = 3, targetSequence = [], playerInput = [], activeHighlight = -1;
+            let cursor = { r: 0, c: 0 };
+            let timer = 0, seqIndex = 0;
+
+            function nextLevel() {
+                gridDim = Math.min(5, 3 + Math.floor(level / 3));
+                let seqLength = 3 + level;
+                targetSequence = [];
+                for(let i=0; i<seqLength; i++) {
+                    targetSequence.push(Math.floor(Math.random() * (gridDim * gridDim)));
+                }
+                playerInput = [];
+                state = 'MEMORIZE';
+                seqIndex = 0; timer = 0;
+            }
+            nextLevel();
+
+            function loop() {
+                ctx.fillStyle = '#05020a'; ctx.fillRect(0,0,600,400);
+
+                let cellMargin = 8;
+                let gridAreaSize = 260;
+                let cellSize = (gridAreaSize - (cellMargin * (gridDim + 1))) / gridDim;
+                let startX = (600 - gridAreaSize) / 2;
+                let startY = (400 - gridAreaSize) / 2 + 10;
+
+                if (state === 'MEMORIZE') {
+                    timer++;
+                    let flashSpeed = Math.max(10, 30 - Math.floor(level * 1.5));
+                    if (timer % flashSpeed === 0) {
+                        if (seqIndex < targetSequence.length) {
+                            activeHighlight = targetSequence[seqIndex];
+                            sfx.playTone(300 + activeHighlight * 40, 'sine', 0.1, 0.1);
+                            seqIndex++;
+                        } else {
+                            activeHighlight = -1;
+                            state = 'REPEAT';
+                            cursor = { r: 0, c: 0 };
+                        }
+                    }
+                } else if (state === 'REPEAT') {
+                    activeHighlight = -1;
+                    if (keys.l) { cursor.c = (cursor.c - 1 + gridDim) % gridDim; keys.l = false; sfx.beep(); }
+                    if (keys.r) { cursor.c = (cursor.c + 1) % gridDim; keys.r = false; sfx.beep(); }
+                    if (keys.u) { cursor.r = (cursor.r - 1 + gridDim) % gridDim; keys.u = false; sfx.beep(); }
+                    if (keys.d) { cursor.r = (cursor.r + 1) % gridDim; keys.d = false; sfx.beep(); }
+
+                    if (keys.act) {
+                        keys.act = false;
+                        let selectedIdx = cursor.r * gridDim + cursor.c;
+                        sfx.playTone(300 + selectedIdx * 40, 'triangle', 0.1, 0.12);
+                        playerInput.push(selectedIdx);
+
+                        let currentStep = playerInput.length - 1;
+                        if (playerInput[currentStep] !== targetSequence[currentStep]) {
+                            triggerGameOver(score);
+                            return;
+                        }
+
+                        if (playerInput.length === targetSequence.length) {
+                            score += 100 * level;
+                            level++;
+                            sfx.powerup();
+                            nextLevel();
+                        }
+                    }
+                }
+
+                // Render Grid Matrix
+                for (let r = 0; r < gridDim; r++) {
+                    for (let c = 0; c < gridDim; c++) {
+                        let idx = r * gridDim + c;
+                        let x = startX + c * (cellSize + cellMargin);
+                        let y = startY + r * (cellSize + cellMargin);
+
+                        if (activeHighlight === idx) {
+                            ctx.fillStyle = '#00f3ff';
+                        } else if (state === 'REPEAT' && cursor.r === r && cursor.c === c) {
+                            ctx.fillStyle = '#ff007f';
+                        } else {
+                            ctx.fillStyle = '#111827';
+                        }
+
+                        ctx.fillRect(x, y, cellSize, cellSize);
+                        ctx.strokeStyle = '#00f3ff';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(x, y, cellSize, cellSize);
+                    }
+                }
+
+                ctx.fillStyle = '#ffdd00';
+                ctx.font = '10px "Press Start 2P"';
+                ctx.fillText(`STAGE ${level}`, 480, 30);
+                ctx.fillText(state === 'MEMORIZE' ? 'MEMORIZE!' : 'REPEAT!', 20, 30);
+
+                particles.updateAndDraw(ctx);
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        let lastGameOverScore = 0;
+
+        function triggerGameOver(score) {
+            sfx.explode();
+            saveScore(score);
+            lastGameOverScore = score;
+
+            document.getElementById('overlay-title').innerText = "GAME OVER";
+            document.getElementById('overlay-desc').innerText = `FINAL SCORE: ${score}`;
+
+            const submitBox = document.getElementById('score-submit-box');
+            const submitBtn = document.getElementById('submit-score-btn');
+            const statusMsg = document.getElementById('score-status-msg');
+            const input = document.getElementById('player-initials');
+
+            if (score > 0) {
+                submitBox.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50');
+                statusMsg.innerText = '';
+                input.value = localStorage.getItem('arcade_player_initials') || 'AAA';
+            } else {
+                submitBox.classList.add('hidden');
+            }
+
+            document.getElementById('overlay').classList.remove('hidden');
+        }
+
+        async function submitScoreAction() {
+            const input = document.getElementById('player-initials');
+            const initials = (input.value || 'AAA').trim().toUpperCase().slice(0, 3);
+            const submitBtn = document.getElementById('submit-score-btn');
+            const statusMsg = document.getElementById('score-status-msg');
+
+            if (initials.length === 0) return;
+
+            localStorage.setItem('arcade_player_initials', initials);
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50');
+            statusMsg.innerText = 'SAVING SCORE...';
+
+            if (window.submitGlobalScore && activeGameId) {
+                const success = await window.submitGlobalScore(activeGameId, lastGameOverScore, initials);
+                if (success) {
+                    statusMsg.innerText = 'SCORE RECORDED!';
+                    sfx.powerup();
+                    setTimeout(() => {
+                        toggleLeaderboard();
+                    }, 800);
+                } else {
+                    statusMsg.innerText = 'SAVED LOCALLY';
+                }
+            }
+        }
+
+        function launchCurrentGame() {
+            document.getElementById('overlay').classList.add('hidden');
+            document.getElementById('score-submit-box').classList.add('hidden');
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            sfx.beep();
+
+            switch(activeGameId) {
+                case 'mindgrid': runMindGrid(); break;
+                case 'galaga': runGalaga(); break;
+                case 'pacman': runPacman(); break;
+                case 'battleship': runBattleship(); break;
+                case 'crash': runCrash(); break;
+                case 'spaceinvaders': runSpaceInvaders(); break;
+                case 'tetris': runTetris(); break;
+                case 'snake': runSnake(); break;
+                case 'frogger': runFrogger(); break;
+                case 'breakout': runBreakout(); break;
+                case 'pong': runPong(); break;
+                case 'asteroids': runAsteroids(); break;
+                case 'centipede': runCentipede(); break;
+                case 'donkeykong': runDonkeyKong(); break;
+                case 'flappy': runFlappy(); break;
+                case 'racer': runRacer(); break;
+            }
+        }
+
+        // 1. GALAGA SHOOTER
+        function runGalaga() {
+            canvas.width = 600; canvas.height = 400;
+            let px = 280, py = 350, score = 0, wave = 1;
+            let lasers = [], enemyLasers = [], powerups = [];
+            let activePowerup = null, powerupTimer = 0;
+            let stars = Array(40).fill(0).map(()=>({x: Math.random()*600, y: Math.random()*400, s: Math.random()*2+1}));
+            let enemies = [], boss = null, frame = 0;
+
+            function spawnWave() {
+                enemies = []; boss = null;
+                if (wave % 3 === 0) {
+                    sfx.bossSiren(); triggerShake(15);
+                    particles.spawnText(180, 150, `WARNING: BOSS ENCOUNTER!`, '#ff0055');
+                    boss = { x: 220, y: -100, targetY: 50, hp: 30 + wave*10, maxHp: 30 + wave*10, width: 160, height: 80, vx: 2, frame: 0 };
+                } else {
+                    let rows = Math.min(4, 2 + Math.floor(wave/2));
+                    for(let r=0; r<rows; r++) {
+                        for(let c=0; c<7; c++) {
+                            let type = r === 0 ? 'destroyer' : (r === 1 && wave >= 2 ? 'interceptor' : 'drone');
+                            enemies.push({ x: c*70 + 60, y: r*35 + 40, type, hp: type === 'destroyer' ? 3 : 1, vx: 2 });
+                        }
+                    }
+                }
+            }
+            spawnWave();
+
+            function loop() {
+                frame++;
+                if (keys.l && px > 20) px -= 6;
+                if (keys.r && px < 540) px += 6;
+
+                if (powerupTimer > 0 && --powerupTimer <= 0) activePowerup = null;
+
+                if (keys.act) {
+                    let cooldown = activePowerup === 'rapid' ? 6 : 12;
+                    if (frame % cooldown === 0) {
+                        sfx.laser();
+                        if (activePowerup === 'triple') {
+                            lasers.push({x: px+20, y: py, vx: 0, vy: -10}, {x: px+20, y: py, vx: -2, vy: -9}, {x: px+20, y: py, vx: 2, vy: -9});
+                        } else if (activePowerup === 'laser') {
+                            lasers.push({x: px+20, y: py, vx: 0, vy: -16, isBeam: true});
+                        } else {
+                            lasers.push({x: px+20, y: py, vx: 0, vy: -10});
+                        }
+                    }
+                }
+
+                ctx.save(); applyShake(ctx);
+                ctx.fillStyle = '#020208'; ctx.fillRect(0,0,600,400);
+
+                ctx.fillStyle = '#ffffff';
+                stars.forEach(s => { s.y = (s.y + s.s + (boss ? 0.5 : 0)) % 400; ctx.fillRect(s.x, s.y, s.s, s.s); });
+
+                for(let i=lasers.length-1; i>=0; i--) {
+                    let l = lasers[i]; l.x += l.vx; l.y += l.vy;
+                    ctx.fillStyle = l.isBeam ? '#00ffff' : '#ff007f';
+                    ctx.fillRect(l.x - (l.isBeam?3:1), l.y, l.isBeam?6:3, 14);
+                    if (l.y < -10 || l.x < 0 || l.x > 600) { lasers.splice(i, 1); continue; }
+
+                    enemies.forEach((e) => {
+                        if (e.hp > 0 && Math.hypot(l.x - (e.x+15), l.y - (e.y+15)) < 20) {
+                            e.hp--; if (!l.isBeam) lasers.splice(i, 1);
+                            if (e.hp <= 0) {
+                                score += e.type === 'destroyer' ? 150 : 50;
+                                sfx.explode(); triggerShake(5);
+                                particles.spawn(e.x+15, e.y+15, '#00ff66', 15);
+                                if (Math.random() < 0.2) {
+                                    const types = ['triple', 'rapid', 'shield', 'laser'];
+                                    powerups.push({ x: e.x+15, y: e.y+15, type: types[Math.floor(Math.random()*types.length)] });
+                                }
+                            } else { sfx.beep(); }
+                        }
+                    });
+
+                    if (boss && boss.hp > 0 && l.x > boss.x && l.x < boss.x + boss.width && l.y > boss.y && l.y < boss.y + boss.height) {
+                        boss.hp -= (l.isBeam ? 2 : 1); if (!l.isBeam) lasers.splice(i, 1);
+                        sfx.beep();
+                        if (boss.hp <= 0) {
+                            score += 2000; sfx.explode(); triggerShake(25);
+                            particles.spawn(boss.x + boss.width/2, boss.y + boss.height/2, '#ff0055', 60, 8);
+                            boss = null; wave++; setTimeout(spawnWave, 1500);
+                        }
+                    }
+                }
+
+                for(let i=enemyLasers.length-1; i>=0; i--) {
+                    let el = enemyLasers[i]; el.x += el.vx; el.y += el.vy;
+                    ctx.fillStyle = '#ff3300'; ctx.fillRect(el.x, el.y, 4, 10);
+                    if (el.y > 400) { enemyLasers.splice(i, 1); continue; }
+                    if (Math.hypot(el.x - (px+20), el.y - py) < 18) {
+                        if (activePowerup === 'shield') { activePowerup = null; powerupTimer = 0; enemyLasers.splice(i, 1); sfx.explode(); }
+                        else { triggerGameOver(score); return; }
+                    }
+                }
+
+                for(let i=powerups.length-1; i>=0; i--) {
+                    let p = powerups[i]; p.y += 2;
+                    ctx.fillStyle = '#ffff00'; ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, Math.PI*2); ctx.fill();
+                    if (Math.hypot(p.x - (px+20), p.y - py) < 25) {
+                        activePowerup = p.type; powerupTimer = 300; sfx.powerup(); powerups.splice(i, 1);
+                    }
+                }
+
+                if (boss) {
+                    boss.frame++;
+                    if (boss.y < boss.targetY) boss.y += 2;
+                    else { boss.x += boss.vx; if (boss.x > 600 - boss.width || boss.x < 0) boss.vx *= -1; }
+                    if (boss.frame % Math.max(20, 50 - wave*5) === 0) {
+                        sfx.laser();
+                        let centerX = boss.x + boss.width/2, centerY = boss.y + boss.height;
+                        if (boss.hp < boss.maxHp * 0.4) {
+                            for(let a=-2; a<=2; a++) enemyLasers.push({x: centerX, y: centerY, vx: a*1.5, vy: 5});
+                        } else {
+                            enemyLasers.push({x: centerX - 30, y: centerY, vx: -1, vy: 4.5}, {x: centerX + 30, y: centerY, vx: 1, vy: 4.5});
+                        }
+                    }
+                    ctx.fillStyle = boss.hp < boss.maxHp*0.4 ? '#ff0055' : '#8800ff';
+                    ctx.fillRect(boss.x, boss.y, boss.width, boss.height);
+                    ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(150, 10, 300, 12);
+                    ctx.fillStyle = '#ff0055'; ctx.fillRect(150, 10, (boss.hp / boss.maxHp) * 300, 12);
+                }
+
+                let aliveEnemies = 0;
+                enemies.forEach((e) => {
+                    if (e.hp > 0) {
+                        aliveEnemies++; e.x += e.vx; if (e.x > 550 || e.x < 20) e.vx *= -1;
+                        if (Math.random() < 0.003 + wave*0.001) enemyLasers.push({x: e.x+15, y: e.y+20, vx: 0, vy: 4 + wave*0.5});
+                        ctx.fillStyle = e.type === 'destroyer' ? '#ffaa00' : '#00ff66';
+                        ctx.beginPath(); ctx.arc(e.x+15, e.y+15, 12, 0, Math.PI*2); ctx.fill();
+                        if (Math.hypot((px+20) - (e.x+15), py - (e.y+15)) < 22) { triggerGameOver(score); return; }
+                    }
+                });
+
+                if (!boss && aliveEnemies === 0) { wave++; score += 500; spawnWave(); }
+
+                ctx.fillStyle = '#00ffff'; ctx.fillRect(px, py+10, 40, 15); ctx.fillRect(px+15, py-5, 10, 15);
+                ctx.fillStyle = '#00f3ff'; ctx.font = '10px "Press Start 2P"'; ctx.fillText(`WAVE ${wave}`, 490, 20);
+
+                particles.updateAndDraw(ctx); ctx.restore();
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 2. PAC-MAN MINI
+        function runPacman() {
+            canvas.width = 600; canvas.height = 400;
+            let score = 0, px = 9, py = 7, mouth = 0, mouthDir = 1, level = 1, dx = 0, dy = 0, sz = 30, frame = 0;
+            let map = [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,3,2,2,2,1,2,2,2,1,2,2,2,1,2,2,2,3,1],
+                [1,2,1,1,2,1,2,1,2,1,2,1,2,1,2,1,1,2,1],
+                [1,2,2,2,2,2,2,1,2,2,2,1,2,2,2,2,2,2,1],
+                [1,1,1,2,1,1,0,1,1,0,1,1,0,1,1,2,1,1,1],
+                [1,2,2,2,2,1,0,0,0,0,0,0,0,1,2,2,2,2,1],
+                [1,2,1,1,2,1,1,1,0,0,1,1,1,1,2,1,1,2,1],
+                [1,3,2,1,2,2,2,2,2,2,2,2,2,2,2,1,2,3,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ];
+            let ghosts = [{x: 8, y: 4, c: '#ff0000', eyeX: 1}, {x: 11, y: 4, c: '#ffb8ff', eyeX: -1}, {x: 9, y: 4, c: '#00ffff', eyeX: 1}];
+            let dotsRemaining = 0;
+            function countDots() {
+                dotsRemaining = 0;
+                for(let r=0; r<map.length; r++) for(let c=0; c<map[r].length; c++) if (map[r][c] === 2 || map[r][c] === 3) dotsRemaining++;
+            }
+            countDots();
+
+            function loop() {
+                frame++;
+                if (keys.u) { dx=0; dy=-1; } if (keys.d) { dx=0; dy=1; }
+                if (keys.l) { dx=-1; dy=0; } if (keys.r) { dx=1; dy=0; }
+                mouth += 0.05 * mouthDir; if (mouth > 0.35 || mouth < 0.02) mouthDir *= -1;
+
+                if (frame % 10 === 0) {
+                    if (map[py+dy] && map[py+dy][px+dx] !== 1) { px += dx; py += dy; }
+                    if (map[py][px] === 2) { map[py][px] = 0; score += 10; dotsRemaining--; sfx.eat(); }
+                    if (map[py][px] === 3) { map[py][px] = 0; score += 50; dotsRemaining--; sfx.jump(); }
+                    if (dotsRemaining <= 0) { level++; countDots(); px = 9; py = 7; }
+                }
+
+                if (frame % Math.max(5, 12 - level) === 0) {
+                    ghosts.forEach(g => {
+                        const dirs = [[0,1],[0,-1],[1,0],[-1,0]];
+                        let valid = dirs.filter(d => map[g.y+d[1]] && map[g.y+d[1]][g.x+d[0]] !== 1);
+                        if (valid.length) {
+                            valid.sort((a,b) => Math.hypot((g.x+a[0])-px, (g.y+a[1])-py) - Math.hypot((g.x+b[0])-px, (g.y+b[1])-py));
+                            let rd = valid[0]; g.x += rd[0]; g.y += rd[1];
+                        }
+                        if (g.x === px && g.y === py) { triggerGameOver(score); return; }
+                    });
+                }
+
+                ctx.save(); applyShake(ctx); ctx.fillStyle = '#05050e'; ctx.fillRect(0,0,600,400);
+                for(let r=0; r<map.length; r++) {
+                    for(let c=0; c<map[r].length; c++) {
+                        if (map[r][c] === 1) { ctx.fillStyle = '#0022ff'; ctx.fillRect(c*sz+2, r*sz+2, sz-4, sz-4); }
+                        else if (map[r][c] === 2) { ctx.fillStyle = '#ffb8ae'; ctx.beginPath(); ctx.arc(c*sz+15, r*sz+15, 3, 0, Math.PI*2); ctx.fill(); }
+                        else if (map[r][c] === 3) { ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(c*sz+15, r*sz+15, 6, 0, Math.PI*2); ctx.fill(); }
+                    }
+                }
+
+                ctx.fillStyle = '#ffff00'; ctx.beginPath();
+                let angle = dx === 1 ? 0 : (dx === -1 ? Math.PI : (dy === 1 ? Math.PI/2 : -Math.PI/2));
+                ctx.arc(px*sz+15, py*sz+15, 12, angle + mouth, angle + Math.PI*2 - mouth);
+                ctx.lineTo(px*sz+15, py*sz+15); ctx.fill();
+
+                ghosts.forEach(g => {
+                    ctx.fillStyle = g.c; ctx.beginPath(); ctx.arc(g.x*sz+15, g.y*sz+12, 11, Math.PI, 0, false);
+                    ctx.lineTo(g.x*sz+26, g.y*sz+24); ctx.lineTo(g.x*sz+4, g.y*sz+24); ctx.fill();
+                });
+
+                particles.updateAndDraw(ctx); ctx.restore();
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 3. SINK THE SHIP
+        function runBattleship() {
+            canvas.width = 600; canvas.height = 400;
+            let score = 0, cursorX = 0, cursorY = 0, level = 1;
+            let grid = Array(5).fill(0).map(() => Array(6).fill(0)), ships = [];
+
+            function spawnFleet() {
+                ships = []; grid = Array(5).fill(0).map(() => Array(6).fill(0));
+                let count = Math.min(8, 3 + level);
+                while(ships.length < count) {
+                    let rx = Math.floor(Math.random()*6), ry = Math.floor(Math.random()*5);
+                    if (!ships.some(s => s.x === rx && s.y === ry)) ships.push({x: rx, y: ry, hit: false, hp: 1});
+                }
+            }
+            spawnFleet();
+
+            function loop() {
+                if (keys.l) { cursorX = Math.max(0, cursorX-1); keys.l = false; sfx.beep(); }
+                if (keys.r) { cursorX = Math.min(5, cursorX+1); keys.r = false; sfx.beep(); }
+                if (keys.u) { cursorY = Math.max(0, cursorY-1); keys.u = false; sfx.beep(); }
+                if (keys.d) { cursorY = Math.min(4, cursorY+1); keys.d = false; sfx.beep(); }
+
+                if (keys.act) {
+                    keys.act = false;
+                    let target = ships.find(s => s.x === cursorX && s.y === cursorY);
+                    if (target) {
+                        target.hit = true; grid[cursorY][cursorX] = 2; score += 100; sfx.explode(); triggerShake(8);
+                        particles.spawn(cursorX*80 + 90, cursorY*60 + 70, '#ff0055', 20);
+                    } else if (grid[cursorY][cursorX] === 0) {
+                        grid[cursorY][cursorX] = 1; sfx.laser();
+                    }
+                    if (ships.every(s => s.hit)) { level++; score += 300; spawnFleet(); }
+                }
+
+                ctx.save(); applyShake(ctx); ctx.fillStyle = '#020b14'; ctx.fillRect(0,0,600,400);
+                for(let r=0; r<5; r++) {
+                    for(let c=0; c<6; c++) {
+                        let x = c*80 + 50, y = r*60 + 40;
+                        ctx.strokeStyle = '#00f3ff'; ctx.strokeRect(x, y, 75, 55);
+                        if (grid[r][c] === 1) { ctx.fillStyle = '#00aaff'; ctx.beginPath(); ctx.arc(x+37, y+27, 8, 0, Math.PI*2); ctx.fill(); }
+                        else if (grid[r][c] === 2) { ctx.fillStyle = '#ff0055'; ctx.fillRect(x+15, y+15, 45, 25); }
+                    }
+                }
+                ctx.strokeStyle = '#ff007f'; ctx.lineWidth = 3; ctx.strokeRect(cursorX*80 + 48, cursorY*60 + 38, 79, 59);
+                particles.updateAndDraw(ctx); ctx.restore();
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 4. CRASH RUNNER
+        function runCrash() {
+            canvas.width = 600; canvas.height = 400;
+            let score = 0, py = 280, vy = 0, spinning = 0, speed = 6, obstacles = [], frame = 0;
+
+            function loop() {
+                frame++; speed = 6 + Math.floor(score / 500) * 1.2;
+                if (keys.u && py >= 280) { vy = -12; sfx.jump(); }
+                if (keys.act && spinning <= 0) { spinning = 20; sfx.laser(); }
+
+                vy += 0.6; py += vy; if (py > 280) py = 280;
+                if (spinning > 0) spinning--;
+
+                if (frame % Math.max(35, 70 - Math.floor(score/300)*5) === 0) {
+                    obstacles.push({x: 600, type: Math.random() > 0.5 ? 'BOULDER' : 'TNT', smashed: false});
+                }
+
+                ctx.save(); applyShake(ctx); ctx.fillStyle = '#100520'; ctx.fillRect(0,0,600,400);
+                ctx.fillStyle = '#ff6600'; ctx.fillRect(0, 320, 600, 80);
+
+                ctx.save(); ctx.translate(100, py);
+                if (spinning > 0) { ctx.rotate(frame*0.5); ctx.fillStyle = '#ff8800'; ctx.fillRect(-20, -20, 40, 40); }
+                else { ctx.fillStyle = '#ff6600'; ctx.fillRect(-15, -35, 30, 35); }
+                ctx.restore();
+
+                obstacles.forEach((o) => {
+                    o.x -= speed;
+                    if (!o.smashed) {
+                        ctx.fillStyle = o.type === 'BOULDER' ? '#888' : '#cc3300';
+                        ctx.fillRect(o.x, 280, 35, 40);
+                        if (o.x < 120 && o.x > 70 && py > 240) {
+                            if (spinning > 0 && o.type === 'TNT') {
+                                o.smashed = true; score += 100; sfx.explode(); particles.spawn(o.x, 280, '#ffaa00', 15);
+                            } else { triggerGameOver(score); return; }
+                        }
+                    }
+                });
+
+                score++; particles.updateAndDraw(ctx); ctx.restore();
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 5. SPACE INVADERS
+        function runSpaceInvaders() {
+            canvas.width = 600; canvas.height = 400;
+            let px = 280, score = 0, bullets = [], aliens = [], wave = 1, alienDir = 1, frame = 0;
+
+            function spawnWave() {
+                aliens = [];
+                for(let r=0; r<3; r++) for(let c=0; c<8; c++) aliens.push({x: 60 + c*55, y: 40 + r*35, alive: true});
+            }
+            spawnWave();
+
+            function loop() {
+                frame++;
+                if (keys.l && px > 20) px -= 5;
+                if (keys.r && px < 540) px += 5;
+                if (keys.act && bullets.length < 3) { bullets.push({x: px+18, y: 350}); keys.act = false; sfx.laser(); }
+
+                if (frame % Math.max(5, 25 - wave*3) === 0) {
+                    let shift = false;
+                    aliens.forEach(a => { if (a.alive && ((a.x > 530 && alienDir === 1) || (a.x < 30 && alienDir === -1))) shift = true; });
+                    if (shift) { alienDir *= -1; aliens.forEach(a => a.y += 15); }
+                    else { aliens.forEach(a => a.x += alienDir * (10 + wave)); }
+                }
+
+                ctx.save(); applyShake(ctx); ctx.fillStyle = '#020208'; ctx.fillRect(0,0,600,400);
+                ctx.fillStyle = '#00ffff'; ctx.fillRect(px, 360, 40, 15);
+
+                bullets.forEach((b, bi) => {
+                    b.y -= 8; ctx.fillStyle = '#ff007f'; ctx.fillRect(b.x, b.y, 4, 12);
+                    if (b.y < 0) bullets.splice(bi, 1);
+                });
+
+                let count = 0;
+                aliens.forEach(a => {
+                    if (a.alive) {
+                        count++; ctx.fillStyle = '#00ff66'; ctx.fillRect(a.x, a.y, 30, 20);
+                        bullets.forEach((b, bi) => {
+                            if (b.x > a.x && b.x < a.x+30 && b.y > a.y && b.y < a.y+20) {
+                                a.alive = false; bullets.splice(bi, 1); score += 30; sfx.explode();
+                            }
+                        });
+                        if (a.y > 330) { triggerGameOver(score); return; }
+                    }
+                });
+
+                if (count === 0) { wave++; score += 300; spawnWave(); }
+                particles.updateAndDraw(ctx); ctx.restore();
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 6. TETRIS BLOCK
+        function runTetris() {
+            canvas.width = 600; canvas.height = 400;
+            const cols = 10, rows = 16, sz = 22, offX = 190, offY = 20;
+            let board = Array(rows).fill(0).map(()=>Array(cols).fill(0));
+            let score = 0, frame = 0;
+
+            const shapes = [
+                [[1,1,1,1]], [[1,1],[1,1]], [[0,1,0],[1,1,1]], [[1,0,0],[1,1,1]], [[0,0,1],[1,1,1]]
+            ];
+            let piece = { shape: shapes[0], x: 3, y: 0, color: '#00f3ff' };
+
+            function collide(p, bx, by) {
+                for(let r=0; r<p.shape.length; r++) {
+                    for(let c=0; c<p.shape[r].length; c++) {
+                        if (p.shape[r][c] && (board[r+by] === undefined || board[r+by][c+bx] === undefined || board[r+by][c+bx])) return true;
+                    }
+                }
+                return false;
+            }
+
+            function merge() {
+                piece.shape.forEach((r, ry) => r.forEach((v, rx) => { if (v) board[ry+piece.y][rx+piece.x] = piece.color; }));
+                for(let r=rows-1; r>=0; r--) {
+                    if (board[r].every(v => v !== 0)) {
+                        board.splice(r, 1); board.unshift(Array(cols).fill(0)); score += 100; sfx.jump(); r++;
+                    }
+                }
+                piece = { shape: shapes[Math.floor(Math.random()*shapes.length)], x: 3, y: 0, color: '#ff007f' };
+                if (collide(piece, piece.x, piece.y)) triggerGameOver(score);
+            }
+
+            function loop() {
+                frame++;
+                if (keys.l && !collide(piece, piece.x-1, piece.y)) { piece.x--; keys.l = false; }
+                if (keys.r && !collide(piece, piece.x+1, piece.y)) { piece.x++; keys.r = false; }
+                if (keys.d && !collide(piece, piece.x, piece.y+1)) { piece.y++; keys.d = false; }
+
+                if (frame % 20 === 0) {
+                    if (!collide(piece, piece.x, piece.y+1)) piece.y++;
+                    else merge();
+                }
+
+                ctx.fillStyle = '#050510'; ctx.fillRect(0,0,600,400);
+                ctx.strokeStyle = '#00f3ff'; ctx.strokeRect(offX-2, offY-2, cols*sz+4, rows*sz+4);
+
+                for(let r=0; r<rows; r++) {
+                    for(let c=0; c<cols; c++) {
+                        if (board[r][c]) { ctx.fillStyle = board[r][c]; ctx.fillRect(offX+c*sz, offY+r*sz, sz-1, sz-1); }
+                    }
+                }
+                piece.shape.forEach((r, ry) => r.forEach((v, rx) => {
+                    if (v) { ctx.fillStyle = piece.color; ctx.fillRect(offX+(piece.x+rx)*sz, offY+(piece.y+ry)*sz, sz-1, sz-1); }
+                }));
+
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 7. RETRO SNAKE
+        function runSnake() {
+            canvas.width = 600; canvas.height = 400;
+            let score = 0, sz = 20, dir = {x: 1, y: 0}, frame = 0;
+            let snake = [{x: 5, y: 5}, {x: 4, y: 5}];
+            let food = {x: 15, y: 10};
+
+            function loop() {
+                frame++;
+                if (keys.u && dir.y === 0) dir = {x: 0, y: -1};
+                if (keys.d && dir.y === 0) dir = {x: 0, y: 1};
+                if (keys.l && dir.x === 0) dir = {x: -1, y: 0};
+                if (keys.r && dir.x === 0) dir = {x: 1, y: 0};
+
+                if (frame % 8 === 0) {
+                    let head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+                    if (head.x < 0 || head.x >= 30 || head.y < 0 || head.y >= 20 || snake.some(s=>s.x===head.x && s.y===head.y)) {
+                        triggerGameOver(score); return;
+                    }
+                    snake.unshift(head);
+                    if (head.x === food.x && head.y === food.y) {
+                        score += 50; sfx.eat(); food = {x: Math.floor(Math.random()*28)+1, y: Math.floor(Math.random()*18)+1};
+                    } else snake.pop();
+                }
+
+                ctx.fillStyle = '#050a05'; ctx.fillRect(0,0,600,400);
+                ctx.fillStyle = '#ff0055'; ctx.fillRect(food.x*sz, food.y*sz, sz-2, sz-2);
+                ctx.fillStyle = '#00ff66';
+                snake.forEach((s) => ctx.fillRect(s.x*sz, s.y*sz, sz-2, sz-2));
+
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 8. FROG CROSSER
+        function runFrogger() {
+            canvas.width = 600; canvas.height = 400;
+            let score = 0, fx = 280, fy = 360;
+            let cars = [
+                {x: 0, y: 300, spd: 4, w: 50, c: '#ff0055'},
+                {x: 300, y: 240, spd: -5, w: 60, c: '#00f3ff'},
+                {x: 100, y: 180, spd: 3, w: 40, c: '#ffff00'}
+            ];
+
+            function loop() {
+                if (keys.u) { fy -= 40; keys.u = false; score += 10; sfx.jump(); }
+                if (keys.d) { fy = Math.min(360, fy + 40); keys.d = false; }
+                if (keys.l) { fx = Math.max(20, fx - 40); keys.l = false; }
+                if (keys.r) { fx = Math.min(540, fx + 40); keys.r = false; }
+
+                if (fy < 40) { score += 200; fy = 360; sfx.powerup(); }
+
+                ctx.fillStyle = '#111'; ctx.fillRect(0,0,600,400);
+                ctx.fillStyle = '#00ff66'; ctx.fillRect(0,0,600,40); ctx.fillRect(0,360,600,40);
+
+                cars.forEach(c => {
+                    c.x += c.spd;
+                    if (c.spd > 0 && c.x > 600) c.x = -c.w;
+                    if (c.spd < 0 && c.x < -c.w) c.x = 600;
+                    ctx.fillStyle = c.c; ctx.fillRect(c.x, c.y, c.w, 30);
+                    if (fx < c.x + c.w && fx + 30 > c.x && fy < c.y + 30 && fy + 30 > c.y) { triggerGameOver(score); return; }
+                });
+
+                ctx.fillStyle = '#00ff00'; ctx.fillRect(fx, fy, 30, 30);
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 9. BRICK BREAKER
+        function runBreakout() {
+            canvas.width = 600; canvas.height = 400;
+            let score = 0, px = 250, bx = 300, by = 300, vx = 4, vy = -4;
+            let bricks = [];
+            for(let r=0; r<4; r++) for(let c=0; c<8; c++) bricks.push({x: c*70 + 20, y: r*25 + 40, alive: true});
+
+            function loop() {
+                if (keys.l && px > 10) px -= 7;
+                if (keys.r && px < 490) px += 7;
+
+                bx += vx; by += vy;
+                if (bx < 10 || bx > 590) { vx *= -1; sfx.beep(); }
+                if (by < 10) { vy *= -1; sfx.beep(); }
+
+                if (by > 350 && bx > px && bx < px + 100) { vy = -Math.abs(vy); sfx.jump(); }
+                if (by > 400) { triggerGameOver(score); return; }
+
+                bricks.forEach(b => {
+                    if (b.alive && bx > b.x && bx < b.x + 60 && by > b.y && by < b.y + 20) {
+                        b.alive = false; vy *= -1; score += 50; sfx.explode();
+                    }
+                });
+
+                ctx.fillStyle = '#050510'; ctx.fillRect(0,0,600,400);
+                ctx.fillStyle = '#00f3ff'; ctx.fillRect(px, 360, 100, 15);
+                ctx.fillStyle = '#ff007f'; ctx.beginPath(); ctx.arc(bx, by, 8, 0, Math.PI*2); ctx.fill();
+
+                bricks.forEach(b => { if (b.alive) { ctx.fillStyle = '#ffdd00'; ctx.fillRect(b.x, b.y, 60, 20); } });
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 10. PONG CLASSIC
+        function runPong() {
+            canvas.width = 600; canvas.height = 400;
+            let score = 0, py = 160, ay = 160, bx = 300, by = 200, vx = 5, vy = 3;
+
+            function loop() {
+                if (keys.u && py > 10) py -= 6;
+                if (keys.d && py < 310) py += 6;
+
+                ay += (by - (ay + 40)) * 0.08;
+                bx += vx; by += vy;
+
+                if (by < 10 || by > 390) { vy *= -1; sfx.beep(); }
+                if (bx < 30 && by > py && by < py + 80) { vx = Math.abs(vx); score += 10; sfx.jump(); }
+                if (bx > 570 && by > ay && by < ay + 80) { vx = -Math.abs(vx); sfx.beep(); }
+
+                if (bx < 0) { triggerGameOver(score); return; }
+                if (bx > 600) { bx = 300; by = 200; vx = -5; score += 100; }
+
+                ctx.fillStyle = '#000'; ctx.fillRect(0,0,600,400);
+                ctx.fillStyle = '#fff'; ctx.fillRect(10, py, 15, 80); ctx.fillRect(575, ay, 15, 80);
+                ctx.fillRect(bx-5, by-5, 10, 10);
+
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 11. ASTEROIDS 360
+        function runAsteroids() {
+            canvas.width = 600; canvas.height = 400;
+            let px = 300, py = 200, angle = 0, vx = 0, vy = 0, score = 0;
+            let bullets = [], roids = Array(4).fill(0).map(()=>({x: Math.random()*600, y: Math.random()*400, r: 25, vx: (Math.random()-0.5)*4, vy: (Math.random()-0.5)*4}));
+
+            function loop() {
+                if (keys.l) angle -= 0.08;
+                if (keys.r) angle += 0.08;
+                if (keys.u) { vx += Math.cos(angle)*0.2; vy += Math.sin(angle)*0.2; }
+                if (keys.act) { bullets.push({x: px, y: py, vx: Math.cos(angle)*8, vy: Math.sin(angle)*8}); keys.act = false; sfx.laser(); }
+
+                px = (px + vx + 600) % 600; py = (py + vy + 400) % 400;
+
+                ctx.fillStyle = '#05050e'; ctx.fillRect(0,0,600,400);
+
+                ctx.save(); ctx.translate(px, py); ctx.rotate(angle);
+                ctx.strokeStyle = '#00f3ff'; ctx.beginPath(); ctx.moveTo(15,0); ctx.lineTo(-10,-10); ctx.lineTo(-10,10); ctx.closePath(); ctx.stroke();
+                ctx.restore();
+
+                bullets.forEach((b, bi) => {
+                    b.x += b.vx; b.y += b.vy; ctx.fillStyle = '#ff007f'; ctx.fillRect(b.x, b.y, 4, 4);
+                    roids.forEach((r, ri) => {
+                        if (Math.hypot(b.x - r.x, b.y - r.y) < r.r) {
+                            roids.splice(ri, 1); bullets.splice(bi, 1); score += 100; sfx.explode();
+                        }
+                    });
+                });
+
+                roids.forEach(r => {
+                    r.x = (r.x + r.vx + 600) % 600; r.y = (r.y + r.vy + 400) % 400;
+                    ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI*2); ctx.stroke();
+                    if (Math.hypot(px - r.x, py - r.y) < r.r + 10) { triggerGameOver(score); return; }
+                });
+
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 12. CENTIPEDE BUG
+        function runCentipede() {
+            canvas.width = 600; canvas.height = 400;
+            let px = 280, score = 0, bullets = [];
+            let segments = Array(8).fill(0).map((_,i)=>({x: i*20 + 40, y: 40, dir: 1}));
+
+            function loop() {
+                if (keys.l && px > 10) px -= 6;
+                if (keys.r && px < 570) px += 6;
+                if (keys.act && bullets.length < 2) { bullets.push({x: px+10, y: 360}); keys.act = false; sfx.laser(); }
+
+                ctx.fillStyle = '#000'; ctx.fillRect(0,0,600,400);
+                ctx.fillStyle = '#00ff66'; ctx.fillRect(px, 370, 20, 20);
+
+                bullets.forEach((b, bi) => {
+                    b.y -= 8; ctx.fillStyle = '#ff007f'; ctx.fillRect(b.x, b.y, 4, 8);
+                    segments.forEach((s, si) => {
+                        if (Math.hypot(b.x - s.x, b.y - s.y) < 15) {
+                            segments.splice(si, 1); bullets.splice(bi, 1); score += 50; sfx.explode();
+                        }
+                    });
+                });
+
+                segments.forEach(s => {
+                    s.x += s.dir * 3;
+                    if (s.x > 580 || s.x < 10) { s.dir *= -1; s.y += 20; }
+                    ctx.fillStyle = '#ff0055'; ctx.beginPath(); ctx.arc(s.x, s.y, 10, 0, Math.PI*2); ctx.fill();
+                    if (s.y > 360) { triggerGameOver(score); return; }
+                });
+
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 13. BARREL JUMPER
+        function runDonkeyKong() {
+            canvas.width = 600; canvas.height = 400;
+            let px = 50, py = 330, vy = 0, score = 0, barrels = [], frame = 0;
+
+            function loop() {
+                frame++;
+                if (keys.u && py >= 330) { vy = -12; sfx.jump(); }
+                vy += 0.6; py += vy; if (py > 330) py = 330;
+
+                if (frame % 80 === 0) barrels.push({x: 580, y: 340});
+
+                ctx.fillStyle = '#100505'; ctx.fillRect(0,0,600,400);
+                ctx.fillStyle = '#ff4400'; ctx.fillRect(0, 360, 600, 40);
+
+                ctx.fillStyle = '#00f3ff'; ctx.fillRect(px, py, 25, 30);
+
+                barrels.forEach(b => {
+                    b.x -= 5;
+                    ctx.fillStyle = '#ffaa00'; ctx.beginPath(); ctx.arc(b.x, b.y, 12, 0, Math.PI*2); ctx.fill();
+                    if (Math.hypot((px+12) - b.x, (py+15) - b.y) < 20) { triggerGameOver(score); return; }
+                });
+
+                score++; document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 14. FLAPPY BIRD
+        function runFlappy() {
+            canvas.width = 600; canvas.height = 400;
+            let py = 200, vy = 0, score = 0, pipes = [], frame = 0;
+
+            function loop() {
+                frame++;
+                if (keys.act || keys.u) { vy = -7; keys.act = false; keys.u = false; sfx.jump(); }
+                vy += 0.4; py += vy;
+
+                if (frame % 70 === 0) {
+                    let gapY = Math.random()*180 + 80;
+                    pipes.push({x: 600, top: gapY - 60, bottom: gapY + 60});
+                }
+
+                ctx.fillStyle = '#021020'; ctx.fillRect(0,0,600,400);
+                ctx.fillStyle = '#ffff00'; ctx.fillRect(100, py, 25, 20);
+
+                pipes.forEach(p => {
+                    p.x -= 4;
+                    ctx.fillStyle = '#00ff66'; ctx.fillRect(p.x, 0, 40, p.top);
+                    ctx.fillRect(p.x, p.bottom, 40, 400 - p.bottom);
+
+                    if (125 > p.x && 100 < p.x + 40 && (py < p.top || py + 20 > p.bottom)) { triggerGameOver(score); return; }
+                });
+
+                if (py < 0 || py > 380) { triggerGameOver(score); return; }
+
+                score++; document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // 15. OUTRUN RACER
+        function runRacer() {
+            canvas.width = 600; canvas.height = 400;
+            let rx = 280, score = 0, frame = 0, wave = 1;
+            let traffic = [{x: 200, y: -100}, {x: 350, y: -300}];
+
+            function loop() {
+                frame++;
+                if (keys.l && rx > 120) rx -= 7;
+                if (keys.r && rx < 440) rx += 7;
+
+                wave = 1 + Math.floor(score / 500);
+
+                ctx.save(); applyShake(ctx); ctx.fillStyle = '#050510'; ctx.fillRect(0,0,600,400);
+
+                let curveShift = Math.sin(frame*0.03) * 40;
+                ctx.fillStyle = '#110022'; ctx.fillRect(0,0,600,180);
+                ctx.fillStyle = '#ff007f'; ctx.fillRect(0,180,600,4);
+
+                ctx.beginPath();
+                ctx.moveTo(250 + curveShift*0.2, 184); ctx.lineTo(350 + curveShift*0.2, 184);
+                ctx.lineTo(520 + curveShift, 400); ctx.lineTo(80 + curveShift, 400);
+                ctx.fillStyle = '#333'; ctx.fill();
+
+                ctx.fillStyle = '#00ffff'; ctx.fillRect(rx, 320, 40, 60);
+
+                let carSpeed = 6 + wave * 1.5;
+                traffic.forEach(t => {
+                    t.y += carSpeed;
+                    if (t.y > 400) { t.y = -100; t.x = Math.random()*200 + 180 + curveShift*0.5; score += 50; sfx.eat(); }
+                    ctx.fillStyle = '#ff0055'; ctx.fillRect(t.x, t.y, 40, 50);
+                    if (rx < t.x+40 && rx+40 > t.x && 320 < t.y+50 && 380 > t.y) { triggerGameOver(score); return; }
+                });
+
+                ctx.fillStyle = '#ffdd00'; ctx.font = '10px "Press Start 2P"'; ctx.fillText(`STAGE ${wave}`, 480, 20);
+
+                particles.updateAndDraw(ctx); ctx.restore();
+                document.getElementById('hud-score').innerText = score;
+                if (document.getElementById('overlay').classList.contains('hidden')) animFrameId = requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        function initHub() {
+            const grid = document.getElementById('arcade-grid');
+            grid.innerHTML = GAMES.map(g => `
+                <div onclick="selectGame('${g.id}')" class="bg-gradient-to-br ${g.color} p-4 rounded-xl border-2 border-cyan-400 hover:border-yellow-300 transform hover:-translate-y-1 hover:scale-105 transition cursor-pointer flex flex-col justify-between items-center text-center shadow-lg group">
+                    <i class="fa-solid ${g.icon} text-3xl sm:text-4xl text-cyan-300 group-hover:text-yellow-300 mb-2 transition"></i>
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-bold text-white mb-1">${g.title}</h3>
+                        <p class="text-[8px] sm:text-[9px] text-gray-200 opacity-90 leading-tight">${g.desc}</p>
+                    </div>
+                    <button class="mt-3 bg-black/50 group-hover:bg-yellow-400 group-hover:text-black text-cyan-300 text-[8px] sm:text-[10px] px-3 py-1 rounded font-bold transition">
+                        PLAY NOW
+                    </button>
+                </div>
+            `).join('');
+
+            // Set up mobile touch button listeners
+            const bindBtn = (id, key) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const start = (e) => { e.preventDefault(); keys[key] = true; };
+                const end = (e) => { e.preventDefault(); keys[key] = false; };
+                el.addEventListener('touchstart', start);
+                el.addEventListener('touchend', end);
+                el.addEventListener('mousedown', start);
+                el.addEventListener('mouseup', end);
+            };
+            bindBtn('btn-u', 'u');
+            bindBtn('btn-d', 'd');
+            bindBtn('btn-l', 'l');
+            bindBtn('btn-r', 'r');
+            bindBtn('btn-act', 'act');
+        }
+
+        function showHub() {
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            activeGameId = null;
+            document.getElementById('game-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('flex');
+            document.getElementById('hub-view').classList.remove('hidden');
+            document.getElementById('home-btn').classList.add('hidden');
+            sfx.beep();
+        }
+
+        function selectGame(id) {
+            const g = GAMES.find(game => game.id === id);
+            if (!g) return;
+            activeGameId = id;
+
+            document.getElementById('hub-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('game-view').classList.add('flex');
+            document.getElementById('home-btn').classList.remove('hidden');
+
+            document.getElementById('hud-title').innerText = g.title;
+            document.getElementById('overlay-title').innerText = g.title;
+            document.getElementById('overlay-desc').innerText = g.desc;
+            document.getElementById('hud-score').innerText = '0';
+            
+            const best = localStorage.getItem(`best_${id}`) || '0';
+            document.getElementById('hud-best').innerText = best;
+
+            document.getElementById('overlay').classList.remove('hidden');
+            sfx.beep();
+        }
+
+        function saveScore(score) {
+            if (!activeGameId) return;
+            const key = `best_${activeGameId}`;
+            const best = parseInt(localStorage.getItem(key) || '0', 10);
+            if (score > best) {
+                localStorage.setItem(key, score);
+                document.getElementById('hud-best').innerText = score;
+            }
+        }
+
+        // Initialize Hub on Load
+        window.onload = () => { initHub(); };
+    </script>
+</body>
+</html>
