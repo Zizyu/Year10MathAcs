@@ -30,7 +30,15 @@
 .leaderboard-card h2{color:#70f5ff;margin:0 0 8px}.leaderboard-card p{color:#b8c8e8;font-size:13px}
 .leaderboard-card input{width:100%;padding:12px;margin:8px 0;background:#050817;color:#fff;border:1px solid #70f5ff;border-radius:6px;text-align:center;font-size:24px;letter-spacing:.35em;text-transform:uppercase}
 .leaderboard-list{padding:0;list-style:none;text-align:left}.leaderboard-list li{display:flex;justify-content:space-between;padding:7px 9px;border-bottom:1px solid #ffffff18}.leaderboard-note{font-size:11px!important;color:#ffd866!important}
-
+.multiplayer-modal{display:none;position:fixed;inset:0;z-index:1050;background:#020611ef;align-items:center;justify-content:center;padding:16px}
+.multiplayer-modal.open{display:flex}.multiplayer-card{width:min(100%,420px);max-height:90vh;overflow:auto;background:#0b1630;border:2px solid #70f5ff;border-radius:12px;padding:22px;box-shadow:0 0 32px #00bfff55;text-align:center}
+.multiplayer-card h2{color:#70f5ff;margin:0 0 8px}.multiplayer-card p{color:#b8c8e8;font-size:13px;line-height:1.5}
+.multiplayer-card input{width:100%;padding:12px;margin:8px 0;background:#050817;color:#fff;border:1px solid #70f5ff;border-radius:6px;text-align:center;font-size:22px;letter-spacing:.25em;text-transform:uppercase}
+.mp-code{font-size:32px;letter-spacing:.2em;color:#ffdc55;font-weight:900;margin:12px 0;text-shadow:0 0 16px #ffdc5560}
+.mp-players{list-style:none;padding:0;margin:10px 0;text-align:left}.mp-players li{padding:6px 10px;border-bottom:1px solid #ffffff15;display:flex;justify-content:space-between;font-size:13px}
+.mp-players li .you{color:#70f5ff}.mp-badge{background:#10284b;border:1px solid #70f5ff55;border-radius:4px;padding:2px 8px;font-size:11px;color:#ffd866}
+.multi-initials-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0}
+.multi-initials-row input{width:72px;font-size:18px;letter-spacing:.2em;padding:10px 6px}
 
 /* Animated deep-space backdrop behind the menu and game UI */
 #starBackground{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,#101b3a 0%,#070b18 58%,#02040c 100%)}
@@ -86,7 +94,7 @@ body.crt-on .gamebox{box-shadow:0 0 0 2px #253f6b,0 0 36px #00d9ff2b,inset 0 0 2
 <button class="item-card" data-ship-buy="nova"><span class="item-art ship-preview nova-preview"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4 39 22 57 31 40 37 35 58 29 42 9 49 22 33 13 20 29 24Z" fill="#ffe87a" stroke="#fff6ce" stroke-width="2"/><path d="M32 13 35 34 32 43 29 34Z" fill="#9d43e8"/></svg></span><span class="item-name">NOVA ARTILLERY SHIP</span><small>🌌 Press Q every 5 seconds to fire tracking energy lasers at every enemy. Deals bonus damage to bosses and blasts them backward.</small><b class="item-price">🪙 90 COINS + 250,000 POINTS</b></button>
 <button class="item-card" data-ship-buy="teleporter"><span class="item-art ship-preview phase-preview"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M24 7 32 20 40 7 46 34 59 47 42 42 37 57 32 48 27 57 22 42 5 47 18 34Z" fill="#a987ff" stroke="#e6d9ff" stroke-width="2"/><circle cx="32" cy="31" r="7" fill="#17102e" stroke="#fff" stroke-width="2"/></svg></span><span class="item-name">PHASE JUMPER SHIP</span><small>🧊 When a bullet hits you, freeze the aliens and click anywhere in the arena to teleport. Aliens unfreeze 0.5 seconds later. Ability recharges every 5 seconds.</small><b class="item-price">🪙 50 COINS + 50,000 POINTS</b></button>
 <button class="item-card" data-ship-buy="bomber"><span class="item-art ship-preview bomber-preview"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5 43 22 59 37 43 39 38 55 32 49 26 55 21 39 5 37 21 22Z" fill="#ff9d42" stroke="#fff0c4" stroke-width="2"/><path d="M23 29 32 19 41 29 37 43 27 43Z" fill="#63321f" stroke="#ffd08a" stroke-width="2"/><circle cx="32" cy="34" r="5" fill="#ffe87a"/><path d="M27 46 24 57M37 46 40 57" stroke="#ff6a35" stroke-width="3" stroke-linecap="round"/></svg></span><span class="item-name">BOMBER COMMAND SHIP</span><small>💣 Press Q every 5 seconds to summon an animated support rocket ship for 6 seconds. It bombs the biggest enemy cluster. While active, your shots become smaller cannon bombs.</small><b class="item-price">🪙 80 COINS + 200,000 POINTS</b></button>
-</div></section></aside><section class="game-main"><h1 class="title">GALACTA SHOOTER</h1><div class="help">Move: Arrow keys or WASD · Shoot: Space or K · Upgrade: 1 Bullet, 2 Speed, 3 Life, 4 Damage · Rare Harpoon ship: 1% drop chance · Q: Ship ability (special ships) · Press Z for fullscreen · Y: Patch notes</div><div class="gamebox"><canvas id="gameCanvas" width="600" height="650" aria-label="Galacta Shooter game"></canvas></div><div><button id="startBtn">Start / Restart</button><button id="pauseBtn">Pause</button><button id="shopBtn">Points Shop</button><button id="coinShopBtn" onclick="openCoinShop()">🪙 Coin Shop</button><button id="fullscreenBtn">Fullscreen (Z)</button><button id="soundBtn" aria-pressed="true">🔊 Sound: ON</button><button id="crtBtn" type="button" aria-pressed="false">📺 CRT: OFF</button><button id="patchBtn" type="button">📋 Patch Notes (Y)</button></div><div class="status" id="status">Press Start / Restart to play.</div></section></main>
+</div></section></aside><section class="game-main"><h1 class="title">GALACTA SHOOTER</h1><div class="help">Move: Arrow keys or WASD · Shoot: Space or K · Upgrade: 1 Bullet, 2 Speed, 3 Life, 4 Damage · Rare Harpoon ship: 1% drop chance · Q: Ship ability (special ships) · Press Z for fullscreen · Y: Patch notes · Multiplayer: Host / Join (6-digit code, max 5 pilots — each keeps their own ship & upgrades)</div><div class="gamebox"><canvas id="gameCanvas" width="600" height="650" aria-label="Galacta Shooter game"></canvas></div><div><button id="startBtn">Start / Restart</button><button id="hostMpBtn">🌐 Host Multiplayer</button><button id="joinMpBtn">🔗 Join Multiplayer</button><button id="pauseBtn">Pause</button><button id="shopBtn">Points Shop</button><button id="coinShopBtn" onclick="openCoinShop()">🪙 Coin Shop</button><button id="fullscreenBtn">Fullscreen (Z)</button><button id="soundBtn" aria-pressed="true">🔊 Sound: ON</button><button id="crtBtn" type="button" aria-pressed="false">📺 CRT: OFF</button><button id="patchBtn" type="button">📋 Patch Notes (Y)</button></div><div class="status" id="status">Press Start / Restart to play.</div></section></main>
 
 <div class="patch-modal" id="patchModal" role="dialog" aria-modal="true" aria-labelledby="patchTitle">
  <div class="patch-card">
@@ -109,6 +117,31 @@ body.crt-on .gamebox{box-shadow:0 0 0 2px #253f6b,0 0 36px #00d9ff2b,inset 0 0 2
   <ol class="leaderboard-list" id="leaderboardList"></ol>
   <p class="leaderboard-note" id="leaderboardNote"></p>
   <button type="button" id="leaderboardCloseBtn">Close</button>
+ </div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<div class="multiplayer-modal" id="multiplayerModal" role="dialog" aria-modal="true" aria-labelledby="mpTitle">
+ <div class="multiplayer-card">
+  <h2 id="mpTitle">🌐 MULTIPLAYER</h2>
+  <p id="mpDesc">Host a room or join with a 6-digit code. Up to 5 players. Each player keeps their own ship, upgrades and coins. Uses peer-to-peer (no special server setup).</p>
+  <div id="mpLobbyView">
+   <button type="button" id="mpHostBtn" style="width:100%;margin:6px 0">Create Room (Host)</button>
+   <p style="margin:12px 0 4px;color:#b8c8e8">Or enter a code to join</p>
+   <input id="mpJoinCode" maxlength="7" placeholder="123 456" autocomplete="off" aria-label="6 digit room code">
+   <button type="button" id="mpJoinBtn" style="width:100%;margin:6px 0">Join Room</button>
+   <p id="mpLobbyStatus" style="color:#ffd866;font-size:12px;min-height:1.2em"></p>
+  </div>
+  <div id="mpRoomView" style="display:none">
+   <p>Room code</p>
+   <div class="mp-code" id="mpRoomCodeDisplay">--- ---</div>
+   <p id="mpRoomHint">Share this code with friends. Max 5 players.</p>
+   <ul class="mp-players" id="mpPlayerList"></ul>
+   <p id="mpRoomStatus" style="color:#ffd866;font-size:12px"></p>
+   <button type="button" id="mpStartBtn" style="width:100%;margin:8px 0;display:none">Start Co-op Mission</button>
+   <button type="button" id="mpLeaveBtn" style="width:100%;margin:4px 0;border-color:#ff6b6b;color:#ffb0b0">Leave Room</button>
+  </div>
+  <button type="button" id="mpCloseBtn" style="margin-top:10px">Close</button>
  </div>
 </div>
 
@@ -222,12 +255,26 @@ function endGame(score) {
   gameState = 'GAMEOVER';
   paused = true;
   document.getElementById('status').textContent = 'Ship destroyed! Enter your initials after the explosion.';
+  if (mpActive && mpRoomCode) {
+    mpReportDeath(pendingFinalScore);
+  }
 }
 function showGameOverModal() {
+  if (mpActive && mpCombinedPending) {
+    // Multiplayer combined score flow is handled by mpShowCombinedGameOver
+    return;
+  }
   document.getElementById('status').textContent = 'Game over — score: ' + pendingFinalScore + '. Enter your initials.';
   document.getElementById('finalScoreText').textContent = 'Your score: ' + pendingFinalScore.toLocaleString() + '. Enter 3 letters to save it.';
   document.getElementById('playerInitials').value = '';
   document.getElementById('scoreForm').style.display = '';
+  // Restore single-player initials UI if previously switched to multi
+  const multiRow = document.getElementById('multiInitialsRow');
+  if (multiRow) multiRow.style.display = 'none';
+  const singleLabel = document.querySelector('#scoreForm label[for="playerInitials"]');
+  if (singleLabel) singleLabel.style.display = '';
+  document.getElementById('playerInitials').style.display = '';
+  document.getElementById('playerInitials').required = true;
   renderLocalLeaderboard();
   document.getElementById('leaderboardModal').classList.add('open');
   document.getElementById('playerInitials').focus();
@@ -262,6 +309,437 @@ let pendingFinalScore = 0;
 const ONLINE_LEADERBOARD = { projectId: 'galacta-shooter', apiKey: 'AIzaSyA-7s6Dl9baq40l-MGrTHjtgSQplPQnzLE', collection: 'scores_galaga' };
 function onlineEnabled(){ return !!(ONLINE_LEADERBOARD.projectId && ONLINE_LEADERBOARD.apiKey); }
 function firestoreBase(){ return 'https://firestore.googleapis.com/v1/projects/' + encodeURIComponent(ONLINE_LEADERBOARD.projectId) + '/databases/(default)/documents'; }
+
+// ---- Multiplayer (PeerJS P2P, up to 5 players) ----
+// Host opens a peer with id "gsXXXXXX". Joiners connect to that id.
+// No Firebase room writes needed — only the score leaderboard still uses Firestore.
+let mpActive = false;
+let mpIsHost = false;
+let mpRoomCode = '';
+let mpPlayerId = '';
+let mpPlayers = {}; // id -> {name, score, lives, x, y, ship, alive}
+let mpPeer = null;
+let mpHostConn = null; // joiner's connection to host
+let mpClientConns = {}; // host: peerId -> DataConnection
+let mpSyncTimer = null;
+let mpCombinedPending = false;
+let mpCombinedScore = 0;
+let mpMyReportedScore = null;
+let mpRoomStatus = 'lobby'; // lobby | playing | finished
+
+function generateRoomCode() {
+  let n = '';
+  for (let i = 0; i < 6; i++) n += Math.floor(Math.random() * 10);
+  return n;
+}
+function formatRoomCode(code) {
+  const c = String(code || '').replace(/\D/g, '').slice(0, 6);
+  if (c.length <= 3) return c;
+  return c.slice(0, 3) + ' ' + c.slice(3);
+}
+function parseRoomCode(input) {
+  return String(input || '').replace(/\D/g, '').slice(0, 6);
+}
+/** Multiplayer enemy HP scale: +50% HP per extra pilot (1p=1x, 2p=1.5x, 3p=2x, …). */
+function mpEnemyHpScale() {
+  if (!mpActive) return 1;
+  const n = Math.max(1, Object.keys(mpPlayers || {}).length || 1);
+  return 1 + 0.5 * (n - 1);
+}
+function mpPeerIdFromCode(code) {
+  return 'gs' + String(code).replace(/\D/g, '').slice(0, 6);
+}
+function mpMakePlayerId() {
+  return 'p' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+}
+function mpLocalSnapshot() {
+  const alive = gameState === 'PLAYING' && (galagaState.lives || 0) > 0;
+  return {
+    id: mpPlayerId,
+    name: (mpPlayers[mpPlayerId] && mpPlayers[mpPlayerId].name) || (mpIsHost ? 'HOST' : 'PLT'),
+    score: Math.floor(galagaState.score || 0),
+    lives: Math.max(0, (galagaState.lives | 0)),
+    x: Math.floor((galagaState.player && galagaState.player.x) || 0),
+    y: Math.floor((galagaState.player && galagaState.player.y) || 0),
+    ship: galagaState.selectedShip || selectedShip || 'fighter',
+    alive: alive || (gameState !== 'PLAYING' && gameState !== 'GAMEOVER')
+  };
+}
+function mpUpdatePlayerListUI() {
+  const list = document.getElementById('mpPlayerList');
+  if (!list) return;
+  list.innerHTML = '';
+  const ids = Object.keys(mpPlayers);
+  ids.forEach(id => {
+    const p = mpPlayers[id];
+    const li = document.createElement('li');
+    const left = document.createElement('span');
+    left.innerHTML = (id === mpPlayerId ? '<span class="you">YOU · </span>' : '') + (p.name || id.slice(0, 6));
+    const right = document.createElement('span');
+    right.className = 'mp-badge';
+    if (id === mpPlayerId && mpIsHost) right.textContent = 'HOST · READY';
+    else if (id === mpPlayerId) right.textContent = 'YOU · READY';
+    else right.textContent = p.alive === false ? 'OUT' : 'READY';
+    li.append(left, right);
+    list.appendChild(li);
+  });
+  document.getElementById('mpRoomStatus').textContent = ids.length + ' / 5 players · ' + (mpIsHost ? 'You are the host' : 'Waiting for host to start');
+  const startBtn = document.getElementById('mpStartBtn');
+  if (startBtn) startBtn.style.display = mpIsHost && ids.length >= 1 ? '' : 'none';
+}
+function mpBroadcast(msg) {
+  const data = typeof msg === 'string' ? msg : JSON.stringify(msg);
+  if (mpIsHost) {
+    Object.values(mpClientConns).forEach(conn => {
+      if (conn && conn.open) try { conn.send(data); } catch (e) {}
+    });
+  } else if (mpHostConn && mpHostConn.open) {
+    try { mpHostConn.send(data); } catch (e) {}
+  }
+}
+function mpHandleMessage(raw, fromPeerId) {
+  let msg;
+  try { msg = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { return; }
+  if (!msg || !msg.type) return;
+  if (msg.type === 'hello') {
+    if (!mpIsHost) return;
+    if (Object.keys(mpPlayers).length >= 5) {
+      const conn = mpClientConns[fromPeerId];
+      if (conn) try { conn.send(JSON.stringify({ type: 'full' })); } catch (e) {}
+      return;
+    }
+    mpPlayers[msg.player.id] = msg.player;
+    mpUpdatePlayerListUI();
+    // Send full roster back to everyone
+    mpBroadcast({ type: 'roster', players: mpPlayers, status: mpRoomStatus });
+  } else if (msg.type === 'roster') {
+    mpPlayers = msg.players || {};
+    mpRoomStatus = msg.status || mpRoomStatus;
+    mpUpdatePlayerListUI();
+    if (mpRoomStatus === 'playing' && gameState !== 'PLAYING' && gameState !== 'GAMEOVER') {
+      startGame();
+      document.getElementById('multiplayerModal').classList.remove('open');
+    }
+  } else if (msg.type === 'state') {
+    if (msg.player && msg.player.id && msg.player.id !== mpPlayerId) {
+      mpPlayers[msg.player.id] = Object.assign({}, mpPlayers[msg.player.id] || {}, msg.player);
+    }
+    // Host relays state to other clients
+    if (mpIsHost && fromPeerId) {
+      Object.keys(mpClientConns).forEach(pid => {
+        if (pid === fromPeerId) return;
+        const conn = mpClientConns[pid];
+        if (conn && conn.open) try { conn.send(JSON.stringify(msg)); } catch (e) {}
+      });
+    }
+  } else if (msg.type === 'start') {
+    mpRoomStatus = 'playing';
+    if (gameState !== 'PLAYING') {
+      startGame();
+      document.getElementById('multiplayerModal').classList.remove('open');
+      document.getElementById('status').textContent = 'Co-op mission started! Each pilot has their own ship & upgrades.';
+    }
+  } else if (msg.type === 'death') {
+    if (msg.playerId) {
+      if (!mpPlayers[msg.playerId]) mpPlayers[msg.playerId] = {};
+      mpPlayers[msg.playerId].alive = false;
+      mpPlayers[msg.playerId].lives = 0;
+      mpPlayers[msg.playerId].score = msg.score || 0;
+    }
+    if (mpIsHost) {
+      mpBroadcast(msg);
+      mpCheckAllDeadLocal();
+    }
+  } else if (msg.type === 'allDead') {
+    mpHandleAllDead(msg.total || 0);
+  } else if (msg.type === 'full') {
+    document.getElementById('mpLobbyStatus').textContent = 'Room is full (max 5 players).';
+    mpLeaveRoom();
+  } else if (msg.type === 'ping') {
+    // ignore
+  }
+}
+function mpWireConnection(conn, isIncoming) {
+  conn.on('data', data => mpHandleMessage(data, conn.peer));
+  conn.on('close', () => {
+    if (mpIsHost) {
+      delete mpClientConns[conn.peer];
+      // Mark any players that were only on this connection — we track by player id in hello
+      mpUpdatePlayerListUI();
+    } else {
+      document.getElementById('status').textContent = 'Disconnected from host.';
+    }
+  });
+  conn.on('error', () => {});
+  if (mpIsHost) {
+    mpClientConns[conn.peer] = conn;
+  } else {
+    mpHostConn = conn;
+  }
+}
+function mpStartSync() {
+  mpStopSync();
+  mpSyncTimer = setInterval(() => {
+    if (!mpActive) return;
+    const snap = mpLocalSnapshot();
+    mpPlayers[mpPlayerId] = Object.assign({}, mpPlayers[mpPlayerId] || {}, snap);
+    mpBroadcast({ type: 'state', player: snap });
+  }, 350);
+}
+function mpStopSync() {
+  if (mpSyncTimer) { clearInterval(mpSyncTimer); mpSyncTimer = null; }
+}
+function mpDestroyPeer() {
+  mpStopSync();
+  try {
+    Object.values(mpClientConns).forEach(c => { try { c.close(); } catch (e) {} });
+  } catch (e) {}
+  mpClientConns = {};
+  if (mpHostConn) { try { mpHostConn.close(); } catch (e) {} mpHostConn = null; }
+  if (mpPeer) { try { mpPeer.destroy(); } catch (e) {} mpPeer = null; }
+}
+function mpReportDeath(score) {
+  mpMyReportedScore = Math.floor(score || 0);
+  if (mpPlayers[mpPlayerId]) {
+    mpPlayers[mpPlayerId].alive = false;
+    mpPlayers[mpPlayerId].lives = 0;
+    mpPlayers[mpPlayerId].score = mpMyReportedScore;
+  }
+  mpBroadcast({ type: 'death', playerId: mpPlayerId, score: mpMyReportedScore });
+  if (mpIsHost) mpCheckAllDeadLocal();
+  else {
+    // Joiner also checks in case host is already dead and only one left reporting
+    setTimeout(mpCheckAllDeadLocal, 500);
+  }
+}
+function mpCheckAllDeadLocal() {
+  const ids = Object.keys(mpPlayers);
+  if (!ids.length) return;
+  const allDead = ids.every(id => mpPlayers[id].alive === false || (mpPlayers[id].lives || 0) <= 0);
+  if (!allDead) return;
+  let total = 0;
+  ids.forEach(id => { total += Math.max(0, mpPlayers[id].score || 0); });
+  mpRoomStatus = 'finished';
+  if (mpIsHost) mpBroadcast({ type: 'allDead', total });
+  mpHandleAllDead(total);
+}
+function mpHandleAllDead(total) {
+  if (mpCombinedPending) return;
+  mpCombinedPending = true;
+  mpCombinedScore = Math.max(0, Math.floor(total || 0));
+  pendingFinalScore = mpCombinedScore;
+  if (gameState === 'PLAYING') {
+    gameState = 'GAMEOVER';
+    paused = true;
+  }
+  setTimeout(() => mpShowCombinedGameOver(), 600);
+}
+function mpShowCombinedGameOver() {
+  document.getElementById('status').textContent = 'Co-op mission complete — combined score: ' + mpCombinedScore.toLocaleString();
+  document.getElementById('finalScoreText').textContent = 'Combined squad score: ' + mpCombinedScore.toLocaleString() + '. Each player enters 3 initials (shown as AAA & BBB & …).';
+  let multiRow = document.getElementById('multiInitialsRow');
+  if (!multiRow) {
+    multiRow = document.createElement('div');
+    multiRow.id = 'multiInitialsRow';
+    multiRow.className = 'multi-initials-row';
+    const form = document.getElementById('scoreForm');
+    form.insertBefore(multiRow, form.querySelector('button[type="submit"]'));
+  }
+  multiRow.innerHTML = '';
+  multiRow.style.display = 'flex';
+  const count = Math.max(1, Math.min(5, Object.keys(mpPlayers).length || 1));
+  for (let i = 0; i < count; i++) {
+    const inp = document.createElement('input');
+    inp.maxLength = 3; inp.minLength = 3; inp.pattern = '[A-Za-z]{3}';
+    inp.placeholder = '___'; inp.className = 'mp-init-input';
+    inp.required = true;
+    inp.setAttribute('aria-label', 'Player ' + (i + 1) + ' initials');
+    multiRow.appendChild(inp);
+  }
+  const singleLabel = document.querySelector('#scoreForm label[for="playerInitials"]');
+  if (singleLabel) singleLabel.style.display = 'none';
+  document.getElementById('playerInitials').style.display = 'none';
+  document.getElementById('playerInitials').required = false;
+  document.getElementById('playerInitials').value = 'AAA';
+  document.getElementById('scoreForm').style.display = '';
+  renderLocalLeaderboard();
+  document.getElementById('leaderboardModal').classList.add('open');
+  const first = multiRow.querySelector('input');
+  if (first) first.focus();
+}
+function mpHostRoom() {
+  if (typeof Peer === 'undefined') {
+    document.getElementById('mpLobbyStatus').textContent = 'PeerJS failed to load. Check your internet connection and try again.';
+    return;
+  }
+  document.getElementById('mpLobbyStatus').textContent = 'Creating room…';
+  mpDestroyPeer();
+  mpPlayerId = mpMakePlayerId();
+  mpRoomCode = generateRoomCode();
+  mpIsHost = true;
+  mpActive = true;
+  mpCombinedPending = false;
+  mpRoomStatus = 'lobby';
+  mpPlayers = {};
+  const peerId = mpPeerIdFromCode(mpRoomCode);
+  mpPeer = new Peer(peerId, { debug: 0 });
+  mpPeer.on('open', () => {
+    mpPlayers[mpPlayerId] = {
+      id: mpPlayerId, name: 'HOST', score: 0, lives: 3, x: 300, y: 530,
+      ship: selectedShip || 'fighter', alive: true
+    };
+    document.getElementById('mpLobbyView').style.display = 'none';
+    document.getElementById('mpRoomView').style.display = '';
+    document.getElementById('mpRoomCodeDisplay').textContent = formatRoomCode(mpRoomCode);
+    document.getElementById('mpRoomHint').textContent = 'Share this code with friends (format XXX XXX). Max 5 players. Keep this tab open.';
+    mpUpdatePlayerListUI();
+    mpStartSync();
+    document.getElementById('mpLobbyStatus').textContent = '';
+    document.getElementById('status').textContent = 'Hosting room ' + formatRoomCode(mpRoomCode) + ' — waiting for players.';
+  });
+  mpPeer.on('connection', conn => {
+    conn.on('open', () => {
+      mpWireConnection(conn, true);
+      // Send current roster immediately
+      try { conn.send(JSON.stringify({ type: 'roster', players: mpPlayers, status: mpRoomStatus })); } catch (e) {}
+    });
+  });
+  mpPeer.on('error', err => {
+    const msg = (err && err.type) ? err.type : 'unknown';
+    if (msg === 'unavailable-id') {
+      // Code taken — try a new one
+      document.getElementById('mpLobbyStatus').textContent = 'Code busy, retrying…';
+      mpDestroyPeer();
+      setTimeout(mpHostRoom, 200);
+      return;
+    }
+    document.getElementById('mpLobbyStatus').textContent = 'Could not create room (' + msg + '). Try again.';
+    mpActive = false;
+    mpDestroyPeer();
+  });
+}
+function mpJoinRoom() {
+  if (typeof Peer === 'undefined') {
+    document.getElementById('mpLobbyStatus').textContent = 'PeerJS failed to load. Check your internet connection and try again.';
+    return;
+  }
+  const code = parseRoomCode(document.getElementById('mpJoinCode').value);
+  if (code.length !== 6) {
+    document.getElementById('mpLobbyStatus').textContent = 'Enter a full 6-digit code (e.g. 123 456).';
+    return;
+  }
+  document.getElementById('mpLobbyStatus').textContent = 'Connecting to room…';
+  mpDestroyPeer();
+  mpPlayerId = mpMakePlayerId();
+  mpRoomCode = code;
+  mpIsHost = false;
+  mpActive = true;
+  mpCombinedPending = false;
+  mpRoomStatus = 'lobby';
+  mpPlayers = {};
+  mpPeer = new Peer(undefined, { debug: 0 });
+  mpPeer.on('open', () => {
+    const hostId = mpPeerIdFromCode(code);
+    const conn = mpPeer.connect(hostId, { reliable: true });
+    const timeout = setTimeout(() => {
+      if (!mpHostConn || !mpHostConn.open) {
+        document.getElementById('mpLobbyStatus').textContent = 'Could not find that room. Check the code and that the host is still in the lobby.';
+        mpLeaveRoom();
+      }
+    }, 8000);
+    conn.on('open', () => {
+      clearTimeout(timeout);
+      mpWireConnection(conn, false);
+      const me = {
+        id: mpPlayerId, name: 'PLT', score: 0, lives: 3, x: 280, y: 530,
+        ship: selectedShip || 'fighter', alive: true
+      };
+      mpPlayers[mpPlayerId] = me;
+      try { conn.send(JSON.stringify({ type: 'hello', player: me })); } catch (e) {}
+      document.getElementById('mpLobbyView').style.display = 'none';
+      document.getElementById('mpRoomView').style.display = '';
+      document.getElementById('mpRoomCodeDisplay').textContent = formatRoomCode(code);
+      document.getElementById('mpRoomHint').textContent = 'Joined! Waiting for the host to start the mission.';
+      mpUpdatePlayerListUI();
+      mpStartSync();
+      document.getElementById('mpLobbyStatus').textContent = '';
+      document.getElementById('status').textContent = 'Joined room ' + formatRoomCode(code) + ' — waiting for host.';
+    });
+    conn.on('error', () => {
+      clearTimeout(timeout);
+      document.getElementById('mpLobbyStatus').textContent = 'Connection failed. Check the code.';
+      mpLeaveRoom();
+    });
+  });
+  mpPeer.on('error', err => {
+    const msg = (err && err.type) ? err.type : 'error';
+    document.getElementById('mpLobbyStatus').textContent = 'Could not join (' + msg + '). Try again.';
+    mpActive = false;
+    mpDestroyPeer();
+  });
+}
+function mpStartMission() {
+  if (!mpIsHost || !mpRoomCode) return;
+  mpRoomStatus = 'playing';
+  mpBroadcast({ type: 'start' });
+  startGame();
+  document.getElementById('multiplayerModal').classList.remove('open');
+  document.getElementById('status').textContent = 'Co-op mission started! Each pilot has their own ship & upgrades.';
+}
+function mpLeaveRoom() {
+  mpDestroyPeer();
+  mpActive = false;
+  mpIsHost = false;
+  mpRoomCode = '';
+  mpPlayers = {};
+  mpCombinedPending = false;
+  mpRoomStatus = 'lobby';
+  document.getElementById('mpRoomView').style.display = 'none';
+  document.getElementById('mpLobbyView').style.display = '';
+  document.getElementById('mpLobbyStatus').textContent = '';
+  document.getElementById('status').textContent = 'Left multiplayer room.';
+}
+function openMultiplayerModal() {
+  document.getElementById('multiplayerModal').classList.add('open');
+  if (!mpActive) {
+    document.getElementById('mpLobbyView').style.display = '';
+    document.getElementById('mpRoomView').style.display = 'none';
+  }
+}
+document.getElementById('hostMpBtn').addEventListener('click', openMultiplayerModal);
+document.getElementById('joinMpBtn').addEventListener('click', openMultiplayerModal);
+document.getElementById('mpCloseBtn').addEventListener('click', () => document.getElementById('multiplayerModal').classList.remove('open'));
+document.getElementById('mpHostBtn').addEventListener('click', () => mpHostRoom());
+document.getElementById('mpJoinBtn').addEventListener('click', () => mpJoinRoom());
+document.getElementById('mpStartBtn').addEventListener('click', () => mpStartMission());
+document.getElementById('mpLeaveBtn').addEventListener('click', () => { mpLeaveRoom(); document.getElementById('multiplayerModal').classList.remove('open'); });
+document.getElementById('mpJoinCode').addEventListener('input', (e) => {
+  const raw = parseRoomCode(e.target.value);
+  e.target.value = formatRoomCode(raw);
+});
+
+// Patch score form submit for multiplayer multi-initials
+(function patchScoreFormForMp() {
+  const form = document.getElementById('scoreForm');
+  form.addEventListener('submit', function mpScoreSubmit(e) {
+    if (!mpCombinedPending) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const inputs = Array.from(document.querySelectorAll('#multiInitialsRow input'));
+    const initialsList = inputs.map(inp => inp.value.trim().toUpperCase()).filter(v => /^[A-Z]{3}$/.test(v));
+    if (initialsList.length < inputs.length) {
+      document.getElementById('finalScoreText').textContent = 'Please enter 3 letters for every pilot.';
+      return;
+    }
+    const combinedInitials = initialsList.join(' & ');
+    saveLocalScore('galaga', combinedInitials.slice(0, 24), mpCombinedScore);
+    document.getElementById('leaderboardList').innerHTML = '<li>Saving squad score…</li>';
+    submitOnlineScore(combinedInitials.slice(0, 32), mpCombinedScore).then(() => renderLocalLeaderboard());
+    document.getElementById('finalScoreText').textContent = 'Squad score saved: ' + mpCombinedScore.toLocaleString() + ' (' + combinedInitials + ').';
+    document.getElementById('scoreForm').style.display = 'none';
+    mpCombinedPending = false;
+  }, true);
+})();
 async function submitOnlineScore(initials, score){
   if(!onlineEnabled()) return false;
   try{
@@ -449,7 +927,7 @@ function scheduleNextWave(delay = 0) {
   }, delay);
 }
 function spawnGalagaEnemies() { galagaState.enemies = []; galagaState.boss = null; galagaState.bossSpawned = false; if (galagaState.wave % 5 === 0) { // Boss Fight Wave
- galagaState.bossSpawned = true; const bossIndex = (Math.floor(galagaState.wave / 5) - 1) % 17; const bossTypes = [{type:'destroyer',name:'CRIMSON DESTROYER',color:'#ff0055',hp:1,vx:2.0},{type:'leviathan',name:'VOID LEVIATHAN',color:'#4c8dff',hp:1.45,vx:2.8},{type:'queen',name:'NOVA QUEEN',color:'#c84dff',hp:1.8,vx:1.6},{type:'titan',name:'IRON TITAN',color:'#ff9d42',hp:2.2,vx:1.3},{type:'specter',name:'PHANTOM SPECTER',color:'#70f5ff',hp:2.5,vx:3.2},{type:'hydra',name:'STAR HYDRA',color:'#8bff66',hp:3,vx:1.8},{type:'chrono',name:'CHRONO DEVOURER',color:'#b88cff',hp:2.6,vx:2.2},{type:'bomber',name:'ASTEROID BOMBER',color:'#ff6d35',hp:2.8,vx:1.5},{type:'mirror',name:'MIRROR EMPRESS',color:'#fff18a',hp:3.2,vx:2.4},{type:'laser',name:'PRISM LASER WYRM',color:'#45eaff',hp:3.4,vx:1.9},{type:'rocket',name:'INFERNO ROCKETEER',color:'#ff7838',hp:3.6,vx:2.6},{type:'guardian',name:'AEGIS OVERLORD',color:'#76ffc4',hp:4.0,vx:1.4},{type:'eclipse',name:'ECLIPSE BEHEMOTH',color:'#ff3df2',hp:4.5,vx:1.7},{type:'stormcaller',name:'TEMPEST STORMCALLER',color:'#65e7ff',hp:3.8,vx:2.1},{type:'swarm',name:'BROODMOTHER PRIME',color:'#a7ff4d',hp:4.1,vx:1.5},{type:'prism',name:'PRISMATIC ANNIHILATOR',color:'#ff72df',hp:4.5,vx:2.5},{type:'singularity',name:'SINGULARITY DEVOURER',color:'#a47aff',hp:5.0,vx:1.4}]; const design = bossTypes[bossIndex % bossTypes.length]; const goldenBoss=Math.random()<1/50; const bossHp = Math.round((100 + galagaState.wave * 42 + galagaState.wave*galagaState.wave*1.5) * design.hp * (goldenBoss?7:1)); galagaState.boss = { x: canvas.width / 2 - 44, y: 60, w: 88, h: 66, hp: bossHp, maxHp: bossHp, vx: design.vx, phase: 1, attackTimer: 0, type: design.type, name: (goldenBoss?'GOLDEN ':'')+design.name, color: goldenBoss?'#ffd84a':design.color, golden:goldenBoss, difficultyScale:goldenBoss?7:1, captured:false, abilityTick:0, abilityCooldown:180, dashTimer:0, invisibleUntil:0, summonTick:0 }; playSfx('bossIntro'); return; } const rows = Math.min(3 + Math.floor(galagaState.wave / 2), 7); const cols = 8; for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) { let type = 'green'; let hp = 1; let points = 100; const advanced = galagaState.wave >= 6; if (advanced && r===0 && c%5===0) { type='shield'; hp=7+Math.floor(galagaState.wave/3); points=650; } else if (advanced && r===1 && c%5===1) { type='splitter'; hp=3+Math.floor(galagaState.wave/4); points=500; } else if (advanced && r===0 && c%5===2) { type='sniper'; hp=2+Math.floor(galagaState.wave/5); points=550; } else if (advanced && r===1 && c%5===3) { type='leech'; hp=5+Math.floor(galagaState.wave/4); points=600; } else if (advanced && r===0 && c%5===4) { type='bomber'; hp=4+Math.floor(galagaState.wave/4); points=575; } else if(galagaState.wave>=4 && r===0 && c%3===0){type='purple';hp=4+Math.floor(galagaState.wave/4);points=450;} else if(galagaState.wave>=3 && r===1 && c%3===1){type='red';hp=2+Math.floor(galagaState.wave/5);points=350;} else if (r === 0 && galagaState.wave >= 2) { type = 'orange'; hp = 3; points = 300; } else if (r <= 1 && galagaState.wave >= 1) { type = 'yellow'; hp = 2; points = 200; } const scaling = 1 + 0.05 * Math.min(galagaState.wave - 1, 34) + 0.20 * Math.max(0, galagaState.wave - 35); const isGolden = Math.random() < 1/50; const scaledHp = Math.ceil(hp * scaling * (isGolden ? 7 : 1)); galagaState.enemies.push({ x: 60 + c * 60, y: 50 + r * 45, baseX: 60 + c * 60, baseY: 50 + r * 45, w: 32, h: 28, type: type, golden: isGolden, hp: scaledHp, maxHp: scaledHp, points: points * (isGolden ? 7 : 1), animTick: Math.random() * 10, specialTimer: Math.max(12,Math.floor((60+Math.random()*120) / (1 + (galagaState.wave-1)*0.012) / (isGolden ? 1.8 : 1))), shieldUntil:0, difficultyScale: (1 + Math.min(0.65,(galagaState.wave-1)*0.018)) * (isGolden ? 2 : 1), goldenSpeed: isGolden ? 1.65 : 1 }); } } } function buyGalagaUpgrade(type) { if (type === 'bullet' && galagaState.coinsCollected >= 1) { galagaState.coinsCollected -= 1; saveCoinWallet(); galagaState.player.extraBullets += 1; playSfx('powerup'); } else if (type === 'speed' && galagaState.coinsCollected >= 2) { galagaState.coinsCollected -= 2; saveCoinWallet(); galagaState.player.extraSpeed += 1; playSfx('powerup'); } else if (type === 'life' && galagaState.coinsCollected >= 3) { galagaState.coinsCollected -= 3; saveCoinWallet(); galagaState.lives += 1; playSfx('powerup'); } else if (type === 'damage' && galagaState.coinsCollected >= 3) { galagaState.coinsCollected -= 3; saveCoinWallet(); galagaState.player.baseDamage += 1; playSfx('powerup'); } } function activateNovaArtillery(){
+ galagaState.bossSpawned = true; const bossIndex = (Math.floor(galagaState.wave / 5) - 1) % 17; const bossTypes = [{type:'destroyer',name:'CRIMSON DESTROYER',color:'#ff0055',hp:1,vx:2.0},{type:'leviathan',name:'VOID LEVIATHAN',color:'#4c8dff',hp:1.45,vx:2.8},{type:'queen',name:'NOVA QUEEN',color:'#c84dff',hp:1.8,vx:1.6},{type:'titan',name:'IRON TITAN',color:'#ff9d42',hp:2.2,vx:1.3},{type:'specter',name:'PHANTOM SPECTER',color:'#70f5ff',hp:2.5,vx:3.2},{type:'hydra',name:'STAR HYDRA',color:'#8bff66',hp:3,vx:1.8},{type:'chrono',name:'CHRONO DEVOURER',color:'#b88cff',hp:2.6,vx:2.2},{type:'bomber',name:'ASTEROID BOMBER',color:'#ff6d35',hp:2.8,vx:1.5},{type:'mirror',name:'MIRROR EMPRESS',color:'#fff18a',hp:3.2,vx:2.4},{type:'laser',name:'PRISM LASER WYRM',color:'#45eaff',hp:3.4,vx:1.9},{type:'rocket',name:'INFERNO ROCKETEER',color:'#ff7838',hp:3.6,vx:2.6},{type:'guardian',name:'AEGIS OVERLORD',color:'#76ffc4',hp:4.0,vx:1.4},{type:'eclipse',name:'ECLIPSE BEHEMOTH',color:'#ff3df2',hp:4.5,vx:1.7},{type:'stormcaller',name:'TEMPEST STORMCALLER',color:'#65e7ff',hp:3.8,vx:2.1},{type:'swarm',name:'BROODMOTHER PRIME',color:'#a7ff4d',hp:4.1,vx:1.5},{type:'prism',name:'PRISMATIC ANNIHILATOR',color:'#ff72df',hp:4.5,vx:2.5},{type:'singularity',name:'SINGULARITY DEVOURER',color:'#a47aff',hp:5.0,vx:1.4}]; const design = bossTypes[bossIndex % bossTypes.length]; const goldenBoss=Math.random()<1/50; const bossHp = Math.round((100 + galagaState.wave * 42 + galagaState.wave*galagaState.wave*1.5) * design.hp * (goldenBoss?7:1) * mpEnemyHpScale()); galagaState.boss = { x: canvas.width / 2 - 44, y: 60, w: 88, h: 66, hp: bossHp, maxHp: bossHp, vx: design.vx, phase: 1, attackTimer: 0, type: design.type, name: (goldenBoss?'GOLDEN ':'')+design.name, color: goldenBoss?'#ffd84a':design.color, golden:goldenBoss, difficultyScale:goldenBoss?7:1, captured:false, abilityTick:0, abilityCooldown:180, dashTimer:0, invisibleUntil:0, summonTick:0 }; playSfx('bossIntro'); return; } const rows = Math.min(3 + Math.floor(galagaState.wave / 2), 7); const cols = 8; for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) { let type = 'green'; let hp = 1; let points = 100; const advanced = galagaState.wave >= 6; if (advanced && r===0 && c%5===0) { type='shield'; hp=7+Math.floor(galagaState.wave/3); points=650; } else if (advanced && r===1 && c%5===1) { type='splitter'; hp=3+Math.floor(galagaState.wave/4); points=500; } else if (advanced && r===0 && c%5===2) { type='sniper'; hp=2+Math.floor(galagaState.wave/5); points=550; } else if (advanced && r===1 && c%5===3) { type='leech'; hp=5+Math.floor(galagaState.wave/4); points=600; } else if (advanced && r===0 && c%5===4) { type='bomber'; hp=4+Math.floor(galagaState.wave/4); points=575; } else if(galagaState.wave>=4 && r===0 && c%3===0){type='purple';hp=4+Math.floor(galagaState.wave/4);points=450;} else if(galagaState.wave>=3 && r===1 && c%3===1){type='red';hp=2+Math.floor(galagaState.wave/5);points=350;} else if (r === 0 && galagaState.wave >= 2) { type = 'orange'; hp = 3; points = 300; } else if (r <= 1 && galagaState.wave >= 1) { type = 'yellow'; hp = 2; points = 200; } const scaling = 1 + 0.20 * Math.min(galagaState.wave - 1, 34) + 1.50 * Math.max(0, galagaState.wave - 35); const isGolden = Math.random() < 1/50; const scaledHp = Math.ceil(hp * scaling * (isGolden ? 7 : 1) * mpEnemyHpScale()); galagaState.enemies.push({ x: 60 + c * 60, y: 50 + r * 45, baseX: 60 + c * 60, baseY: 50 + r * 45, w: 32, h: 28, type: type, golden: isGolden, hp: scaledHp, maxHp: scaledHp, points: points * (isGolden ? 7 : 1), animTick: Math.random() * 10, specialTimer: Math.max(12,Math.floor((60+Math.random()*120) / (1 + (galagaState.wave-1)*0.012) / (isGolden ? 1.8 : 1))), shieldUntil:0, difficultyScale: (1 + Math.min(0.65,(galagaState.wave-1)*0.018)) * (isGolden ? 2 : 1), goldenSpeed: isGolden ? 1.65 : 1 }); } } } function buyGalagaUpgrade(type) { if (type === 'bullet' && galagaState.coinsCollected >= 1) { galagaState.coinsCollected -= 1; saveCoinWallet(); galagaState.player.extraBullets += 1; playSfx('powerup'); } else if (type === 'speed' && galagaState.coinsCollected >= 2) { galagaState.coinsCollected -= 2; saveCoinWallet(); galagaState.player.extraSpeed += 1; playSfx('powerup'); } else if (type === 'life' && galagaState.coinsCollected >= 3) { galagaState.coinsCollected -= 3; saveCoinWallet(); galagaState.lives += 1; playSfx('powerup'); } else if (type === 'damage' && galagaState.coinsCollected >= 3) { galagaState.coinsCollected -= 3; saveCoinWallet(); galagaState.player.baseDamage += 1; playSfx('powerup'); } } function activateNovaArtillery(){
  if(galagaState.selectedShip!=='nova'||galagaState.novaCooldown>0)return;
  galagaState.novaCooldown=300;
  const sx=galagaState.player.x+galagaState.player.w/2, sy=galagaState.player.y;
@@ -888,8 +1366,37 @@ function maybeDropBossPowerup(boss) { if(boss&&boss.golden&&!boss.goldenAscensio
  ctx.fillStyle = '#222233'; ctx.fillRect(100, 15, canvas.width - 200, 14); ctx.fillStyle = '#ff0055'; ctx.fillRect(100, 15, ((b.hp / b.maxHp) * (canvas.width - 200)), 14); ctx.strokeStyle = '#ffffff'; ctx.strokeRect(100, 15, canvas.width - 200, 14); ctx.fillStyle = '#ffffff'; ctx.font = '8px "Press Start 2P"'; ctx.fillText(b.name || 'BOSS ALIEN', canvas.width / 2 - 60, 26); } // Draw Powerup Drops
  galagaState.drops.forEach(d => { const spin=performance.now()*0.0018; const styles={multishot:{c:'#ffca55',icon:'✦'},rapidfire:{c:'#ff5a68',icon:'»'},shield:{c:'#42eaff',icon:'⬡'},slowmo:{c:'#b78aff',icon:'◷'},homing:{c:'#7dff9b',icon:'⌖'},megalaser:{c:'#ff66e8',icon:'⚡'},twinlasers:{c:'#6ee7ff',icon:'🚀'},harpoon:{c:'#bd7bff',icon:'◉'},starfall:{c:'#ff9d42',icon:'☄'},drones:{c:'#62eaff',icon:'✣'}}; const st=styles[d.type]||{c:'#ffffff',icon:'+'}; ctx.save();ctx.translate(d.x,d.y);ctx.rotate(spin);ctx.fillStyle='#07101f';ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();ctx.strokeStyle=st.c;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.stroke();ctx.fillStyle=st.c;ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(st.icon,0,0.5);ctx.restore(); }); // Draw Coin Drops
  galagaState.coins.forEach(c => { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.fillStyle = '#ffcc00'; ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#000000'; ctx.font = '7px "Press Start 2P"'; ctx.fillText('$', -3, 3); ctx.restore(); }); // Draw Explosions / Particles
- galagaState.bossDebris.forEach(d=>{ctx.save();ctx.globalAlpha=Math.min(1,d.life/24);ctx.translate(d.x,d.y);ctx.rotate(d.rot);ctx.fillStyle=d.color;ctx.shadowColor=d.color;ctx.shadowBlur=8;ctx.fillRect(-d.w/2,-d.h/2,d.w,d.h);ctx.strokeStyle='#fff2c4';ctx.lineWidth=1;ctx.strokeRect(-d.w/2,-d.h/2,d.w,d.h);ctx.restore();}); galagaState.particles.forEach(pt => { ctx.fillStyle = pt.color; ctx.globalAlpha = pt.alpha; ctx.fillRect(pt.x, pt.y, 3, 3); ctx.globalAlpha = 1.0; }); // Top HUD
- ctx.fillStyle = '#00f3ff'; ctx.font = '10px "Press Start 2P"'; ctx.fillText(`SCORE: ${galagaState.score}`, 15, 25); ctx.fillText(`WAVE: ${galagaState.wave}`, 15, 42); ctx.fillText(`LIVES: ${galagaState.lives}`, canvas.width - 120, 25); ctx.fillStyle = '#ffcc00'; ctx.fillText(`COINS: ${galagaState.coinsCollected}`, canvas.width - 120, 42); if(galagaState.selectedShip==='laser'){ctx.fillStyle='#ff9b9b';ctx.font='bold 9px system-ui';ctx.fillText(galagaState.shipLaserActive>0?'SOLAR LANCE FIRING!':'SOLAR LANCE · NEXT BEAM '+Math.max(0,60-galagaState.shipLaserTimer)+'f',canvas.width/2,62);} if(galagaState.selectedShip==='guardian'){ctx.fillStyle='#76ffc4';ctx.font='bold 9px system-ui';ctx.fillText(galagaState.guardianCooldown<=0?'AEGIS SHIELD READY':'AEGIS SHIELD '+Math.ceil(galagaState.guardianCooldown/60)+'s',canvas.width/2,62);} if(galagaState.selectedShip==='nova'){ctx.fillStyle='#ffe87a';ctx.font='bold 10px system-ui';ctx.fillText(galagaState.novaCooldown<=0?'NOVA ARTILLERY READY · PRESS Q':'NOVA ARTILLERY '+Math.ceil(galagaState.novaCooldown/60)+'s',canvas.width/2,76);} if(galagaState.selectedShip==='teleporter'){ctx.fillStyle='#d8a8ff';ctx.font='bold 9px system-ui';ctx.fillText(Date.now()<teleportCooldownUntil?'PHASE JUMP '+Math.ceil((teleportCooldownUntil-Date.now())/1000)+'s':'PHASE JUMP READY',canvas.width/2,62);if(Date.now()<galagaState.phasePortalUntil){ctx.fillStyle='#c7a0ff';ctx.font='bold 10px system-ui';ctx.fillText('PORTAL STORM '+Math.ceil((galagaState.phasePortalUntil-Date.now())/1000)+'s',canvas.width/2,80);}} if(galagaState.passives.shield){ctx.fillStyle='#70f5ff';ctx.fillText(galagaState.shieldCooldown<=0?'AUTO SHIELD READY':'AUTO SHIELD '+(galagaState.shieldCooldown/60).toFixed(1)+'s',canvas.width-180,59);} if(Date.now()<galagaState.flameShipUntil){ctx.fillStyle='#ff9b42';ctx.font='bold 11px system-ui';ctx.fillText('🔥 FLAME SHIP '+((galagaState.flameShipUntil-Date.now())/1000).toFixed(1)+'s',canvas.width/2,95);} // Larger, high-contrast active ability timers HUD
+ galagaState.bossDebris.forEach(d=>{ctx.save();ctx.globalAlpha=Math.min(1,d.life/24);ctx.translate(d.x,d.y);ctx.rotate(d.rot);ctx.fillStyle=d.color;ctx.shadowColor=d.color;ctx.shadowBlur=8;ctx.fillRect(-d.w/2,-d.h/2,d.w,d.h);ctx.strokeStyle='#fff2c4';ctx.lineWidth=1;ctx.strokeRect(-d.w/2,-d.h/2,d.w,d.h);ctx.restore();}); galagaState.particles.forEach(pt => { ctx.fillStyle = pt.color; ctx.globalAlpha = pt.alpha; ctx.fillRect(pt.x, pt.y, 3, 3); ctx.globalAlpha = 1.0; });
+ // Remote multiplayer ships (ghost outlines so each pilot keeps their own local stats/upgrades)
+ if (mpActive && mpPlayers) {
+   Object.keys(mpPlayers).forEach(id => {
+     if (id === mpPlayerId) return;
+     const rp = mpPlayers[id];
+     if (!rp || rp.alive === false || rp.lives <= 0) return;
+     const rx = rp.x || 0, ry = rp.y || 0;
+     const colors = {fighter:'#70f5ff',laser:'#ff6868',stormwing:'#45eaff',guardian:'#76ffc4',nova:'#ffe87a',teleporter:'#a987ff',bomber:'#ff9d42'};
+     const col = colors[rp.ship] || '#b8c8e8';
+     ctx.save();
+     ctx.globalAlpha = 0.55;
+     ctx.translate(rx + 14, ry + 14);
+     ctx.strokeStyle = col; ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 10; ctx.lineWidth = 2;
+     ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(10, 10); ctx.lineTo(4, 8); ctx.lineTo(0, 12); ctx.lineTo(-4, 8); ctx.lineTo(-10, 10); ctx.closePath();
+     ctx.stroke();
+     ctx.globalAlpha = 0.85;
+     ctx.font = 'bold 9px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#eaf4ff';
+     ctx.fillText((rp.name || 'PLT').slice(0, 6), 0, 22);
+     ctx.restore();
+   });
+ }
+ // Top HUD
+ ctx.fillStyle = '#00f3ff'; ctx.font = '10px "Press Start 2P"'; ctx.fillText(`SCORE: ${galagaState.score}`, 15, 25); ctx.fillText(`WAVE: ${galagaState.wave}`, 15, 42); ctx.fillText(`LIVES: ${galagaState.lives}`, canvas.width - 120, 25); ctx.fillStyle = '#ffcc00'; ctx.fillText(`COINS: ${galagaState.coinsCollected}`, canvas.width - 120, 42);
+ if (mpActive) {
+   ctx.fillStyle = '#a8e0ff'; ctx.font = '9px system-ui';
+   const aliveCount = Object.values(mpPlayers || {}).filter(p => p && p.alive !== false && p.lives > 0).length;
+   const squadSize = Math.max(1, Object.keys(mpPlayers || {}).length || 1);
+   const hpPct = Math.round(mpEnemyHpScale() * 100);
+   ctx.fillText('CO-OP · ' + aliveCount + '/' + squadSize + ' alive · enemy HP ' + hpPct + '% · room ' + formatRoomCode(mpRoomCode), canvas.width / 2, 12);
+ } if(galagaState.selectedShip==='laser'){ctx.fillStyle='#ff9b9b';ctx.font='bold 9px system-ui';ctx.fillText(galagaState.shipLaserActive>0?'SOLAR LANCE FIRING!':'SOLAR LANCE · NEXT BEAM '+Math.max(0,60-galagaState.shipLaserTimer)+'f',canvas.width/2,62);} if(galagaState.selectedShip==='guardian'){ctx.fillStyle='#76ffc4';ctx.font='bold 9px system-ui';ctx.fillText(galagaState.guardianCooldown<=0?'AEGIS SHIELD READY':'AEGIS SHIELD '+Math.ceil(galagaState.guardianCooldown/60)+'s',canvas.width/2,62);} if(galagaState.selectedShip==='nova'){ctx.fillStyle='#ffe87a';ctx.font='bold 10px system-ui';ctx.fillText(galagaState.novaCooldown<=0?'NOVA ARTILLERY READY · PRESS Q':'NOVA ARTILLERY '+Math.ceil(galagaState.novaCooldown/60)+'s',canvas.width/2,76);} if(galagaState.selectedShip==='teleporter'){ctx.fillStyle='#d8a8ff';ctx.font='bold 9px system-ui';ctx.fillText(Date.now()<teleportCooldownUntil?'PHASE JUMP '+Math.ceil((teleportCooldownUntil-Date.now())/1000)+'s':'PHASE JUMP READY',canvas.width/2,62);if(Date.now()<galagaState.phasePortalUntil){ctx.fillStyle='#c7a0ff';ctx.font='bold 10px system-ui';ctx.fillText('PORTAL STORM '+Math.ceil((galagaState.phasePortalUntil-Date.now())/1000)+'s',canvas.width/2,80);}} if(galagaState.passives.shield){ctx.fillStyle='#70f5ff';ctx.fillText(galagaState.shieldCooldown<=0?'AUTO SHIELD READY':'AUTO SHIELD '+(galagaState.shieldCooldown/60).toFixed(1)+'s',canvas.width-180,59);} if(Date.now()<galagaState.flameShipUntil){ctx.fillStyle='#ff9b42';ctx.font='bold 11px system-ui';ctx.fillText('🔥 FLAME SHIP '+((galagaState.flameShipUntil-Date.now())/1000).toFixed(1)+'s',canvas.width/2,95);} // Larger, high-contrast active ability timers HUD
  const activeAbilities = Object.keys(galagaState.abilities).filter(k => galagaState.abilities[k] > 0);
  if (activeAbilities.length > 0) {
    const cardW = 112, cardH = 40, gap = 7;
@@ -973,9 +1480,15 @@ requestAnimationFrame(frame);
  // PATCHES: newest first. To log a new update, add an entry at the TOP of this list.
  // The 3 newest are shown on their own; anything older is folded into "Earlier updates".
  const PATCHES=[
+  {version:'v20.1',notes:[
+   'Co-op multiplayer: Host generates a 6-digit code (shown as XXX XXX). Up to 5 players can join.',
+   'Each pilot keeps their own ship, Points Shop upgrades, Coin Shop passives and coin wallet — upgrades only affect you.',
+   'Remote squadmates appear as coloured ghost ships. When every pilot is down, scores are added together and the squad enters multi-initials (AAA & BBB & …) for the combined leaderboard entry.',
+   'Enemy and boss HP scale with squad size: +50% HP for each extra pilot (1p = 100%, 2p = 150%, 3p = 200%, up to 5p = 300%).'
+  ]},
   {version:'v20',notes:[
-   'Regular enemies now get tougher every wave: +5% HP per wave up to wave 35.',
-   'From wave 36 onward, enemy HP grows +20% per wave.',
+   'Regular enemies get tougher every wave: +20% HP per wave up to wave 35.',
+   'From wave 36 onward, enemy HP grows +150% per wave.',
    'Patch Notes screen added (press Y).'
   ]}
  ];
