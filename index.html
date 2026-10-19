@@ -326,6 +326,7 @@ let mpCombinedPending = false;
 let mpCombinedScore = 0;
 let mpMyReportedScore = null;
 let mpRoomStatus = 'lobby'; // lobby | playing | finished
+let mpLinkOk = false;
 
 function generateRoomCode() {
   let n = '';
@@ -347,7 +348,7 @@ function mpEnemyHpScale() {
   return 1 + 0.5 * (n - 1);
 }
 function mpPeerIdFromCode(code) {
-  return 'gs' + String(code).replace(/\D/g, '').slice(0, 6);
+  return 'galacta' + String(code).replace(/\D/g, '').slice(0, 6);
 }
 function mpMakePlayerId() {
   return 'p' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -482,6 +483,8 @@ function mpUpdatePlayerListUI() {
 }
 function mpBroadcast(msg) {
   const data = typeof msg === 'string' ? msg : JSON.stringify(msg);
+  // Always mirror on BroadcastChannel so same-browser tabs can join without WebRTC
+  try { mpBCSend(typeof msg === 'string' ? JSON.parse(msg) : msg); } catch (e) { try { mpBCSend(msg); } catch (e2) {} }
   if (mpIsHost) {
     Object.values(mpClientConns).forEach(conn => {
       if (conn && conn.open) try { conn.send(data); } catch (e) {}
@@ -515,8 +518,9 @@ function mpHandleMessageInner(msg, fromPeerId) {
     if (mpRoomStatus === 'playing') {
       const conn = mpClientConns[fromPeerId];
       const send = (payload) => {
-        if (!conn || !conn.open) return;
-        try { conn.send(typeof payload === 'string' ? payload : JSON.stringify(payload)); } catch (e) {}
+        const body = typeof payload === 'string' ? payload : JSON.stringify(payload);
+        if (conn && conn.open) { try { conn.send(body); } catch (e) {} }
+        mpBCSend(typeof payload === 'string' ? JSON.parse(payload) : payload);
       };
       send({ type: 'start' });
       try {
@@ -533,6 +537,19 @@ function mpHandleMessageInner(msg, fromPeerId) {
     mpPlayers = msg.players || {};
     mpRoomStatus = msg.status || mpRoomStatus;
     mpUpdatePlayerListUI();
+    if (!mpIsHost && mpActive) {
+      mpLinkOk = true;
+      // Successfully reached host (WebRTC or same-browser channel)
+      document.getElementById('mpLobbyView').style.display = 'none';
+      document.getElementById('mpRoomView').style.display = '';
+      document.getElementById('mpRoomCodeDisplay').textContent = formatRoomCode(mpRoomCode);
+      document.getElementById('mpRoomHint').textContent = mpRoomStatus === 'playing'
+        ? 'Joined mid-mission — syncing…'
+        : 'Joined lobby! Waiting for the host to start.';
+      mpSetLobbyStatus('Connected (' + Object.keys(mpPlayers).length + '/5).');
+      document.getElementById('status').textContent = 'Joined room ' + formatRoomCode(mpRoomCode);
+      if (!mpSyncTimer) mpStartSync();
+    }
     // Joining a room that is already in progress
     if (mpRoomStatus === 'playing' && gameState !== 'PLAYING' && gameState !== 'GAMEOVER') {
       mpSafeStartGame('roster');
@@ -640,6 +657,7 @@ function mpDestroyPeer() {
   mpClientConns = {};
   if (mpHostConn) { try { mpHostConn.close(); } catch (e) {} mpHostConn = null; }
   if (mpPeer) { try { mpPeer.destroy(); } catch (e) {} mpPeer = null; }
+  mpCloseBroadcast();
 }
 function mpReportDeath(score) {
   mpMyReportedScore = Math.floor(score || 0);
@@ -712,20 +730,61 @@ function mpShowCombinedGameOver() {
 }
 
 function mpPeerOptions() {
+  // Use PeerJS default cloud broker + STUN/TURN so joiners behind NATs can connect
   return {
     debug: 1,
-    host: '0.peerjs.com',
-    port: 443,
-    path: '/',
-    secure: true,
     config: {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:global.stun.twilio.com:3478' }
+        { urls: 'stun:stun.cloudflare.com:3478' },
+        {
+          urls: [
+            'turn:openrelay.metered.ca:80',
+            'turn:openrelay.metered.ca:443',
+            'turn:openrelay.metered.ca:443?transport=tcp'
+          ],
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        }
       ]
     }
   };
+}
+/** Same-browser / same-device backup channel (works when PeerJS WebRTC is blocked). */
+let mpBC = null;
+function mpOpenBroadcast(code) {
+  try {
+    if (mpBC) { try { mpBC.close(); } catch (e) {} mpBC = null; }
+    if (typeof BroadcastChannel === 'undefined') return;
+    mpBC = new BroadcastChannel('galacta-mp-' + String(code).replace(/\D/g, '').slice(0, 6));
+    mpBC.onmessage = (ev) => {
+      const data = ev && ev.data;
+      if (!data) return;
+      // Ignore our own echoes when possible
+      try {
+        const msg = typeof data === 'string' ? JSON.parse(data) : data;
+        if (msg && msg.player && msg.player.id === mpPlayerId) return;
+        if (msg && msg._from === mpPlayerId) return;
+        mpHandleMessage(msg, 'broadcast');
+      } catch (e) {
+        mpHandleMessage(data, 'broadcast');
+      }
+    };
+  } catch (e) { mpBC = null; }
+}
+function mpCloseBroadcast() {
+  if (mpBC) { try { mpBC.close(); } catch (e) {} mpBC = null; }
+}
+function mpBCSend(msg) {
+  if (!mpBC) return;
+  try {
+    const payload = typeof msg === 'string' ? JSON.parse(msg) : Object.assign({}, msg);
+    payload._from = mpPlayerId;
+    mpBC.postMessage(payload);
+  } catch (e) {
+    try { mpBC.postMessage(msg); } catch (e2) {}
+  }
 }
 function mpSetLobbyStatus(msg) {
   const el = document.getElementById('mpLobbyStatus');
@@ -746,6 +805,7 @@ function mpHostRoom() {
   mpRoomStatus = 'lobby';
   mpPlayers = {};
   mpClientConns = {};
+  mpOpenBroadcast(mpRoomCode);
   const peerId = mpPeerIdFromCode(mpRoomCode);
   let opened = false;
   try {
@@ -871,6 +931,8 @@ function mpJoinRoom() {
   mpRoomStatus = 'lobby';
   mpPlayers = {};
   mpHostConn = null;
+  mpLinkOk = false;
+  mpOpenBroadcast(code);
   let opened = false;
   let linked = false;
   try {
@@ -891,6 +953,13 @@ function mpJoinRoom() {
     opened = true;
     clearTimeout(openTimer);
     mpSetLobbyStatus('Looking up room ' + formatRoomCode(code) + '…');
+    // Same-browser path: announce over BroadcastChannel immediately
+    const meEarly = {
+      id: mpPlayerId, name: 'PLT', score: 0, lives: 3, x: 280, y: 530,
+      ship: selectedShip || 'fighter', alive: true
+    };
+    mpPlayers[mpPlayerId] = meEarly;
+    mpBCSend({ type: 'hello', player: meEarly });
     const hostId = mpPeerIdFromCode(code);
     let conn;
     try {
@@ -902,8 +971,8 @@ function mpJoinRoom() {
       return;
     }
     const timeout = setTimeout(() => {
-      if (!linked) {
-        const errMsg = 'Could not connect to room ' + formatRoomCode(code) + '. Check the code, that the host clicked Create Room, and that they kept the tab open.';
+      if (!linked && !mpLinkOk) {
+        const errMsg = 'Could not connect to room ' + formatRoomCode(code) + '. Same Wi‑Fi helps. Host must keep the room open. Try again, or both open the game in Chrome.';
         mpDestroyPeer();
         mpActive = false;
         mpIsHost = false;
@@ -917,6 +986,7 @@ function mpJoinRoom() {
     }, 15000);
     conn.on('open', () => {
       linked = true;
+      mpLinkOk = true;
       clearTimeout(timeout);
       mpWireConnection(conn, false);
       const me = {
