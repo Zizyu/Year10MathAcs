@@ -94,6 +94,7 @@ body.crt-on .gamebox{box-shadow:0 0 0 2px #253f6b,0 0 36px #00d9ff2b,inset 0 0 2
 <button class="item-card" data-ship-buy="nova"><span class="item-art ship-preview nova-preview"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4 39 22 57 31 40 37 35 58 29 42 9 49 22 33 13 20 29 24Z" fill="#ffe87a" stroke="#fff6ce" stroke-width="2"/><path d="M32 13 35 34 32 43 29 34Z" fill="#9d43e8"/></svg></span><span class="item-name">NOVA ARTILLERY SHIP</span><small>🌌 Press Q every 5 seconds to fire tracking energy lasers at every enemy. Deals bonus damage to bosses and blasts them backward.</small><b class="item-price">🪙 90 COINS + 250,000 POINTS</b></button>
 <button class="item-card" data-ship-buy="teleporter"><span class="item-art ship-preview phase-preview"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M24 7 32 20 40 7 46 34 59 47 42 42 37 57 32 48 27 57 22 42 5 47 18 34Z" fill="#a987ff" stroke="#e6d9ff" stroke-width="2"/><circle cx="32" cy="31" r="7" fill="#17102e" stroke="#fff" stroke-width="2"/></svg></span><span class="item-name">PHASE JUMPER SHIP</span><small>🧊 When a bullet hits you, freeze the aliens and click anywhere in the arena to teleport. Aliens unfreeze 0.5 seconds later. Ability recharges every 5 seconds.</small><b class="item-price">🪙 50 COINS + 50,000 POINTS</b></button>
 <button class="item-card" data-ship-buy="bomber"><span class="item-art ship-preview bomber-preview"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5 43 22 59 37 43 39 38 55 32 49 26 55 21 39 5 37 21 22Z" fill="#ff9d42" stroke="#fff0c4" stroke-width="2"/><path d="M23 29 32 19 41 29 37 43 27 43Z" fill="#63321f" stroke="#ffd08a" stroke-width="2"/><circle cx="32" cy="34" r="5" fill="#ffe87a"/><path d="M27 46 24 57M37 46 40 57" stroke="#ff6a35" stroke-width="3" stroke-linecap="round"/></svg></span><span class="item-name">BOMBER COMMAND SHIP</span><small>💣 Press Q every 5 seconds to summon an animated support rocket ship for 6 seconds. It bombs the biggest enemy cluster. While active, your shots become smaller cannon bombs.</small><b class="item-price">🪙 80 COINS + 200,000 POINTS</b></button>
+<button class="item-card" data-ship-buy="spiritbeam"><span class="item-art ship-preview" style="display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 64 64" width="48" height="48" aria-hidden="true"><path d="M32 6 40 22 52 28 40 32 36 50 32 44 28 50 24 32 12 28 24 22Z" fill="#6ee7ff" stroke="#e0fbff" stroke-width="2"/><rect x="29" y="8" width="6" height="28" fill="#b8f4ff" opacity="0.9"/><path d="M20 48h24" stroke="#5cf" stroke-width="3"/></svg></span><span class="item-body"><b>SPIRIT BEAM</b><small>Fires a continuous laser beam that burns through every enemy in its lane (slightly weaker than a normal bullet per hit). Q: 3-second Kamehameha beam + final explosion. Harpoon pickup instantly triggers it.</small><b class="item-price">🪙 95 COINS + 320,000 POINTS</b></span></button>
 </div></section></aside><section class="game-main"><h1 class="title">GALACTA SHOOTER</h1><div class="help">Move: Arrow keys or WASD · Shoot: Space or K · Upgrade: 1 Bullet, 2 Speed, 3 Life, 4 Damage · Rare Harpoon ship: 1% drop chance · Q: Ship ability (special ships) · Press Z for fullscreen · Y: Patch notes · Multiplayer: Host / Join (6-digit code, max 5 pilots — each keeps their own ship & upgrades)</div><div class="gamebox"><canvas id="gameCanvas" width="600" height="650" aria-label="Galacta Shooter game"></canvas></div><div><button id="startBtn">Start / Restart</button><button id="hostMpBtn">🌐 Host Multiplayer</button><button id="joinMpBtn">🔗 Join Multiplayer</button><button id="pauseBtn">Pause</button><button id="shopBtn">Points Shop</button><button id="coinShopBtn" onclick="openCoinShop()">🪙 Coin Shop</button><button id="fullscreenBtn">Fullscreen (Z)</button><button id="soundBtn" aria-pressed="true">🔊 Sound: ON</button><button id="crtBtn" type="button" aria-pressed="false">📺 CRT: OFF</button><button id="patchBtn" type="button">📋 Patch Notes (Y)</button></div><div class="status" id="status">Press Start / Restart to play.</div></section></main>
 
 <div class="patch-modal" id="patchModal" role="dialog" aria-modal="true" aria-labelledby="patchTitle">
@@ -215,6 +216,61 @@ function playSfx(name) {
     if (!audioCtx) audioCtx = new AudioContextClass();
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const now = audioCtx.currentTime;
+    if (name === 'kamehameha') {
+      const dur = 3.0, master = audioCtx.createGain();
+      master.gain.setValueAtTime(.0001, now);
+      master.gain.exponentialRampToValueAtTime(.05, now + .12);      // charge-up swell
+      master.gain.exponentialRampToValueAtTime(.12, now + .35);      // full blast
+      master.gain.setValueAtTime(.12, now + dur - .4);
+      master.gain.exponentialRampToValueAtTime(.0001, now + dur);    // fade out
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(700, now); lp.frequency.exponentialRampToValueAtTime(3000, now + .4);
+      lp.frequency.setValueAtTime(3000, now + dur - .5); lp.frequency.exponentialRampToValueAtTime(400, now + dur);
+      master.connect(lp); lp.connect(audioCtx.destination);
+      const lfo = audioCtx.createOscillator(), lfoGain = audioCtx.createGain();
+      lfo.type = 'sine'; lfo.frequency.value = 13; lfoGain.gain.value = 22;
+      lfo.connect(lfoGain); lfo.start(now); lfo.stop(now + dur + .05);
+      const layer = (type, f0, f1, f2, vol, detune, wobble) => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = type; o.detune.value = detune || 0;
+        o.frequency.setValueAtTime(f0, now);
+        o.frequency.exponentialRampToValueAtTime(f1, now + .35);     // rising charge
+        o.frequency.setValueAtTime(f1, now + .35);
+        o.frequency.linearRampToValueAtTime(f1 * .92, now + dur - .4);
+        o.frequency.exponentialRampToValueAtTime(f2, now + dur);     // drop at the end
+        if (wobble) lfoGain.connect(o.frequency);
+        g.gain.value = vol; o.connect(g); g.connect(master);
+        o.start(now); o.stop(now + dur + .05);
+      };
+      layer('sawtooth', 160, 520, 140, .5, 0, true);   // main beam roar
+      layer('sawtooth', 160, 520, 140, .4, 12, false); // thickener
+      layer('square', 70, 130, 45, .5, 0, false);      // heavy low body
+      layer('sine', 600, 1500, 500, .22, 0, false);    // bright energy shimmer
+      return;
+    }
+    if (name === 'bigLaser') {
+      const dur = .42, master = audioCtx.createGain();
+      master.gain.setValueAtTime(.0001, now);
+      master.gain.exponentialRampToValueAtTime(.085, now + .02);
+      master.gain.setValueAtTime(.085, now + dur * .45);
+      master.gain.exponentialRampToValueAtTime(.0001, now + dur);
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.setValueAtTime(3200, now); lp.frequency.exponentialRampToValueAtTime(500, now + dur);
+      master.connect(lp); lp.connect(audioCtx.destination);
+      const layer = (type, f0, f1, vol, delay) => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = type; o.frequency.setValueAtTime(f0, now + (delay||0));
+        o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), now + dur);
+        g.gain.value = vol; o.connect(g); g.connect(master);
+        o.start(now + (delay||0)); o.stop(now + dur + .02);
+      };
+      layer('sawtooth', 1100, 140, .55);   // main falling laser sweep
+      layer('square', 260, 60, .4);        // heavy low body
+      layer('sine', 2200, 420, .35);       // bright zap on top
+      layer('sawtooth', 90, 70, .5);       // deep sub rumble
+      return;
+    }
     const presets = {
       laser:     {wave:'sawtooth', f:680, end:210, dur:.085, vol:.045},
       explosion: {wave:'triangle', f:155, end:42, dur:.28, vol:.11},
@@ -393,8 +449,9 @@ function mpLocalSnapshot() {
     flame: nowFx < (galagaState.flameShipUntil || 0),
     bullets,
     fx: {
-      megalaser: (ab.megalaser || 0) > 0 || (galagaState.shipLaserActive || 0) > 0,
-      beamWide: (galagaState.selectedShip || selectedShip) === 'laser',
+      megalaser: (ab.megalaser || 0) > 0 || (galagaState.shipLaserActive || 0) > 0 || Date.now() < (galagaState.kamehamehaUntil || 0),
+      kamehameha: Date.now() < (galagaState.kamehamehaUntil || 0),
+      beamWide: (galagaState.selectedShip || selectedShip) === 'laser' || Date.now() < (galagaState.kamehamehaUntil || 0) || (galagaState.selectedShip || selectedShip) === 'spiritbeam',
       drones: nowFx < (galagaState.droneSquadronUntil || 0),
       starfall: nowFx < (galagaState.starfallUntil || 0),
       solarBlades: nowFx < (galagaState.solarBladesUntil || 0),
@@ -1337,7 +1394,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyC' && !e.repeat && gameState === 'PLAYING') { e.preventDefault(); openCoinShop(); }
   if (e.code === 'KeyV' && !e.repeat && gameState === 'PLAYING' && (shopPanel.classList.contains('open') || coinShopPanel.classList.contains('open'))) { e.preventDefault(); shopPanel.classList.remove('open'); coinShopPanel.classList.remove('open'); paused = false; }
   if ((e.code === 'Enter' || e.code === 'Space') && gameState !== 'PLAYING') { e.preventDefault(); startGame(); }
-  if (e.code === 'KeyQ' && !e.repeat && gameState === 'PLAYING' && currentGame === 'galaga') { if (galagaState.selectedShip === 'nova') activateNovaArtillery(); else if (galagaState.selectedShip === 'bomber') activateBomberCommand(); else if (galagaState.selectedShip === 'laser' && (galagaState.solarFireUntil||0) < Date.now() && (galagaState.solarCooldownUntil||0) < Date.now()) { galagaState.solarFireUntil=Date.now()+10000; galagaState.solarCooldownUntil=galagaState.solarFireUntil+10000; document.getElementById('status').textContent='SOLAR LANCE: FIRE-TIPPED TRIANGLE SHOTS FOR 10 SECONDS!'; playSfx('powerup'); } }
+  if (e.code === 'KeyQ' && !e.repeat && gameState === 'PLAYING' && currentGame === 'galaga') { if (galagaState.selectedShip === 'nova') activateNovaArtillery(); else if (galagaState.selectedShip === 'bomber') activateBomberCommand(); else if (galagaState.selectedShip === 'spiritbeam') activateSpiritBeamBlast(); else if (galagaState.selectedShip === 'laser' && (galagaState.solarFireUntil||0) < Date.now() && (galagaState.solarCooldownUntil||0) < Date.now()) { galagaState.solarFireUntil=Date.now()+10000; galagaState.solarCooldownUntil=galagaState.solarFireUntil+10000; document.getElementById('status').textContent='SOLAR LANCE: FIRE-TIPPED TRIANGLE SHOTS FOR 10 SECONDS!'; playSfx('powerup'); } }
   if (e.code === 'KeyL' && !e.repeat && currentGame === 'galaga') { galagaState.coinsCollected = (galagaState.coinsCollected || 0) + 50000; galagaState.score = (galagaState.score || 0) + 5000000; saveCoinWallet(); if (typeof refreshCoinShop === 'function') refreshCoinShop(); if (typeof refreshShop === 'function') refreshShop(); const status = document.getElementById('status'); if (status) status.textContent = 'CHEAT ACTIVATED: +50,000 coins and +5,000,000 points!'; playSfx('powerup'); }
   if (e.code === 'Escape' && shopPanel.classList.contains('open')) closeShop(); if (e.code === 'Escape' && coinShopPanel.classList.contains('open')) closeCoinShop();
 });
@@ -1387,7 +1444,7 @@ document.querySelector('[data-coin-upgrade="rockets"]').addEventListener('click'
  if(galagaState.score<cost){document.getElementById('status').textContent='You need '+cost.toLocaleString()+' points to upgrade Auto-Rockets.';return;}
  galagaState.score-=cost;galagaState.rocketUpgradeLevel=(galagaState.rocketUpgradeLevel||0)+1;saveRocketLevel();refreshCoinShop();document.getElementById('status').textContent='Auto-Rockets upgraded!';playSfx('powerup');
 });
-const shipCosts={teleporter:{coins:50,points:50000,name:'Phase Jumper'},laser:{coins:100,points:400000,name:'Solar Lance'},stormwing:{coins:75,points:150000,name:'Stormwing'},guardian:{coins:60,points:100000,name:'Aegis Guardian'},nova:{coins:90,points:250000,name:'Nova Artillery'},bomber:{coins:80,points:200000,name:'Bomber Command'}};
+const shipCosts={teleporter:{coins:50,points:50000,name:'Phase Jumper'},laser:{coins:100,points:400000,name:'Solar Lance'},stormwing:{coins:75,points:150000,name:'Stormwing'},guardian:{coins:60,points:100000,name:'Aegis Guardian'},nova:{coins:90,points:250000,name:'Nova Artillery'},bomber:{coins:80,points:200000,name:'Bomber Command'},spiritbeam:{coins:95,points:320000,name:'Spirit Beam'}};
 function loadOwnedShips(){try{return Object.assign({fighter:true},JSON.parse(localStorage.getItem('galactaOwnedShips_v1')||'{}'))}catch(e){return {fighter:true}}}
 let ownedShips=loadOwnedShips();ownedShips.fighter=true;ownedShips[selectedShip]=true;
 function saveOwnedShips(){try{localStorage.setItem('galactaOwnedShips_v1',JSON.stringify(ownedShips))}catch(e){}}
@@ -1455,7 +1512,7 @@ document.getElementById('closeShopBtn').addEventListener('click', closeShop);
 shopPanel.querySelectorAll('[data-upgrade]').forEach(button => button.addEventListener('click', () => { const type = button.dataset.upgrade; const costs = {bullet:500,speed:400,damage:700,life:900,rapidfire:800,shield:650,bulletspeed:600,capacitor:850}; const cost = costs[type]; if (gameState !== 'PLAYING') return; if (galagaState.score < cost) { document.getElementById('status').textContent = 'Not enough points! Earn more by destroying enemies.'; return; } galagaState.score -= cost; const p = galagaState.player; if (type === 'bullet') p.extraBullets += 1; else if (type === 'speed') p.extraSpeed += 1; else if (type === 'damage') p.baseDamage += 1; else if (type === 'life') galagaState.lives += 1; else if (type === 'rapidfire') grantAbility('rapidfire', 20); else if (type === 'shield') grantAbility('shield', 15); else if (type === 'bulletspeed') p.bulletSpeedBonus = Math.min(0.6, (p.bulletSpeedBonus || 0) + 0.1); else if (type === 'capacitor') p.fireRateBonus = Math.min(0.35, (p.fireRateBonus || 0) + 0.05); refreshShop(); document.getElementById('status').textContent = 'Upgrade purchased!'; playSfx('powerup'); }));
 </script>
 <script>
-/************************************************** * 2. GALACTA SHOOTER **************************************************/ let galagaState = { player: { x: 300, y: 530, w: 28, h: 28, speed: 5, extraBullets: 0, extraSpeed: 0, baseDamage: 1 }, bullets: [], enemies: [], enemyBullets: [], particles: [], bossDebris: [], drops: [], coins: [], harpoons: [], rockets: [], score: 0, coinsCollected: loadCoinWallet(), passives: loadCoinUnlocks(), rocketUpgradeLevel: loadRocketLevel(), rocketTimer: 5, repairWaveMark: 0, voidPulseTimer: 8, novaBurstTimer: 8, novaRings: [], shieldCooldown: 0, lives: 3, wave: 1, boss: null, abilities: { multishot: 0, rapidfire: 0, shield: 0, slowmo: 0, homing: 0, megalaser: 0, twinlasers: 0 }, twinLaserTimer: 0, fireCooldown: 0, bossSpawned: false, selectedShip: selectedShip, shipLaserTimer: 0, shipLaserActive: 0, guardianCooldown: 0, novaCooldown: 0, bomberCooldown: 0, bomberUntil: 0, bomberShotTimer: 0, bomberShipX: -80, bomberBombs: [], abilityLasers: [], starfallUntil:0, solarBladesUntil:0, droneSquadronUntil:0, specialAbilityTick:0, specialProjectiles:[], flameShipUntil: 0, flameTick: 0, guardianHarpoonShields: 0, guardianHarpoonUntil: 0, phaseShotCount: 0, stormLightningUntil: 0, phasePortalUntil: 0, phasePortals: [], phasePortalSpawnTick: 0, invincibleUntil: 0, playerTrail: [], eclipseCharge: 0, solarFireUntil: 0, solarCooldownUntil: 0 }; function initGalaga() { waveTransitionPending = false; galagaState.player = { x: canvas.width / 2 - 14, y: canvas.height - 70, w: 28, h: 28, speed: 5, extraBullets: 0, extraSpeed: galagaState.passives.overdrive ? 1 : 0, baseDamage: 1, fireRateBonus: 0, bulletSpeedBonus: 0 }; galagaState.bullets = []; galagaState.enemyBullets = []; galagaState.particles = []; galagaState.bossDebris = []; galagaState.drops = []; galagaState.coins = []; galagaState.harpoons = []; galagaState.rockets = []; galagaState.score = 0; galagaState.coinsCollected = loadCoinWallet(); galagaState.passives = loadCoinUnlocks(); galagaState.rocketUpgradeLevel = loadRocketLevel(); galagaState.rocketTimer = Math.max(0.1,5-(galagaState.rocketUpgradeLevel||0)*0.2); galagaState.repairWaveMark = 0; galagaState.voidPulseTimer = 8; galagaState.novaBurstTimer = 8; galagaState.novaRings = []; galagaState.shieldCooldown = 0; galagaState.lives = 3 + (galagaState.passives.plating ? 1 : 0); galagaState.wave = 1; galagaState.boss = null; galagaState.bossSpawned = false; galagaState.lastBossType = null; galagaState.abilities = { multishot: 0, rapidfire: 0, shield: 0, slowmo: 0, homing: 0, megalaser: 0, twinlasers: 0, harpoon: 0 }; galagaState.twinLaserTimer=0; galagaState.harpoonCooldown = 0; galagaState.selectedShip=selectedShip; galagaState.shipLaserTimer=0; galagaState.shipLaserActive=0; galagaState.guardianCooldown=0; galagaState.novaCooldown=0; galagaState.abilityLasers=[]; galagaState.specialProjectiles=[]; galagaState.starfallUntil=0; galagaState.solarBladesUntil=0; galagaState.droneSquadronUntil=0; galagaState.specialAbilityTick=0; galagaState.flameShipUntil=0; galagaState.flameTick=0; galagaState.guardianHarpoonShields=0; galagaState.guardianHarpoonUntil=0; galagaState.phaseShotCount=0; galagaState.stormLightningUntil=0; galagaState.phasePortalUntil=0; galagaState.phasePortals=[]; galagaState.phasePortalSpawnTick=0; galagaState.invincibleUntil=0; galagaState.playerTrail=[]; galagaState.eclipseCharge=0; galagaState.solarFireUntil=0; galagaState.solarCooldownUntil=0; teleportTargeting=false; aliensFrozenUntil=0; teleportCooldownUntil=0; teleportChosenPoint=null; spawnGalagaEnemies(); playSfx('start'); } let waveTransitionPending = false;
+/************************************************** * 2. GALACTA SHOOTER **************************************************/ let galagaState = { player: { x: 300, y: 530, w: 28, h: 28, speed: 5, extraBullets: 0, extraSpeed: 0, baseDamage: 1 }, bullets: [], enemies: [], enemyBullets: [], particles: [], bossDebris: [], drops: [], coins: [], harpoons: [], rockets: [], score: 0, coinsCollected: loadCoinWallet(), passives: loadCoinUnlocks(), rocketUpgradeLevel: loadRocketLevel(), rocketTimer: 5, repairWaveMark: 0, voidPulseTimer: 8, novaBurstTimer: 8, novaRings: [], shieldCooldown: 0, lives: 3, wave: 1, boss: null, abilities: { multishot: 0, rapidfire: 0, shield: 0, slowmo: 0, homing: 0, megalaser: 0, twinlasers: 0 }, twinLaserTimer: 0, fireCooldown: 0, bossSpawned: false, selectedShip: selectedShip, shipLaserTimer: 0, shipLaserActive: 0, guardianCooldown: 0, novaCooldown: 0, bomberCooldown: 0, bomberUntil: 0, bomberShotTimer: 0, bomberShipX: -80, bomberBombs: [], abilityLasers: [], starfallUntil:0, solarBladesUntil:0, droneSquadronUntil:0, specialAbilityTick:0, specialProjectiles:[], flameShipUntil: 0, flameTick: 0, guardianHarpoonShields: 0, guardianHarpoonUntil: 0, phaseShotCount: 0, stormLightningUntil: 0, phasePortalUntil: 0, phasePortals: [], phasePortalSpawnTick: 0, invincibleUntil: 0, playerTrail: [], eclipseCharge: 0, solarFireUntil: 0, solarCooldownUntil: 0, kamehamehaUntil: 0, kamehamehaFinalized: false, spiritBeamCooldown: 0, spiritBeamQCooldown: 0, novaHarpoonUntil: 0 }; function initGalaga() { waveTransitionPending = false; galagaState.player = { x: canvas.width / 2 - 14, y: canvas.height - 70, w: 28, h: 28, speed: 5, extraBullets: 0, extraSpeed: galagaState.passives.overdrive ? 1 : 0, baseDamage: 1, fireRateBonus: 0, bulletSpeedBonus: 0 }; galagaState.bullets = []; galagaState.enemyBullets = []; galagaState.particles = []; galagaState.bossDebris = []; galagaState.drops = []; galagaState.coins = []; galagaState.harpoons = []; galagaState.rockets = []; galagaState.score = 0; galagaState.coinsCollected = loadCoinWallet(); galagaState.passives = loadCoinUnlocks(); galagaState.rocketUpgradeLevel = loadRocketLevel(); galagaState.rocketTimer = Math.max(0.1,5-(galagaState.rocketUpgradeLevel||0)*0.2); galagaState.repairWaveMark = 0; galagaState.voidPulseTimer = 8; galagaState.novaBurstTimer = 8; galagaState.novaRings = []; galagaState.shieldCooldown = 0; galagaState.lives = 3 + (galagaState.passives.plating ? 1 : 0); galagaState.wave = 1; galagaState.boss = null; galagaState.bossSpawned = false; galagaState.lastBossType = null; galagaState.abilities = { multishot: 0, rapidfire: 0, shield: 0, slowmo: 0, homing: 0, megalaser: 0, twinlasers: 0, harpoon: 0 }; galagaState.twinLaserTimer=0; galagaState.harpoonCooldown = 0; galagaState.selectedShip=selectedShip; galagaState.shipLaserTimer=0; galagaState.shipLaserActive=0; galagaState.guardianCooldown=0; galagaState.novaCooldown=0; galagaState.abilityLasers=[]; galagaState.specialProjectiles=[]; galagaState.starfallUntil=0; galagaState.solarBladesUntil=0; galagaState.droneSquadronUntil=0; galagaState.specialAbilityTick=0; galagaState.flameShipUntil=0; galagaState.flameTick=0; galagaState.guardianHarpoonShields=0; galagaState.guardianHarpoonUntil=0; galagaState.phaseShotCount=0; galagaState.stormLightningUntil=0; galagaState.phasePortalUntil=0; galagaState.phasePortals=[]; galagaState.phasePortalSpawnTick=0; galagaState.invincibleUntil=0; galagaState.playerTrail=[]; galagaState.eclipseCharge=0; galagaState.solarFireUntil=0; galagaState.solarCooldownUntil=0; galagaState.kamehamehaUntil=0; galagaState.kamehamehaFinalized=false; galagaState.spiritBeamCooldown=0; galagaState.novaHarpoonUntil=0; teleportTargeting=false; aliensFrozenUntil=0; teleportCooldownUntil=0; teleportChosenPoint=null; spawnGalagaEnemies(); playSfx('start'); } let waveTransitionPending = false;
 function scheduleNextWave(delay = 0) {
   if (mpActive && !mpIsHost) return;
   if (waveTransitionPending) return;
@@ -1468,13 +1525,13 @@ function scheduleNextWave(delay = 0) {
   }, delay);
 }
 
-/** Regular enemy HP by wave: +20% per wave up to wave 35, then +150% per wave from wave 35 on. */
+/** Regular enemy HP by wave: +30% per wave through wave 35, then +60% per wave after wave 35. */
 function enemyWaveHpMultiplier(wave) {
   const w = Math.max(1, Math.floor(Number(wave) || 1));
-  // Waves 1–34 build +20% per step (wave 1 = 1.0x, wave 2 = 1.2x, …)
-  const early = 1 + 0.20 * Math.min(w - 1, 34);
-  // From wave 35 onward add +150% for each wave at/after 35
-  const late = 1.50 * Math.max(0, w - 34);
+  // Waves 1–35: +30% per wave (wave 1 = 1.0x, wave 2 = 1.3x, … wave 35 = 1 + 0.30*34)
+  const early = 1 + 0.30 * Math.min(w - 1, 34);
+  // After wave 35: +60% per additional wave (wave 36 = early + 0.60, …)
+  const late = 0.60 * Math.max(0, w - 35);
   return early + late;
 }
 function spawnGalagaEnemies() { if (mpActive && !mpIsHost) return; galagaState.enemies = []; galagaState.boss = null; galagaState.bossSpawned = false; if (galagaState.wave % 5 === 0) { // Boss Fight Wave
@@ -1485,7 +1542,39 @@ function spawnGalagaEnemies() { if (mpActive && !mpIsHost) return; galagaState.e
     if (pool.length) bossIndex = pool[Math.floor(Math.random() * pool.length)];
   }
   const design = bossTypes[bossIndex];
-  galagaState.lastBossType = design.type; const goldenBoss=Math.random()<1/50; const bossHp = Math.round((100 + galagaState.wave * 42 + galagaState.wave*galagaState.wave*1.5) * design.hp * (goldenBoss?7:1) * mpEnemyHpScale()); galagaState.boss = { x: canvas.width / 2 - 44, y: 60, w: 88, h: 66, hp: bossHp, maxHp: bossHp, vx: design.vx, phase: 1, attackTimer: 0, type: design.type, name: (goldenBoss?'GOLDEN ':'')+design.name, color: goldenBoss?'#ffd84a':design.color, golden:goldenBoss, difficultyScale:goldenBoss?7:1, captured:false, abilityTick:0, abilityCooldown:180, dashTimer:0, invisibleUntil:0, summonTick:0 }; playSfx('bossIntro'); return; } const rows = Math.min(3 + Math.floor(galagaState.wave / 2), 7); const cols = 8; for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) { let type = 'green'; let hp = 1; let points = 100; const advanced = galagaState.wave >= 6; if (advanced && r===0 && c%5===0) { type='shield'; hp=7+Math.floor(galagaState.wave/3); points=650; } else if (advanced && r===1 && c%5===1) { type='splitter'; hp=3+Math.floor(galagaState.wave/4); points=500; } else if (advanced && r===0 && c%5===2) { type='sniper'; hp=2+Math.floor(galagaState.wave/5); points=550; } else if (advanced && r===1 && c%5===3) { type='leech'; hp=5+Math.floor(galagaState.wave/4); points=600; } else if (advanced && r===0 && c%5===4) { type='bomber'; hp=4+Math.floor(galagaState.wave/4); points=575; } else if(galagaState.wave>=4 && r===0 && c%3===0){type='purple';hp=4+Math.floor(galagaState.wave/4);points=450;} else if(galagaState.wave>=3 && r===1 && c%3===1){type='red';hp=2+Math.floor(galagaState.wave/5);points=350;} else if (r === 0 && galagaState.wave >= 2) { type = 'orange'; hp = 3; points = 300; } else if (r <= 1 && galagaState.wave >= 1) { type = 'yellow'; hp = 2; points = 200; } const scaling = enemyWaveHpMultiplier(galagaState.wave); const isGolden = Math.random() < 1/50; const scaledHp = Math.ceil(hp * scaling * (isGolden ? 7 : 1) * mpEnemyHpScale()); galagaState.enemies.push({ x: 60 + c * 60, y: 50 + r * 45, baseX: 60 + c * 60, baseY: 50 + r * 45, w: 32, h: 28, type: type, golden: isGolden, hp: scaledHp, maxHp: scaledHp, points: points * (isGolden ? 7 : 1), animTick: Math.random() * 10, specialTimer: Math.max(12,Math.floor((60+Math.random()*120) / (1 + (galagaState.wave-1)*0.012) / (isGolden ? 1.8 : 1))), shieldUntil:0, difficultyScale: (1 + Math.min(0.65,(galagaState.wave-1)*0.018)) * (isGolden ? 2 : 1), goldenSpeed: isGolden ? 1.65 : 1 }); } } } function buyGalagaUpgrade(type) { if (type === 'bullet' && galagaState.coinsCollected >= 1) { galagaState.coinsCollected -= 1; saveCoinWallet(); galagaState.player.extraBullets += 1; playSfx('powerup'); } else if (type === 'speed' && galagaState.coinsCollected >= 2) { galagaState.coinsCollected -= 2; saveCoinWallet(); galagaState.player.extraSpeed += 1; playSfx('powerup'); } else if (type === 'life' && galagaState.coinsCollected >= 3) { galagaState.coinsCollected -= 3; saveCoinWallet(); galagaState.lives += 1; playSfx('powerup'); } else if (type === 'damage' && galagaState.coinsCollected >= 3) { galagaState.coinsCollected -= 3; saveCoinWallet(); galagaState.player.baseDamage += 1; playSfx('powerup'); } } function activateNovaArtillery(){
+  galagaState.lastBossType = design.type; const goldenBoss=Math.random()<1/50; const bossHp = Math.round((100 + galagaState.wave * 42 + galagaState.wave*galagaState.wave*1.5) * design.hp * (goldenBoss?7:1) * mpEnemyHpScale()); galagaState.boss = { x: canvas.width / 2 - 44, y: 60, w: 88, h: 66, hp: bossHp, maxHp: bossHp, vx: design.vx, phase: 1, attackTimer: 0, type: design.type, name: (goldenBoss?'GOLDEN ':'')+design.name, color: goldenBoss?'#ffd84a':design.color, golden:goldenBoss, difficultyScale:goldenBoss?7:1, captured:false, abilityTick:0, abilityCooldown:180, dashTimer:0, invisibleUntil:0, summonTick:0 }; playSfx('bossIntro'); return; } const rows = Math.min(3 + Math.floor(galagaState.wave / 2), 7); const cols = 8; for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) { let type = 'green'; let hp = 1; let points = 100; const advanced = galagaState.wave >= 6; if (advanced && r===0 && c%5===0) { type='shield'; hp=7+Math.floor(galagaState.wave/3); points=650; } else if (advanced && r===1 && c%5===1) { type='splitter'; hp=3+Math.floor(galagaState.wave/4); points=500; } else if (advanced && r===0 && c%5===2) { type='sniper'; hp=2+Math.floor(galagaState.wave/5); points=550; } else if (advanced && r===1 && c%5===3) { type='leech'; hp=5+Math.floor(galagaState.wave/4); points=600; } else if (advanced && r===0 && c%5===4) { type='bomber'; hp=4+Math.floor(galagaState.wave/4); points=575; } else if(galagaState.wave>=4 && r===0 && c%3===0){type='purple';hp=4+Math.floor(galagaState.wave/4);points=450;} else if(galagaState.wave>=3 && r===1 && c%3===1){type='red';hp=2+Math.floor(galagaState.wave/5);points=350;} else if (r === 0 && galagaState.wave >= 2) { type = 'orange'; hp = 3; points = 300; } else if (r <= 1 && galagaState.wave >= 1) { type = 'yellow'; hp = 2; points = 200; } const scaling = enemyWaveHpMultiplier(galagaState.wave); const isGolden = Math.random() < 1/50; const scaledHp = Math.ceil(hp * scaling * (isGolden ? 7 : 1) * mpEnemyHpScale()); galagaState.enemies.push({ x: 60 + c * 60, y: 50 + r * 45, baseX: 60 + c * 60, baseY: 50 + r * 45, w: 32, h: 28, type: type, golden: isGolden, hp: scaledHp, maxHp: scaledHp, points: points * (isGolden ? 7 : 1), animTick: Math.random() * 10, specialTimer: Math.max(12,Math.floor((60+Math.random()*120) / (1 + (galagaState.wave-1)*0.012) / (isGolden ? 1.8 : 1))), shieldUntil:0, difficultyScale: (1 + Math.min(0.65,(galagaState.wave-1)*0.018)) * (isGolden ? 2 : 1), goldenSpeed: isGolden ? 1.65 : 1 }); } } } function buyGalagaUpgrade(type) { if (type === 'bullet' && galagaState.coinsCollected >= 1) { galagaState.coinsCollected -= 1; saveCoinWallet(); galagaState.player.extraBullets += 1; playSfx('powerup'); } else if (type === 'speed' && galagaState.coinsCollected >= 2) { galagaState.coinsCollected -= 2; saveCoinWallet(); galagaState.player.extraSpeed += 1; playSfx('powerup'); } else if (type === 'life' && galagaState.coinsCollected >= 3) { galagaState.coinsCollected -= 3; saveCoinWallet(); galagaState.lives += 1; playSfx('powerup'); } else if (type === 'damage' && galagaState.coinsCollected >= 3) { galagaState.coinsCollected -= 3; saveCoinWallet(); galagaState.player.baseDamage += 1; playSfx('powerup'); } } function detonateCannonBomb(x,y,radius,damage,color='#cc5500'){
+  // Cheap visual: one small burst only (was double explosion + heavy particles per bomb)
+  createExplosion(x,y,color,4);
+  if(galagaState.boss && Math.hypot(galagaState.boss.x+galagaState.boss.w/2-x,galagaState.boss.y+galagaState.boss.h/2-y)<=radius+Math.max(galagaState.boss.w,galagaState.boss.h)*0.25){galagaState.boss.hp-=damage*1.5;maybeDropBossPowerup(galagaState.boss);}
+  for(let ei=galagaState.enemies.length-1;ei>=0;ei--){const e=galagaState.enemies[ei];const d=Math.hypot(e.x+e.w/2-x,e.y+e.h/2-y);if(!e.captured&&d<=radius+Math.max(e.w,e.h)*0.25){e.hp-=damage;if(e.hp<=0){galagaState.score+=(e.golden?e.points:e.points*0.1);galagaState.enemies.splice(ei,1);}}}
+ }
+function spiritBeamStrike(cooldownFrames){
+ const p=galagaState.player, lw=24, lx=p.x+p.w/2-lw/2;
+ galagaState.spiritLaserUntil=Date.now()+cooldownFrames*17+40;
+ const dmg=Math.max(0.5,galagaState.player.baseDamage*0.8);
+ for(let i=galagaState.enemies.length-1;i>=0;i--){
+  const e=galagaState.enemies[i];
+  if(e.captured||e.y+e.h>p.y)continue;
+  if(e.x+e.w>lx&&e.x<lx+lw){
+   e.hp-=dmg;createExplosion(e.x+e.w/2,e.y+e.h/2,'#6ee7ff',2);
+   if(e.hp<=0){
+    const ex=e.x+e.w/2,ey=e.y+e.h/2;
+    galagaState.score+=(e.golden?e.points:e.points*0.1);
+    createExplosion(ex,ey,'#b9f8ff',12);playSfx('explosion');maybeDropHarpoonShip(ex,ey);
+    if(e.golden&&Math.random()<0.10)galagaState.drops.push({x:ex,y:ey,type:'goldenascension',vy:2.2});
+    if(Math.random()<0.10)galagaState.drops.push({x:ex,y:ey,type:'twinlasers',vy:2});
+    else if(Math.random()<0.20){const t=['multishot','rapidfire','shield','slowmo','homing','megalaser'];galagaState.drops.push({x:ex,y:ey,type:t[Math.floor(Math.random()*t.length)],vy:2});}
+    if(Math.random()<(galagaState.passives.fortune?0.28:0.10))galagaState.coins.push({x:ex,y:ey,vy:2.2,rot:0});
+    galagaState.enemies.splice(i,1);
+   }
+  }
+ }
+ const b=galagaState.boss;
+ if(b&&b.y+b.h<=p.y+10&&b.x+b.w>lx&&b.x<lx+lw){
+  b.hp-=dmg;createExplosion(p.x+p.w/2,b.y+b.h,'#6ee7ff',3);maybeDropBossPowerup(b);maybeDropHarpoonShip(b.x+b.w/2,b.y+b.h/2);
+ }
+}
+function activateNovaArtillery(){
  if(galagaState.selectedShip!=='nova'||galagaState.novaCooldown>0)return;
  galagaState.novaCooldown=300;
  const sx=galagaState.player.x+galagaState.player.w/2, sy=galagaState.player.y;
@@ -1493,6 +1582,77 @@ function spawnGalagaEnemies() { if (mpActive && !mpIsHost) return; galagaState.e
  if(galagaState.boss){const b=galagaState.boss,tx=b.x+b.w/2,ty=b.y+b.h/2;galagaState.abilityLasers.push({x1:sx,y1:sy,x2:tx,y2:ty,life:22,color:'#ff9df7'});b.hp-=85*galagaState.player.baseDamage;b.y=Math.max(48,b.y-58);b.vx*=1.35;createExplosion(tx,ty,'#ff9df7',32);maybeDropBossPowerup(b);}
  createExplosion(sx,sy,'#ffe87a',24);playSfx('laser');document.getElementById('status').textContent='NOVA ARTILLERY: ALL TARGETS STRUCK!';
 }
+
+function activateSpiritBeamBlast() {
+  // Q is Spirit Beam's regular targeted blast. The massive Kamehameha is reserved
+  // for the special undefined/megalaser pickup below.
+  if (galagaState.selectedShip !== 'spiritbeam') return;
+  const now = Date.now();
+  if (now < (galagaState.spiritBeamQCooldown || 0)) {
+    document.getElementById('status').textContent = 'SPIRIT BEAM Q RECHARGING · ' + Math.ceil((galagaState.spiritBeamQCooldown - now) / 1000) + 's';
+    return;
+  }
+  const targets = (galagaState.enemies || []).filter(e => e && e.hp > 0);
+  let tx, ty, target = null;
+  if (targets.length) {
+    target = targets[Math.floor(Math.random() * targets.length)];
+    tx = target.x + target.w / 2;
+    ty = target.y + target.h / 2;
+  } else if (galagaState.boss) {
+    target = galagaState.boss;
+    tx = target.x + target.w / 2;
+    ty = target.y + target.h / 2;
+  } else {
+    document.getElementById('status').textContent = 'NO TARGETS FOR SPIRIT BEAM!';
+    return;
+  }
+  const px = galagaState.player.x + galagaState.player.w / 2;
+  const py = galagaState.player.y;
+  galagaState.abilityLasers.push({x1:px,y1:py,x2:tx,y2:ty,life:22,color:'#6ee7ff',width:7});
+  createExplosion(tx, ty, '#6ee7ff', 10);
+  // Small radius-10 blast: damage the chosen target and anything almost touching it.
+  const blastRadius = 10;
+  for (let i = galagaState.enemies.length - 1; i >= 0; i--) {
+    const e = galagaState.enemies[i];
+    const ex = e.x + e.w / 2, ey = e.y + e.h / 2;
+    if (e === target || Math.hypot(ex - tx, ey - ty) <= blastRadius) {
+      e.hp -= 7 * galagaState.player.baseDamage;
+      if (e.hp <= 0) {
+        galagaState.score += (e.golden ? e.points : e.points * 0.1);
+        createExplosion(ex, ey, '#b9f8ff', 14);
+        galagaState.enemies.splice(i, 1);
+      }
+    }
+  }
+  if (galagaState.boss && target === galagaState.boss) {
+    galagaState.boss.hp -= 12 * galagaState.player.baseDamage;
+    createExplosion(tx, ty, '#b9f8ff', 12);
+    maybeDropBossPowerup(galagaState.boss);
+  }
+  galagaState.spiritBeamQCooldown = now + 5000;
+  document.getElementById('status').textContent = 'SPIRIT BEAM: RANDOM TARGET BLAST!';
+  playSfx('laser');
+}
+
+function activateNovaHarpoon() {
+  if (galagaState.selectedShip !== 'nova') return;
+  const px = galagaState.player.x + galagaState.player.w/2;
+  const py = galagaState.player.y;
+  let hits = 0;
+  for (let i = galagaState.enemies.length - 1; i >= 0; i--) {
+    const e = galagaState.enemies[i], tx = e.x + e.w/2, ty = e.y + e.h/2;
+    galagaState.abilityLasers.push({x1:px,y1:py,x2:tx,y2:ty,life:28,color:'#ffe87a',width:10});
+    e.hp -= 8 * galagaState.player.baseDamage; hits++;
+    createExplosion(tx,ty,'#ffe87a',10);
+    if(e.hp<=0){galagaState.score+=(e.golden?e.points:e.points*0.1);if(Math.random()<0.2)galagaState.coins.push({x:tx,y:ty,vy:2.2,rot:0});galagaState.enemies.splice(i,1);}
+  }
+  if(galagaState.boss){const b=galagaState.boss,tx=b.x+b.w/2,ty=b.y+b.h/2;galagaState.abilityLasers.push({x1:px,y1:py,x2:tx,y2:ty,life:34,color:'#fff2a8',width:14});b.hp-=150*galagaState.player.baseDamage;b.y=Math.max(42,b.y-28);createExplosion(tx,ty,'#fff2a8',28);maybeDropBossPowerup(b);hits++;}
+  galagaState.novaHarpoonUntil = Date.now()+1800;
+  galagaState.abilities.harpoon=0;
+  createExplosion(px,py,'#ffe87a',28);playSfx('laser');playSfx('explosion');
+  document.getElementById('status').textContent='NOVA ARTILLERY HARPOON: ORBITAL STRIKE! '+hits+' TARGET'+(hits===1?'':'S')+' HIT.';
+}
+
 function activateBomberCommand(){
  const now=Date.now();
  if(galagaState.selectedShip!=='bomber')return;
@@ -1590,8 +1750,43 @@ function updateGalaga() { if (gameState !== 'PLAYING' || currentGame !== 'galaga
  if(galagaState.passives.rockets){galagaState.rocketTimer-=1/60;if(galagaState.rocketTimer<=0){galagaState.rocketTimer=Math.max(2,5-(galagaState.rocketUpgradeLevel||0)*0.2);for(let r=0;r<2;r++)galagaState.rockets.push({x:galagaState.player.x+galagaState.player.w/2+(r?8:-8),y:galagaState.player.y,vx:r?1:-1,vy:-4,damage:3});playSfx('laser');}}
  for(let ri=galagaState.rockets.length-1;ri>=0;ri--){const r=galagaState.rockets[ri];let target=galagaState.boss||galagaState.enemies[0];if(target){const dx=target.x+target.w/2-r.x,dy=target.y+target.h/2-r.y,d=Math.hypot(dx,dy)||1;r.vx+=(dx/d)*.22;r.vy+=(dy/d)*.22;const sp=Math.hypot(r.vx,r.vy)||1;r.vx=r.vx/sp*5;r.vy=r.vy/sp*5;}r.x+=r.vx;r.y+=r.vy;let hit=galagaState.boss&&r.x>=galagaState.boss.x-5&&r.x<=galagaState.boss.x+galagaState.boss.w+5&&r.y>=galagaState.boss.y-5&&r.y<=galagaState.boss.y+galagaState.boss.h+5; if(!hit)hit=galagaState.enemies.some(e=>r.x>=e.x-5&&r.x<=e.x+e.w+5&&r.y>=e.y-5&&r.y<=e.y+e.h+5);if(hit||r.y<-15){const radius=50+(galagaState.rocketUpgradeLevel||0);createExplosion(r.x,r.y,'#ff9d42',16);for(let ei=galagaState.enemies.length-1;ei>=0;ei--){const e=galagaState.enemies[ei];if(Math.hypot(e.x+e.w/2-r.x,e.y+e.h/2-r.y)<=radius){e.hp-=r.damage;if(e.hp<=0){galagaState.score+=(e.golden?e.points:e.points*0.1);createExplosion(e.x+e.w/2,e.y+e.h/2,'#ff7a22',18);if(Math.random()<.1)galagaState.coins.push({x:e.x+e.w/2,y:e.y+e.h/2,vy:2.2,rot:0});galagaState.enemies.splice(ei,1);}}}if(galagaState.boss&&Math.hypot(galagaState.boss.x+galagaState.boss.w/2-r.x,galagaState.boss.y+galagaState.boss.h/2-r.y)<=radius+35){galagaState.boss.hp-=r.damage*2;maybeDropBossPowerup(galagaState.boss);}galagaState.rockets.splice(ri,1);}}
  // Auto/Manual Firing
- if (galagaState.fireCooldown > 0) galagaState.fireCooldown--; if ((keys['Space'] || keys['KeyK']) && galagaState.fireCooldown <= 0 && Date.now()>=(galagaState.empDisabledUntil||0) && (galagaState.abilities.harpoon <= 0 || galagaState.harpoonCooldown <= 0)) { const baseCooldown = galagaState.abilities.rapidfire > 0 ? 5 : 12; const cooldownRate = Math.max(4, Math.round(baseCooldown * (1 - (galagaState.player.fireRateBonus || 0)))); galagaState.fireCooldown = cooldownRate; const newBulletStart=galagaState.bullets.length; playSfx(galagaState.abilities.rapidfire > 0 ? 'rapid' : 'laser'); const dmg = galagaState.player.baseDamage;  if(galagaState.selectedShip==='nova' && Math.random()<0.15){const rowY=galagaState.enemies.length?galagaState.enemies[0].y+galagaState.enemies[0].h/2:100;galagaState.abilityLasers.push({x1:0,y1:rowY,x2:canvas.width,y2:rowY,life:18,color:'#ffe87a',width:7});for(let ei=galagaState.enemies.length-1;ei>=0;ei--){const e=galagaState.enemies[ei];if(Math.abs(e.y+e.h/2-rowY)<28){galagaState.score+=(e.golden?e.points:e.points*0.1);createExplosion(e.x+e.w/2,e.y+e.h/2,'#ffe87a',12);galagaState.enemies.splice(ei,1);}}if(galagaState.boss){const b=galagaState.boss;for(let z=0;z<5;z++){const x=b.x+b.w/2+(Math.random()-.5)*70,y=b.y+b.h/2+(Math.random()-.5)*60;galagaState.abilityLasers.push({x1:x,y1:y-45,x2:x,y2:y+45,life:12,color:'#ffe87a',width:4});}if(Math.hypot(b.x+b.w/2-(galagaState.player.x+14),b.y+b.h/2-(galagaState.player.y+14))<125)b.hp-=25;}} if (galagaState.abilities.harpoon > 0) { galagaState.harpoons.push({ x: galagaState.player.x + galagaState.player.w/2, y: galagaState.player.y - 4, vx: 0, vy: -10, mode: 'flying', targets: [], maxTargets: 5, hold: 0 }); playSfx('laser'); } else if (galagaState.abilities.multishot > 0 || galagaState.player.extraBullets > 0) { const totalBullets = 3 + galagaState.player.extraBullets; const startAngle = -0.3; const step = 0.6 / Math.max(1, totalBullets - 1); for (let i = 0; i < totalBullets; i++) { const angle = startAngle + i * step; galagaState.bullets.push({ x: galagaState.player.x + galagaState.player.w / 2 - 3, y: galagaState.player.y, w: 6, h: 12, vx: Math.sin(angle) * 7, vy: -Math.cos(angle) * 9, homing: galagaState.abilities.homing > 0, homingPowerup: galagaState.abilities.homing > 0, dmg: dmg, stormChain:galagaState.selectedShip==='stormwing'&&Date.now()<galagaState.stormLightningUntil, guardianBullet:galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0 }); } } else { galagaState.bullets.push({ x: galagaState.player.x + galagaState.player.w / 2 - 3, y: galagaState.player.y, w: galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0?8:6, h: galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0?14:12, vx: 0, vy: -9, homing: galagaState.abilities.homing > 0, homingPowerup: galagaState.abilities.homing > 0, dmg: dmg, color:galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0?'#76ffc4':undefined, stormChain:galagaState.selectedShip==='stormwing'&&Date.now()<galagaState.stormLightningUntil, guardianBullet:galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0 }); } if(galagaState.passives.twin && galagaState.abilities.harpoon<=0 && !(galagaState.selectedShip==='teleporter'&&galagaState.phaseShotCount%5===0)){galagaState.bullets.push({x:galagaState.player.x+2,y:galagaState.player.y+7,w:5,h:11,vx:-2.4,vy:-8.7,dmg:dmg,color:'#ffcc66',homing:galagaState.abilities.homing>0,homingPowerup:galagaState.abilities.homing>0},{x:galagaState.player.x+galagaState.player.w-7,y:galagaState.player.y+7,w:5,h:11,vx:2.4,vy:-8.7,dmg:dmg,color:'#ffcc66',homing:galagaState.abilities.homing>0,homingPowerup:galagaState.abilities.homing>0});} if(Date.now()<(galagaState.goldenAscensionUntil||0)){for(let gi=newBulletStart;gi<galagaState.bullets.length;gi++){const shot=galagaState.bullets[gi];shot.goldenAscensionShot=true;shot.color='#ffd84a';shot.dmg*=7;}} if(galagaState.selectedShip==='laser' && Date.now() < (galagaState.solarFireUntil||0)){for(let si=newBulletStart;si<galagaState.bullets.length;si++){const shot=galagaState.bullets[si];shot.solarFire=true;shot.color='#ff8a24';shot.w=9;shot.h=14;shot.dmg=shot.dmg*1.2;}} if(galagaState.selectedShip==='bomber' && (Date.now()<galagaState.bomberUntil)){for(let bi=newBulletStart;bi<galagaState.bullets.length;bi++){const shot=galagaState.bullets[bi];shot.isCannonBomb=true;shot.color='#cc5500';shot.w=10;shot.h=10;shot.vy=-7.2;shot.vx*=0.65;shot.dmg=shot.dmg*1.35;shot.blastRadius=45;}} playSfx('laser'); } // Mega Laser Damage Processing
- if (galagaState.abilities.megalaser > 0 || galagaState.shipLaserActive > 0) { const beamWidth = galagaState.selectedShip==='laser' ? 76 : 24; const lx = galagaState.player.x + galagaState.player.w / 2 - beamWidth/2; const lw = beamWidth; // Damage enemies in the beam and remove them when defeated
+ if (galagaState.fireCooldown > 0) galagaState.fireCooldown--; if ((keys['Space'] || keys['KeyK']) && galagaState.fireCooldown <= 0 && Date.now()>=(galagaState.empDisabledUntil||0) && (galagaState.abilities.harpoon <= 0 || galagaState.harpoonCooldown <= 0)) { const baseCooldown = galagaState.abilities.rapidfire > 0 ? 5 : 12; let cooldownRate = Math.max(4, Math.round(baseCooldown * (1 - (galagaState.player.fireRateBonus || 0)))); if (galagaState.selectedShip === 'spiritbeam') cooldownRate = Math.round(cooldownRate * 1.6); galagaState.fireCooldown = cooldownRate; const newBulletStart=galagaState.bullets.length; if (Date.now() >= (galagaState.kamehamehaUntil || 0)) playSfx(galagaState.selectedShip === 'spiritbeam' ? 'bigLaser' : (galagaState.abilities.rapidfire > 0 ? 'rapid' : 'laser')); const dmg = galagaState.player.baseDamage;  if(galagaState.selectedShip==='nova' && Math.random()<0.15){const rowY=galagaState.enemies.length?galagaState.enemies[0].y+galagaState.enemies[0].h/2:100;galagaState.abilityLasers.push({x1:0,y1:rowY,x2:canvas.width,y2:rowY,life:18,color:'#ffe87a',width:7});for(let ei=galagaState.enemies.length-1;ei>=0;ei--){const e=galagaState.enemies[ei];if(Math.abs(e.y+e.h/2-rowY)<28){galagaState.score+=(e.golden?e.points:e.points*0.1);createExplosion(e.x+e.w/2,e.y+e.h/2,'#ffe87a',12);galagaState.enemies.splice(ei,1);}}if(galagaState.boss){const b=galagaState.boss;for(let z=0;z<5;z++){const x=b.x+b.w/2+(Math.random()-.5)*70,y=b.y+b.h/2+(Math.random()-.5)*60;galagaState.abilityLasers.push({x1:x,y1:y-45,x2:x,y2:y+45,life:12,color:'#ffe87a',width:4});}if(Math.hypot(b.x+b.w/2-(galagaState.player.x+14),b.y+b.h/2-(galagaState.player.y+14))<125)b.hp-=25;}} if (galagaState.abilities.harpoon > 0) { galagaState.harpoons.push({ x: galagaState.player.x + galagaState.player.w/2, y: galagaState.player.y - 4, vx: 0, vy: -10, mode: 'flying', targets: [], maxTargets: 5, hold: 0 }); playSfx('laser'); } else if (galagaState.abilities.multishot > 0 || galagaState.player.extraBullets > 0) { const totalBullets = 3 + galagaState.player.extraBullets; const startAngle = -0.3; const step = 0.6 / Math.max(1, totalBullets - 1); for (let i = 0; i < totalBullets; i++) { const angle = startAngle + i * step; galagaState.bullets.push({ x: galagaState.player.x + galagaState.player.w / 2 - 3, y: galagaState.player.y, w: 6, h: 12, vx: Math.sin(angle) * 7, vy: -Math.cos(angle) * 9, homing: galagaState.abilities.homing > 0, homingPowerup: galagaState.abilities.homing > 0, dmg: dmg, stormChain:galagaState.selectedShip==='stormwing'&&Date.now()<galagaState.stormLightningUntil, guardianBullet:galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0 }); } } else { galagaState.bullets.push({ x: galagaState.player.x + galagaState.player.w / 2 - 3, y: galagaState.player.y, w: galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0?8:6, h: galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0?14:12, vx: 0, vy: -9, homing: galagaState.abilities.homing > 0, homingPowerup: galagaState.abilities.homing > 0, dmg: dmg, color:galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0?'#76ffc4':undefined, stormChain:galagaState.selectedShip==='stormwing'&&Date.now()<galagaState.stormLightningUntil, guardianBullet:galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0 }); } if(galagaState.passives.twin && galagaState.abilities.harpoon<=0 && !(galagaState.selectedShip==='teleporter'&&galagaState.phaseShotCount%5===0)){galagaState.bullets.push({x:galagaState.player.x+2,y:galagaState.player.y+7,w:5,h:11,vx:-2.4,vy:-8.7,dmg:dmg,color:'#ffcc66',homing:galagaState.abilities.homing>0,homingPowerup:galagaState.abilities.homing>0},{x:galagaState.player.x+galagaState.player.w-7,y:galagaState.player.y+7,w:5,h:11,vx:2.4,vy:-8.7,dmg:dmg,color:'#ffcc66',homing:galagaState.abilities.homing>0,homingPowerup:galagaState.abilities.homing>0});} if(Date.now()<(galagaState.goldenAscensionUntil||0)){for(let gi=newBulletStart;gi<galagaState.bullets.length;gi++){const shot=galagaState.bullets[gi];shot.goldenAscensionShot=true;shot.color='#ffd84a';shot.dmg*=7;}} if(galagaState.selectedShip==='laser' && Date.now() < (galagaState.solarFireUntil||0)){for(let si=newBulletStart;si<galagaState.bullets.length;si++){const shot=galagaState.bullets[si];shot.solarFire=true;shot.color='#ff8a24';shot.w=9;shot.h=14;shot.dmg=shot.dmg*1.2;}} if(galagaState.selectedShip==='bomber' && (Date.now()<galagaState.bomberUntil)){for(let bi=newBulletStart;bi<galagaState.bullets.length;bi++){const shot=galagaState.bullets[bi];shot.isCannonBomb=true;shot.color='#cc5500';shot.w=10;shot.h=10;shot.vy=-7.2;shot.vx*=0.65;shot.dmg=shot.dmg*1.35;shot.blastRadius=45;}}
+ if(galagaState.selectedShip==='spiritbeam'){galagaState.bullets.splice(newBulletStart);spiritBeamStrike(cooldownRate);}
+ if (galagaState.selectedShip !== 'spiritbeam') playSfx('laser'); } // Mega Laser Damage Processing
+ if (Date.now() < (galagaState.kamehamehaUntil || 0)) {
+  const beamWidth = 190;
+  const lx = galagaState.player.x + galagaState.player.w / 2 - beamWidth / 2;
+  const lw = beamWidth;
+  const dps = 1.15 * galagaState.player.baseDamage;
+  for (let i = galagaState.enemies.length - 1; i >= 0; i--) {
+    const e = galagaState.enemies[i];
+    if (e.x + e.w > lx && e.x < lx + lw) {
+      e.hp -= dps;
+      if (e.hp <= 0) {
+        galagaState.score += (e.golden ? e.points : e.points * 0.1);
+        createExplosion(e.x + e.w / 2, e.y + e.h / 2, '#6ee7ff', 10);
+        galagaState.enemies.splice(i, 1);
+      }
+    }
+  }
+  if (galagaState.boss) {
+    const b = galagaState.boss;
+    if (b.x + b.w > lx && b.x < lx + lw) b.hp -= dps * 1.2;
+  }
+}
+if (galagaState.kamehamehaUntil && Date.now() >= galagaState.kamehamehaUntil && !galagaState.kamehamehaFinalized) {
+  galagaState.kamehamehaFinalized = true;
+  const px = galagaState.player.x + galagaState.player.w/2;
+  const blastY = 105;
+  // Massive end-of-beam detonation: broad shockwave plus bright, screen-tall beam flash.
+  galagaState.abilityLasers.push({x1:px,y1:galagaState.player.y,x2:px,y2:blastY,life:42,color:'#e0fbff',width:42});
+  galagaState.novaRings.push({x:px,y:blastY,r:22,life:32,maxLife:32,color:'#6ee7ff'});
+  createExplosion(px,blastY,'#6ee7ff',70);createExplosion(px,blastY,'#ffffff',44);
+  for(let i=galagaState.enemies.length-1;i>=0;i--){const e=galagaState.enemies[i],ex=e.x+e.w/2,ey=e.y+e.h/2;const dx=ex-px,dy=ey-blastY;if(Math.abs(dx)<=235 || Math.hypot(dx,dy)<=250){e.hp-=34*galagaState.player.baseDamage;createExplosion(ex,ey,'#6ee7ff',12);if(e.hp<=0){galagaState.score+=(e.golden?e.points:e.points*0.1);createExplosion(ex,ey,'#ffffff',22);galagaState.enemies.splice(i,1);}}}
+  if(galagaState.boss){const b=galagaState.boss; b.hp-=300*galagaState.player.baseDamage;createExplosion(b.x+b.w/2,b.y+b.h/2,'#e0fbff',42);maybeDropBossPowerup(b);}
+  document.getElementById('status').textContent='KAMEHAMEHA FINISHER! MASSIVE ENERGY DETONATION!';playSfx('explosion');
+}
+if (galagaState.abilities.megalaser > 0 || galagaState.shipLaserActive > 0) { const beamWidth = galagaState.selectedShip==='laser' ? 76 : 24; const lx = galagaState.player.x + galagaState.player.w / 2 - beamWidth/2; const lw = beamWidth; // Damage enemies in the beam and remove them when defeated
  for (let i = galagaState.enemies.length - 1; i >= 0; i--) { const e = galagaState.enemies[i]; if (e.x + e.w > lx && e.x < lx + lw) { e.hp -= (galagaState.selectedShip==='laser' ? 0.24 : 0.35) * galagaState.player.baseDamage; if (e.hp <= 0) { galagaState.score += (e.golden?e.points:e.points*0.1); createExplosion(e.x + e.w / 2, e.y + e.h / 2, e.type === 'orange' ? '#ff6600' : (e.type === 'yellow' ? '#ffff00' : '#00ff66'), 15); playSfx('explosion'); maybeDropHarpoonShip(e.x + e.w/2, e.y + e.h/2); if (Math.random() < 0.10) galagaState.coins.push({ x: e.x + e.w / 2, y: e.y + e.h / 2, vy: 2.2, rot: 0 }); galagaState.enemies.splice(i, 1); } } } // Damage boss when the beam crosses it
  if (galagaState.boss && galagaState.boss.x + galagaState.boss.w > lx && galagaState.boss.x < lx + lw) { galagaState.boss.hp -= (galagaState.selectedShip==='laser' ? 0.24 : 0.35) * galagaState.player.baseDamage; maybeDropBossPowerup(galagaState.boss); maybeDropHarpoonShip(galagaState.boss.x + galagaState.boss.w/2, galagaState.boss.y + galagaState.boss.h/2); } } // Update Bullets
  for (let index = galagaState.bullets.length - 1; index >= 0; index--) { const b = galagaState.bullets[index]; if (b.homing && (!b.homingPowerup || galagaState.abilities.homing > 0)) { let target = null; let bestDist = Infinity; if (galagaState.boss) { target = galagaState.boss; bestDist = Math.hypot(target.x + target.w/2 - b.x, target.y + target.h/2 - b.y); } for (const enemy of galagaState.enemies) { if (enemy.captured) continue; const dist = Math.hypot(enemy.x + enemy.w/2 - b.x, enemy.y + enemy.h/2 - b.y); if (dist < bestDist) { bestDist = dist; target = enemy; } } if (target) { const tx = target.x + target.w / 2; const ty = target.y + target.h / 2; const dx = tx - b.x; const dy = ty - b.y; const dist = Math.hypot(dx, dy) || 1; const steer = b.twinLaser ? 0.42 : 0.22; /* gentle homing: guide toward targets without hard-locking */ b.vx += (dx / dist) * steer; b.vy += (dy / dist) * steer; const maxSpeed = b.twinLaser ? 10 : 9; const speed = Math.hypot(b.vx,b.vy); if(speed > maxSpeed){b.vx=b.vx/speed*maxSpeed;b.vy=b.vy/speed*maxSpeed;} } } const playerBulletSpeed = 1 + (galagaState.player.bulletSpeedBonus || 0); b.x += b.vx * playerBulletSpeed; b.y += b.vy * playerBulletSpeed; if (b.y < -20 || b.y > canvas.height + 20 || b.x < -20 || b.x > canvas.width + 20) galagaState.bullets.splice(index, 1); } // Solar Lance burn damage-over-time (matches the fire-beam tick strength).
@@ -1606,35 +1801,51 @@ function updateGalaga() { if (gameState !== 'PLAYING' || currentGame !== 'galaga
     b.abilityCooldown = (b.abilityCooldown ?? 180) - 1;
     if (!b.captured) {
       if (b.type === 'charger') {
-        // Built to ram: continuously charge toward the player instead of strafing
-        const px = galagaState.player.x + galagaState.player.w/2, py = galagaState.player.y + galagaState.player.h/2;
-        const cx = b.x + b.w/2, cy = b.y + b.h/2;
-        const dx = px - cx, dy = py - cy, dist = Math.hypot(dx, dy) || 1;
-        b.chargeWindup = (b.chargeWindup || 0) - 1;
-        const charging = (b.chargeWindup || 0) <= 0;
-        const spd = charging ? (4.2 + Math.min(2.5, (b.abilityTick||0)*0.002)) : 1.6;
-        b.x += (dx/dist) * spd;
-        b.y += (dy/dist) * spd * 0.85;
-        // Rebound after diving deep, then wind up another charge
-        if (b.y > canvas.height - 160 || b.y < 40 || b.x < 10 || b.x + b.w > canvas.width - 10) {
-          b.y = Math.max(50, Math.min(canvas.height - 180, b.y));
-          b.x = Math.max(20, Math.min(canvas.width - b.w - 20, b.x));
-          b.chargeWindup = 55;
-          createExplosion(cx, cy, b.color, 12);
-        }
-        // Body-slam contact damage
+        // Old-school ram attack: hover + shoot -> red warning line -> dash along the line -> back off
         const p = galagaState.player;
-        if (charging && b.x < p.x+p.w && b.x+b.w > p.x && b.y < p.y+p.h && b.y+b.h > p.y) {
-          if (Date.now() >= (galagaState.invincibleUntil||0)) {
-            if (galagaState.selectedShip==='guardian' && galagaState.guardianCooldown<=0) { galagaState.guardianCooldown=15*60; createExplosion(px,py,'#76ffc4',20); playSfx('shield'); }
-            else if (galagaState.passives.shield && galagaState.shieldCooldown<=0) { galagaState.shieldCooldown=20*60; createExplosion(px,py,'#70f5ff',20); playSfx('shield'); }
-            else if ((galagaState.abilities.shield||0) <= 0) {
-              galagaState.lives--; galagaState.invincibleUntil=Date.now()+1500;
-              createExplosion(px,py,'#ff4d6d',22); playSfx('hit');
-              if (galagaState.lives<=0) endGame(galagaState.score);
-            }
+        const px = p.x + p.w/2, py = p.y + p.h/2;
+        const cx = b.x + b.w/2, cy = b.y + b.h/2;
+        const nowC = Date.now(), homeY = 70;
+        if (!b.chState) { b.chState = 'approach'; b.chTimer = 100; }
+        b.chTimer--;
+        if (b.chState === 'approach') {
+          b.x += Math.max(-2.4, Math.min(2.4, (px - b.w/2 - b.x) * 0.04));
+          b.y += (homeY - b.y) * 0.06;
+          if (b.chTimer <= 0) { b.chState = 'telegraph'; b.chTimer = 55; playSfx('capture'); }
+        } else if (b.chState === 'telegraph') {
+          // Line tracks you, then locks on for the last third of a second (flashing)
+          if (b.chTimer > 20) {
+            const dx = px - cx, dy = py - cy, d = Math.hypot(dx, dy) || 1;
+            b.chDirX = dx / d; b.chDirY = dy / d; b.chTargetX = px; b.chTargetY = py;
           }
-          b.chargeWindup = 70; b.y = Math.max(55, b.y - 40);
+          if (b.chTimer <= 0) { b.chState = 'charge'; b.chTimer = 70; b.chHit = false; playSfx('bossIntro'); createExplosion(cx, cy, '#ff2a2a', 14); }
+        } else if (b.chState === 'charge') {
+          const spd = 11;
+          b.x += b.chDirX * spd; b.y += b.chDirY * spd;
+          if (b.chTimer % 3 === 0) createExplosion(b.x + b.w/2, b.y + b.h/2, '#ff4d6d', 2);
+          let rammed = b.x + 6 < p.x + p.w && b.x + b.w - 6 > p.x && b.y + 6 < p.y + p.h && b.y + b.h - 6 > p.y;
+          if (rammed) {
+            if (nowC >= (galagaState.invincibleUntil || 0)) {
+              if (galagaState.selectedShip === 'guardian' && galagaState.guardianCooldown <= 0) { galagaState.guardianCooldown = 15*60; createExplosion(px, py, '#76ffc4', 20); playSfx('shield'); }
+              else if (galagaState.passives.shield && galagaState.shieldCooldown <= 0) { galagaState.shieldCooldown = 20*60; createExplosion(px, py, '#70f5ff', 20); playSfx('shield'); }
+              else if ((galagaState.abilities.shield || 0) <= 0) {
+                galagaState.lives--; galagaState.invincibleUntil = nowC + 1500;
+                createExplosion(px, py, '#ff4d6d', 22); playSfx('hit');
+                if (galagaState.lives <= 0) endGame(galagaState.score);
+              }
+            }
+            b.noShootUntil = nowC + 2000;   // cannot shoot for 2 seconds after a ram
+            b.chState = 'retreat';
+          } else if (b.chTimer <= 0 || b.x <= 10 || b.x + b.w >= canvas.width - 10 || b.y + b.h >= canvas.height - 70) {
+            b.x = Math.max(10, Math.min(canvas.width - b.w - 10, b.x));
+            b.y = Math.min(canvas.height - 70 - b.h, b.y);
+            b.chState = 'retreat';          // missed: back off
+          }
+        } else if (b.chState === 'retreat') {
+          b.y -= 4.5;
+          b.x += Math.max(-1.5, Math.min(1.5, (canvas.width/2 - b.w/2 - b.x) * 0.02));
+          b.x = Math.max(10, Math.min(canvas.width - b.w - 10, b.x));
+          if (b.y <= homeY + 3) { b.y = homeY; b.chState = 'approach'; b.chTimer = 110; }
         }
       } else if (b.type === 'destroyer' && b.dashTimer > 0) { b.x += b.dashVx; b.dashTimer--; }
       else { b.x += b.vx; }
@@ -1646,7 +1857,7 @@ function updateGalaga() { if (gameState !== 'PLAYING' || currentGame !== 'galaga
     b.attackTimer++;
     const slow = galagaState.abilities.slowmo > 0 ? 2 : 1;
     const rate = b.type==='eclipse' ? (b.phase===2?25:48) : (({queen:42,leviathan:50,hydra:46,titan:72,destroyer:58,specter:48,chrono:44,bomber:54,mirror:40,laser:64,rocket:52,guardian:58,stormcaller:43,swarm:62,cryo:55,prism:38,singularity:50,charger:46})[b.type] || 60);
-    if (b.attackTimer % Math.floor(rate*slow) === 0 && !b.captured) {
+    if (b.attackTimer % Math.floor(rate*slow) === 0 && !b.captured && !(b.type==='charger' && (b.chState==='telegraph' || b.chState==='charge' || Date.now() < (b.noShootUntil||0)))) {
       const cx=b.x+b.w/2, cy=b.y+b.h;
       const px=galagaState.player.x+galagaState.player.w/2, py=galagaState.player.y;
       const dx=px-cx, dy=py-cy, len=Math.hypot(dx,dy)||1;
@@ -1837,17 +2048,43 @@ function updateGalaga() { if (gameState !== 'PLAYING' || currentGame !== 'galaga
    }
  }
  // Player Bullet collisions with enemies & boss
- function detonateCannonBomb(x,y,radius,damage,color='#cc5500'){
-  // Cheap visual: one small burst only (was double explosion + heavy particles per bomb)
-  createExplosion(x,y,color,4);
-  if(galagaState.boss && Math.hypot(galagaState.boss.x+galagaState.boss.w/2-x,galagaState.boss.y+galagaState.boss.h/2-y)<=radius+Math.max(galagaState.boss.w,galagaState.boss.h)*0.25){galagaState.boss.hp-=damage*1.5;maybeDropBossPowerup(galagaState.boss);}
-  for(let ei=galagaState.enemies.length-1;ei>=0;ei--){const e=galagaState.enemies[ei];const d=Math.hypot(e.x+e.w/2-x,e.y+e.h/2-y);if(!e.captured&&d<=radius+Math.max(e.w,e.h)*0.25){e.hp-=damage;if(e.hp<=0){galagaState.score+=(e.golden?e.points:e.points*0.1);galagaState.enemies.splice(ei,1);}}}
+ 
+ for (let bIdx = galagaState.bullets.length - 1; bIdx >= 0; bIdx--) { const b = galagaState.bullets[bIdx]; let hit = false;
+ if (b.pierce) {
+  b.hitSet = b.hitSet || new Set();
+  const pb = galagaState.boss;
+  if (pb && !b.hitSet.has(pb) && b.x < pb.x + pb.w && b.x + b.w > pb.x && b.y < pb.y + pb.h && b.y + b.h > pb.y) {
+   b.hitSet.add(pb); pb.hp -= b.dmg; createExplosion(b.x + b.w/2, Math.max(pb.y, b.y), '#6ee7ff', 3); maybeDropBossPowerup(pb); maybeDropHarpoonShip(pb.x + pb.w/2, pb.y + pb.h/2);
+  }
+  for (let pe = galagaState.enemies.length - 1; pe >= 0; pe--) {
+   const e = galagaState.enemies[pe];
+   if (e.captured || b.hitSet.has(e)) continue;
+   if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
+    b.hitSet.add(e); e.hp -= b.dmg; createExplosion(e.x + e.w/2, e.y + e.h/2, '#6ee7ff', 3);
+    if (e.hp <= 0) {
+     galagaState.score += (e.golden ? e.points : e.points * 0.1);
+     createExplosion(e.x + e.w/2, e.y + e.h/2, '#b9f8ff', 12); playSfx('explosion'); maybeDropHarpoonShip(e.x + e.w/2, e.y + e.h/2);
+     if (e.golden && Math.random() < 0.10) galagaState.drops.push({x:e.x+e.w/2,y:e.y+e.h/2,type:'goldenascension',vy:2.2});
+     if (Math.random() < 0.10) galagaState.drops.push({x:e.x+e.w/2,y:e.y+e.h/2,type:'twinlasers',vy:2});
+     else if (Math.random() < 0.20) { const types=['multishot','rapidfire','shield','slowmo','homing','megalaser']; galagaState.drops.push({x:e.x+e.w/2,y:e.y+e.h/2,type:types[Math.floor(Math.random()*types.length)],vy:2}); }
+     if (Math.random() < (galagaState.passives.fortune ? 0.28 : 0.10)) galagaState.coins.push({x:e.x+e.w/2,y:e.y+e.h/2,vy:2.2,rot:0});
+     galagaState.enemies.splice(pe, 1);
+    }
+   }
+  }
+  continue;
  }
- for (let bIdx = galagaState.bullets.length - 1; bIdx >= 0; bIdx--) { const b = galagaState.bullets[bIdx]; let hit = false; if (galagaState.boss) { const bo = galagaState.boss; if (b.x < bo.x + bo.w && b.x + b.w > bo.x && b.y < bo.y + bo.h && b.y + b.h > bo.y) { if(b.isCannonBomb)detonateCannonBomb(b.x+b.w/2,b.y+b.h/2,b.blastRadius||45,b.dmg,'#ff9d42');else{bo.hp -= b.dmg; if(b.solarFire){bo.solarBurnUntil=Date.now()+3000;bo.solarBurnTick=Date.now();} maybeDropBossPowerup(bo); maybeDropHarpoonShip(bo.x + bo.w/2, bo.y + bo.h/2);} hit = true; } } if (!hit) { galagaState.enemies.forEach((e, eIdx) => { if (!hit && !e.captured && b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) { if(b.isCannonBomb)detonateCannonBomb(b.x+b.w/2,b.y+b.h/2,b.blastRadius||45,b.dmg,'#ff9d42');else {e.hp -= b.dmg; if(b.solarFire){e.solarBurnUntil=Date.now()+3000;e.solarBurnTick=Date.now();}} if(!b.isCannonBomb && galagaState.passives.chain && Math.random()<0.18){createExplosion(e.x+e.w/2,e.y+e.h/2,'#70f5ff',12);for(const other of galagaState.enemies){if(other!==e&&Math.hypot(other.x+other.w/2-(e.x+e.w/2),other.y+other.h/2-(e.y+e.h/2))<115){other.hp-=2;if(other.hp<=0){galagaState.score+=(other.golden?other.points:other.points*0.1);createExplosion(other.x+other.w/2,other.y+other.h/2,'#70f5ff',12);other.hp=0;}}}galagaState.enemies=galagaState.enemies.filter(other=>other.hp>0);} hit = true; if (e.hp <= 0) { galagaState.score += (e.golden?e.points:e.points*0.1); createExplosion(e.x + e.w/2, e.y + e.h/2, e.type === 'orange' ? '#ff6600' : (e.type==='yellow'?'#ffff00':'#00ff66'), 15); playSfx('explosion'); maybeDropHarpoonShip(e.x + e.w/2, e.y + e.h/2); if(e.golden && Math.random()<0.10)galagaState.drops.push({x:e.x+e.w/2,y:e.y+e.h/2,type:'goldenascension',vy:2.2}); // Drops: 20% Ability Drop
+ if (galagaState.boss) { const bo = galagaState.boss; if (b.x < bo.x + bo.w && b.x + b.w > bo.x && b.y < bo.y + bo.h && b.y + b.h > bo.y) { if(b.isCannonBomb)detonateCannonBomb(b.x+b.w/2,b.y+b.h/2,b.blastRadius||45,b.dmg,'#ff9d42');else{bo.hp -= b.dmg; if(b.solarFire){bo.solarBurnUntil=Date.now()+3000;bo.solarBurnTick=Date.now();} maybeDropBossPowerup(bo); maybeDropHarpoonShip(bo.x + bo.w/2, bo.y + bo.h/2);} hit = true; } } if (!hit) { galagaState.enemies.forEach((e, eIdx) => { if (!hit && !e.captured && b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) { if(b.isCannonBomb)detonateCannonBomb(b.x+b.w/2,b.y+b.h/2,b.blastRadius||45,b.dmg,'#ff9d42');else {e.hp -= b.dmg; if(b.solarFire){e.solarBurnUntil=Date.now()+3000;e.solarBurnTick=Date.now();}} if(!b.isCannonBomb && galagaState.passives.chain && Math.random()<0.18){createExplosion(e.x+e.w/2,e.y+e.h/2,'#70f5ff',12);for(const other of galagaState.enemies){if(other!==e&&Math.hypot(other.x+other.w/2-(e.x+e.w/2),other.y+other.h/2-(e.y+e.h/2))<115){other.hp-=2;if(other.hp<=0){galagaState.score+=(other.golden?other.points:other.points*0.1);createExplosion(other.x+other.w/2,other.y+other.h/2,'#70f5ff',12);other.hp=0;}}}galagaState.enemies=galagaState.enemies.filter(other=>other.hp>0);} hit = true; if (e.hp <= 0) { galagaState.score += (e.golden?e.points:e.points*0.1); createExplosion(e.x + e.w/2, e.y + e.h/2, e.type === 'orange' ? '#ff6600' : (e.type==='yellow'?'#ffff00':'#00ff66'), 15); playSfx('explosion'); maybeDropHarpoonShip(e.x + e.w/2, e.y + e.h/2); if(e.golden && Math.random()<0.10)galagaState.drops.push({x:e.x+e.w/2,y:e.y+e.h/2,type:'goldenascension',vy:2.2}); // Drops: 20% Ability Drop
  if (Math.random() < 0.10) { galagaState.drops.push({ x: e.x + e.w / 2, y: e.y + e.h / 2, type: 'twinlasers', vy: 2 }); } else if (Math.random() < 0.20) { const types = ['multishot', 'rapidfire', 'shield', 'slowmo', 'homing', 'megalaser']; const picked = types[Math.floor(Math.random() * types.length)]; galagaState.drops.push({ x: e.x + e.w / 2, y: e.y + e.h / 2, type: picked, vy: 2 }); } // 1/10 (10%) Chance to Drop Coin
  if (Math.random() < (galagaState.passives.fortune ? 0.28 : 0.10)) { galagaState.coins.push({ x: e.x + e.w / 2, y: e.y + e.h / 2, vy: 2.2, rot: 0 }); } galagaState.enemies.splice(eIdx, 1); } } }); } if (hit) galagaState.bullets.splice(bIdx, 1); } } // end host-only shared world sim (boss/enemies/bullets)
  // Handle Powerup Drops
- for (let idx = galagaState.drops.length - 1; idx >= 0; idx--) { const d = galagaState.drops[idx]; if(galagaState.passives.magnet){const mx=galagaState.player.x+galagaState.player.w/2-(d.x+10),my=galagaState.player.y+galagaState.player.h/2-(d.y+10),md=Math.hypot(mx,my);if(md<245&&md>1){d.x+=mx/md*3.6;d.y+=my/md*3.6;}else{d.y+=d.vy;}}else{d.y+=d.vy;} if (d.x < galagaState.player.x + galagaState.player.w + galagaState.player.w && d.x + 20 > galagaState.player.x && d.y < galagaState.player.y + galagaState.player.h && d.y + 20 > galagaState.player.y) { if(d.type==='goldenascension'){activateGoldenAscension();galagaState.drops.splice(idx,1);return;} if (Math.random() < 0.01) { galagaState.flameShipUntil = Date.now() + (10 + Math.random() * 3) * 1000; galagaState.flameTick = 0; document.getElementById('status').textContent = '🔥 RARE FLAME SHIP! Side flamethrowers active for 10–13 seconds!'; } else { if(d.type==='harpoon' && galagaState.selectedShip!=='fighter' && ((galagaState.selectedShip==='laser' && galagaState.flameShipUntil>Date.now()) || (galagaState.selectedShip==='guardian' && galagaState.guardianHarpoonShields>0) || (galagaState.selectedShip==='stormwing' && galagaState.stormLightningUntil>Date.now()) || (galagaState.selectedShip==='teleporter' && galagaState.phasePortalUntil>Date.now()))){document.getElementById('status').textContent='SHIP ABILITY ALREADY ACTIVE!';} else if(d.type==='harpoon' && galagaState.selectedShip==='laser'){galagaState.flameShipUntil=Date.now()+12000;galagaState.flameTick=0;document.getElementById('status').textContent='SOLAR LANCE OVERDRIVE: FLAMETHROWER ACTIVE FOR 12 SECONDS!';} else if(d.type==='harpoon' && galagaState.selectedShip==='guardian'){galagaState.guardianHarpoonShields=40;galagaState.guardianHarpoonUntil=Date.now()+12000;galagaState.abilities.harpoon=0;document.getElementById('status').textContent='AEGIS BARRIER: 8 SHIELDS · 5 HITS EACH · 12 SECONDS!';} else if(d.type==='harpoon' && galagaState.selectedShip==='nova'){galagaState.abilities.harpoon=0;document.getElementById('status').textContent='NOVA ARTILLERY: LASER PROC IS BUILT INTO EVERY SHOT — NO HARPOON NEEDED!';} else if(d.type==='harpoon' && galagaState.selectedShip==='stormwing'){galagaState.abilities.harpoon=0;galagaState.stormLightningUntil=Date.now()+12000;document.getElementById('status').textContent='STORMWING: LIGHTNING CHAIN FOR 12 SECONDS!';} else if(d.type==='harpoon' && galagaState.selectedShip==='teleporter'){galagaState.abilities.harpoon=0;galagaState.phasePortalUntil=Date.now()+12000;galagaState.phaseShotCount=0;galagaState.phasePortalSpawnTick=0;galagaState.phasePortals=[];document.getElementById('status').textContent='PHASE JUMPER: PORTAL STORM! RIFTS FIRE LASERS AND DAMAGE TOUCHING ALIENS FOR 12 SECONDS!';} else if(d.type==='harpoon' && galagaState.selectedShip==='bomber'){galagaState.abilities.harpoon=0;galagaState.bomberUntil=Date.now()+6000;galagaState.bomberCooldown=Date.now()+5000;galagaState.bomberShotTimer=0;galagaState.bomberShipX=-80;document.getElementById('status').textContent='BOMBER COMMAND: BOMBING RUN REACTIVATED!';} else {grantAbility(d.type, d.type === 'megalaser' ? 7 : (d.type === 'harpoon' ? 12 : 12)); if(d.type==='harpoon')document.getElementById('status').textContent='HARPOON ACTIVE! Fire to snag up to five aliens!';} if(d.type==='starfall'){galagaState.starfallUntil=Date.now()+12000;document.getElementById('status').textContent='STARFALL BARRAGE: HOMING MISSILES FOR 12 SECONDS!';}else if(d.type==='drones'){galagaState.droneSquadronUntil=Date.now()+12000;document.getElementById('status').textContent='DRONE SQUADRON: 6 SUPPORT DRONES DEPLOYED FOR 12 SECONDS!';} if(d.type==='twinlasers'){galagaState.twinLaserTimer=1;document.getElementById('status').textContent='TWIN ROCKET LASERS! Auto-targeting piercing beams active for 10 seconds!';} else if(d.type==='harpoon' && galagaState.selectedShip==='fighter') document.getElementById('status').textContent='RARE HARPOON SHIP! Fire to snag aliens into the black hole!'; } playSfx('powerup'); galagaState.drops.splice(idx, 1); } if (d.y > canvas.height) galagaState.drops.splice(idx, 1); } // Handle Coin Drops
+ for (let idx = galagaState.drops.length - 1; idx >= 0; idx--) { const d = galagaState.drops[idx]; if(galagaState.passives.magnet){const mx=galagaState.player.x+galagaState.player.w/2-(d.x+10),my=galagaState.player.y+galagaState.player.h/2-(d.y+10),md=Math.hypot(mx,my);if(md<245&&md>1){d.x+=mx/md*3.6;d.y+=my/md*3.6;}else{d.y+=d.vy;}}else{d.y+=d.vy;} if (d.x < galagaState.player.x + galagaState.player.w + galagaState.player.w && d.x + 20 > galagaState.player.x && d.y < galagaState.player.y + galagaState.player.h && d.y + 20 > galagaState.player.y) { if(d.type==='goldenascension'){activateGoldenAscension();galagaState.drops.splice(idx,1);return;} if (Math.random() < 0.01) { galagaState.flameShipUntil = Date.now() + (10 + Math.random() * 3) * 1000; galagaState.flameTick = 0; document.getElementById('status').textContent = '🔥 RARE FLAME SHIP! Side flamethrowers active for 10–13 seconds!'; } else { if(d.type==='harpoon' && galagaState.selectedShip!=='fighter' && ((galagaState.selectedShip==='laser' && galagaState.flameShipUntil>Date.now()) || (galagaState.selectedShip==='guardian' && galagaState.guardianHarpoonShields>0) || (galagaState.selectedShip==='stormwing' && galagaState.stormLightningUntil>Date.now()) || (galagaState.selectedShip==='teleporter' && galagaState.phasePortalUntil>Date.now()) || (galagaState.selectedShip==='spiritbeam' && (galagaState.kamehamehaUntil>Date.now() || galagaState.spiritBeamCooldown>Date.now())) || (galagaState.selectedShip==='nova' && galagaState.novaHarpoonUntil>Date.now()))){document.getElementById('status').textContent='SHIP ABILITY ALREADY ACTIVE!';} else if(d.type==='harpoon' && galagaState.selectedShip==='laser'){galagaState.flameShipUntil=Date.now()+12000;galagaState.flameTick=0;document.getElementById('status').textContent='SOLAR LANCE OVERDRIVE: FLAMETHROWER ACTIVE FOR 12 SECONDS!';} else if(d.type==='harpoon' && galagaState.selectedShip==='guardian'){galagaState.guardianHarpoonShields=40;galagaState.guardianHarpoonUntil=Date.now()+12000;galagaState.abilities.harpoon=0;document.getElementById('status').textContent='AEGIS BARRIER: 8 SHIELDS · 5 HITS EACH · 12 SECONDS!';} else if(d.type==='harpoon' && galagaState.selectedShip==='nova'){activateNovaHarpoon();} else if(d.type==='harpoon' && galagaState.selectedShip==='stormwing'){galagaState.abilities.harpoon=0;galagaState.stormLightningUntil=Date.now()+12000;document.getElementById('status').textContent='STORMWING: LIGHTNING CHAIN FOR 12 SECONDS!';} else if(d.type==='harpoon' && galagaState.selectedShip==='teleporter'){galagaState.abilities.harpoon=0;galagaState.phasePortalUntil=Date.now()+12000;galagaState.phaseShotCount=0;galagaState.phasePortalSpawnTick=0;galagaState.phasePortals=[];document.getElementById('status').textContent='PHASE JUMPER: PORTAL STORM! RIFTS FIRE LASERS AND DAMAGE TOUCHING ALIENS FOR 12 SECONDS!';} else if(d.type==='harpoon' && galagaState.selectedShip==='bomber'){galagaState.abilities.harpoon=0;galagaState.bomberUntil=Date.now()+6000;galagaState.bomberCooldown=Date.now()+5000;galagaState.bomberShotTimer=0;galagaState.bomberShipX=-80;document.getElementById('status').textContent='BOMBER COMMAND: BOMBING RUN REACTIVATED!';} else if(d.type==='harpoon' && galagaState.selectedShip==='spiritbeam'){galagaState.abilities.harpoon=0;galagaState.spiritBeamCooldown=0;activateSpiritBeamBlast();} else {if (d.type === 'megalaser' && (galagaState.selectedShip === 'spiritbeam' || selectedShip === 'spiritbeam')) {
+          galagaState.kamehamehaUntil = Date.now() + 3000;
+          document.getElementById('status').textContent = 'KAMEHAMEHA BEAM — 3 SECONDS!';
+          playSfx('kamehameha');
+        } else {
+          grantAbility(d.type, d.type === 'megalaser' ? 7 : (d.type === 'harpoon' ? 12 : 12));
+        } if(d.type==='harpoon')document.getElementById('status').textContent='HARPOON ACTIVE! Fire to snag up to five aliens!';} if(d.type==='starfall'){galagaState.starfallUntil=Date.now()+12000;document.getElementById('status').textContent='STARFALL BARRAGE: HOMING MISSILES FOR 12 SECONDS!';}else if(d.type==='drones'){galagaState.droneSquadronUntil=Date.now()+12000;document.getElementById('status').textContent='DRONE SQUADRON: 6 SUPPORT DRONES DEPLOYED FOR 12 SECONDS!';} if(d.type==='twinlasers'){galagaState.twinLaserTimer=1;document.getElementById('status').textContent='TWIN ROCKET LASERS! Auto-targeting piercing beams active for 10 seconds!';} else if(d.type==='harpoon' && galagaState.selectedShip==='fighter') document.getElementById('status').textContent='RARE HARPOON SHIP! Fire to snag aliens into the black hole!'; } playSfx('powerup'); galagaState.drops.splice(idx, 1); } if (d.y > canvas.height) galagaState.drops.splice(idx, 1); } // Handle Coin Drops
  galagaState.coins.forEach((c, idx) => { c.y += c.vy; c.rot += 0.1; if (c.x < galagaState.player.x + galagaState.player.w && c.x + 16 > galagaState.player.x && c.y < galagaState.player.y + galagaState.player.h && c.y + 16 > galagaState.player.y) { galagaState.coinsCollected += 1; galagaState.score += 100; saveCoinWallet(); playSfx('coin'); galagaState.coins.splice(idx, 1); } if (c.y > canvas.height) galagaState.coins.splice(idx, 1); }); // Next Wave
  if (galagaState.enemies.length === 0 && !galagaState.boss && !galagaState.bossSpawned && !waveTransitionPending) { if (!mpActive || mpIsHost) { galagaState.wave++; scheduleNextWave(); } } // Particles
  for (let idx = galagaState.particles.length - 1; idx >= 0; idx--) { const p = galagaState.particles[idx]; p.x += p.vx; p.y += p.vy; p.alpha -= 0.03; if (p.alpha <= 0) galagaState.particles.splice(idx, 1); } for(let i=galagaState.bossDebris.length-1;i>=0;i--){const d=galagaState.bossDebris[i];d.x+=d.vx;d.y+=d.vy;d.vx*=.985;d.vy+=.075;d.rot+=d.vr;d.life--;if(d.life<=0)galagaState.bossDebris.splice(i,1);} } function spawnBossWreck(boss) { if(!boss)return; const cx=boss.x+boss.w/2,cy=boss.y+boss.h/2; createExplosion(cx,cy,boss.color||'#ffaa00',70); createExplosion(cx,cy,'#fff3c4',35); playSfx('explosion'); const pieces=18; for(let i=0;i<pieces;i++){const a=Math.PI*2*i/pieces+(Math.random()-.5)*.35,sp=2+Math.random()*5;galagaState.bossDebris.push({x:boss.x+Math.random()*boss.w,y:boss.y+Math.random()*boss.h,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.5,rot:Math.random()*Math.PI*2,vr:(Math.random()-.5)*.22,w:5+Math.random()*13,h:4+Math.random()*11,color:Math.random()<.65?(boss.color||'#ffaa00'):['#aab6d8','#59627b','#ffcc66'][Math.floor(Math.random()*3)],life:70+Math.random()*35,maxLife:105});} }
@@ -1861,7 +2098,7 @@ function maybeDropBossPowerup(boss) { if(boss&&boss.golden&&!boss.goldenAscensio
 function drawShipBody(ctx, shipId, opts) {
   opts = opts || {};
   const harpoon = !!opts.harpoon;
-  const shipColor = harpoon ? '#c77dff' : shipId==='laser' ? '#ff5656' : shipId==='guardian' ? '#76ffc4' : shipId==='stormwing' ? '#45eaff' : shipId==='nova' ? '#ffe87a' : shipId==='teleporter' ? '#b78aff' : shipId==='bomber' ? '#ff9d42' : '#00f3ff';
+  const shipColor = harpoon ? '#c77dff' : shipId==='laser' ? '#ff5656' : shipId==='guardian' ? '#76ffc4' : shipId==='stormwing' ? '#45eaff' : shipId==='nova' ? '#ffe87a' : shipId==='teleporter' ? '#b78aff' : shipId==='bomber' ? '#ff9d42' : shipId==='spiritbeam' ? '#6ee7ff' : '#00f3ff';
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.fillStyle = shipColor; ctx.strokeStyle = shipColor; ctx.shadowColor = shipColor; ctx.shadowBlur = opts.shadowBlur != null ? opts.shadowBlur : 12;
   if (shipId === 'laser') {
@@ -1887,6 +2124,10 @@ function drawShipBody(ctx, shipId, opts) {
     ctx.fillStyle = '#63321f'; ctx.strokeStyle = '#ffd08a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(7,-1); ctx.lineTo(5,7); ctx.lineTo(-5,7); ctx.lineTo(-7,-1); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#ffe87a'; ctx.shadowColor = '#ffb13b'; ctx.shadowBlur = 12; ctx.beginPath(); ctx.arc(0,1,4.5,0,Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
     ctx.fillStyle = '#ff6a35'; ctx.beginPath(); ctx.moveTo(-5,14); ctx.lineTo(-2,14); ctx.lineTo(-4,20+flick); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(2,14); ctx.lineTo(5,14); ctx.lineTo(4,20+flick); ctx.closePath(); ctx.fill();
+  } else if (shipId === 'spiritbeam') {
+    ctx.beginPath(); ctx.moveTo(0,-20); ctx.lineTo(8,-6); ctx.lineTo(16,4); ctx.lineTo(10,8); ctx.lineTo(6,16); ctx.lineTo(0,12); ctx.lineTo(-6,16); ctx.lineTo(-10,8); ctx.lineTo(-16,4); ctx.lineTo(-8,-6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#e0fbff'; ctx.fillRect(-2,-18,4,22);
+    ctx.strokeStyle = '#b8f4ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-12,10); ctx.lineTo(-18,18); ctx.moveTo(12,10); ctx.lineTo(18,18); ctx.stroke();
   } else {
     ctx.beginPath(); ctx.moveTo(0,-14); ctx.lineTo(12,12); ctx.lineTo(6,10); ctx.lineTo(0,14); ctx.lineTo(-6,10); ctx.lineTo(-12,12); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#ff0055'; ctx.fillRect(-3,-4,6,8);
@@ -1912,8 +2153,18 @@ function renderGalaga() { ctx.fillStyle = '#050515'; ctx.fillRect(0, 0, canvas.w
  if (galagaState.abilities.shield > 0) { ctx.strokeStyle = '#00f3ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.stroke(); } // Fighter Body
  const shipId=galagaState.selectedShip||'fighter';
  drawShipBody(ctx, shipId, { harpoon: galagaState.abilities.harpoon>0 });
+ if(Date.now()<(galagaState.kamehamehaUntil||0)){
+   const beamT=performance.now(), bw=190+Math.sin(beamT*.035)*14; ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.34+0.12*Math.sin(beamT*0.02); ctx.fillStyle='#7df7ff'; ctx.shadowColor='#6ee7ff'; ctx.shadowBlur=48; ctx.fillRect(-bw/2-20,-canvas.height,bw+40,canvas.height); ctx.globalAlpha=0.7; for(let pi=0;pi<8;pi++){const px=(Math.sin(beamT*.009+pi*2.4)*bw*.42);ctx.fillStyle=pi%2?'#ffffff':'#8df7ff';ctx.fillRect(px,-((beamT*.55+pi*83)%(canvas.height)),3,16);} ctx.globalAlpha=0.55+0.2*Math.sin(beamT*0.02);
+   const g=ctx.createLinearGradient(0,0,0,-canvas.height);
+   g.addColorStop(0,'#e0fbff'); g.addColorStop(0.4,'#6ee7ff'); g.addColorStop(1,'rgba(110,231,255,0)');
+   ctx.fillStyle=g; ctx.shadowColor='#6ee7ff'; ctx.shadowBlur=28;
+   ctx.fillRect(-bw/2,-canvas.height,bw,canvas.height);
+   ctx.globalAlpha=0.9; ctx.fillStyle='#ffffff'; ctx.fillRect(-6,-canvas.height,12,canvas.height);
+   ctx.restore();
+ }
  if(galagaState.abilities.harpoon>0){ctx.strokeStyle='#e7c7ff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-12,5);ctx.lineTo(-17,12);ctx.moveTo(12,5);ctx.lineTo(17,12);ctx.stroke();}
  ctx.restore();
+ if(shipId==='nova' && Date.now()<(galagaState.novaHarpoonUntil||0)){const t=performance.now();ctx.save();ctx.globalCompositeOperation='lighter';ctx.strokeStyle='#ffe87a';ctx.shadowColor='#fff2a8';ctx.shadowBlur=20;ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(p.x+p.w/2,p.y+p.h/2,31+Math.sin(t*.04)*4,24+Math.cos(t*.04)*3,t*.003,0,Math.PI*2);ctx.stroke();ctx.restore();}
  if(shipId==='stormwing' && Date.now()<galagaState.stormLightningUntil){const t=performance.now();ctx.save();ctx.globalCompositeOperation='lighter';for(let i=0;i<7;i++){const a=t*.004+i*Math.PI*2/7,rr=24+Math.sin(t*.02+i)*4,x=p.x+p.w/2+Math.cos(a)*rr,y=p.y+p.h/2+Math.sin(a)*rr;ctx.strokeStyle='#8df7ff';ctx.shadowColor='#45eaff';ctx.shadowBlur=12;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.sin(t*.02+i)*7,y+Math.cos(t*.018+i)*9);ctx.stroke();}ctx.restore();}
  if (galagaState.guardianHarpoonShields>0){ctx.save();ctx.strokeStyle='#76ffc4';ctx.shadowColor='#76ffc4';ctx.shadowBlur=10;ctx.lineWidth=2;for(let i=0;i<8;i++){const a=i*Math.PI/4+performance.now()*.0005;ctx.beginPath();ctx.arc(p.x+p.w/2+Math.cos(a)*25,p.y+p.h/2+Math.sin(a)*25,5,0,Math.PI*2);ctx.stroke();}ctx.restore();}
  if (Date.now() < galagaState.flameShipUntil) {
@@ -1952,7 +2203,22 @@ function renderGalaga() { ctx.fillStyle = '#050515'; ctx.fillRect(0, 0, canvas.w
   // Tiny escort rockets shown while the rare twin-laser power-up is active.
   if(galagaState.abilities.twinlasers>0){for(const side of [-1,1]){const rx=p.x+p.w/2+side*14,ry=p.y+5;ctx.save();ctx.translate(rx,ry);ctx.fillStyle='#6ee7ff';ctx.strokeStyle='#d9fbff';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(3,2);ctx.lineTo(0,0);ctx.lineTo(-3,2);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#ffb45e';ctx.fillRect(-1,2,2,3);ctx.restore();}}
   // Draw Rainbow Mega Laser Beam
- if (galagaState.abilities.megalaser > 0 || galagaState.shipLaserActive > 0) { const now=performance.now(), lx=p.x+p.w/2; ctx.save();ctx.globalCompositeOperation='lighter'; if(galagaState.selectedShip==='laser' && galagaState.shipLaserActive>0){ /* Solar Lance: a broad pixelated fire beam */ const half=38; for(let sy=0;sy<p.y;sy+=12){const sway=Math.sin(now*.012+sy*.045)*5;const width=half*(0.72+0.22*Math.sin(now*.018+sy*.03));for(let x=-width;x<=width;x+=10){const jitter=Math.sin(now*.02+sy*.17+x*.11)*3;ctx.globalAlpha=.72+Math.sin(now*.025+sy*.1+x)*.2;ctx.fillStyle=(Math.abs(x)<width*.22)?(sy%24===0?'#fff4a3':'#ffe34d'):(Math.abs(x)<width*.62?'#ff9d28':'#ff4b18');ctx.fillRect(lx+x+sway+jitter,sy,8,13);} }ctx.globalAlpha=.85;ctx.fillStyle='#fff6bf';ctx.fillRect(lx-5,0,10,p.y); } else {const pulse=0.82+Math.sin(now*0.025)*0.12,beamHalf=12;ctx.globalAlpha=.24+Math.sin(now*.035)*.08;ctx.fillStyle='#55eaff';ctx.shadowColor='#7df7ff';ctx.shadowBlur=20;ctx.fillRect(lx-beamHalf-5,0,beamHalf*2+10,p.y);ctx.globalAlpha=.88;const grad=ctx.createLinearGradient(lx-beamHalf,0,lx+beamHalf,0);grad.addColorStop(0,'#ff245f');grad.addColorStop(.5,'#fff66b');grad.addColorStop(1,'#bd69ff');ctx.fillStyle=grad;ctx.fillRect(lx-beamHalf*pulse,0,beamHalf*2*pulse,p.y);ctx.globalAlpha=.75;ctx.fillStyle='#ffffff';ctx.fillRect(lx-3,0,6,p.y);}ctx.restore(); } // Animated Bomber Command support ship, only while its 6-second deployment is active.
+ if (galagaState.abilities.megalaser > 0 || galagaState.shipLaserActive > 0) { const now=performance.now(), lx=p.x+p.w/2; ctx.save();ctx.globalCompositeOperation='lighter'; if(galagaState.selectedShip==='laser' && galagaState.shipLaserActive>0){ /* Solar Lance: a broad pixelated fire beam */ const half=38; for(let sy=0;sy<p.y;sy+=12){const sway=Math.sin(now*.012+sy*.045)*5;const width=half*(0.72+0.22*Math.sin(now*.018+sy*.03));for(let x=-width;x<=width;x+=10){const jitter=Math.sin(now*.02+sy*.17+x*.11)*3;ctx.globalAlpha=.72+Math.sin(now*.025+sy*.1+x)*.2;ctx.fillStyle=(Math.abs(x)<width*.22)?(sy%24===0?'#fff4a3':'#ffe34d'):(Math.abs(x)<width*.62?'#ff9d28':'#ff4b18');ctx.fillRect(lx+x+sway+jitter,sy,8,13);} }ctx.globalAlpha=.85;ctx.fillStyle='#fff6bf';ctx.fillRect(lx-5,0,10,p.y); } else {const pulse=0.82+Math.sin(now*0.025)*0.12,beamHalf=12;ctx.globalAlpha=.24+Math.sin(now*.035)*.08;ctx.fillStyle='#55eaff';ctx.shadowColor='#7df7ff';ctx.shadowBlur=20;ctx.fillRect(lx-beamHalf-5,0,beamHalf*2+10,p.y);ctx.globalAlpha=.88;const grad=ctx.createLinearGradient(lx-beamHalf,0,lx+beamHalf,0);grad.addColorStop(0,'#ff245f');grad.addColorStop(.5,'#fff66b');grad.addColorStop(1,'#bd69ff');ctx.fillStyle=grad;ctx.fillRect(lx-beamHalf*pulse,0,beamHalf*2*pulse,p.y);ctx.globalAlpha=.75;ctx.fillStyle='#ffffff';ctx.fillRect(lx-3,0,6,p.y);}ctx.restore(); } if(galagaState.selectedShip==='spiritbeam'&&Date.now()<(galagaState.spiritLaserUntil||0)){
+ const t=performance.now(),bx=p.x+p.w/2,by=p.y-4,w=22+Math.sin(t*.04)*2;
+ ctx.save();ctx.globalCompositeOperation='lighter';
+ ctx.shadowColor='#39dfff';ctx.shadowBlur=30;
+ ctx.globalAlpha=.35;ctx.fillStyle='#2fd8ff';ctx.fillRect(bx-w/2-7,0,w+14,by);
+ const g=ctx.createLinearGradient(bx-w/2,0,bx+w/2,0);
+ g.addColorStop(0,'#1a9fe8');g.addColorStop(.35,'#7df7ff');g.addColorStop(.5,'#ffffff');g.addColorStop(.65,'#7df7ff');g.addColorStop(1,'#1a9fe8');
+ ctx.globalAlpha=.92;ctx.fillStyle=g;ctx.fillRect(bx-w/2,0,w,by);
+ ctx.globalAlpha=1;ctx.fillStyle='#ffffff';ctx.fillRect(bx-3,0,6,by);
+ ctx.shadowBlur=0;ctx.globalAlpha=.8;ctx.fillStyle='#e6ffff';
+ for(let i=0;i<10;i++){const yy=by-((t*.9+i*61)%by);ctx.fillRect(bx-w/2+((i*7)%(w-3)),yy,3,12);}
+ ctx.globalAlpha=.9;ctx.shadowColor='#7df7ff';ctx.shadowBlur=22;ctx.fillStyle='#e6ffff';
+ ctx.beginPath();ctx.arc(bx,by,11+Math.sin(t*.05)*2,0,Math.PI*2);ctx.fill();
+ ctx.restore();
+}
+// Animated Bomber Command support ship, only while its 6-second deployment is active.
  if(galagaState.selectedShip==='bomber'&&Date.now()<galagaState.bomberUntil){const by=70,flame=7+Math.sin(performance.now()*.04)*3;for(const offset of [-34,0,34]){ctx.save();ctx.translate(galagaState.bomberShipX+offset,by);ctx.shadowBlur=0;ctx.fillStyle='#cc5500';ctx.beginPath();ctx.moveTo(-26,-3);ctx.lineTo(-13,-13);ctx.lineTo(13,-13);ctx.lineTo(27,-1);ctx.lineTo(17,9);ctx.lineTo(-17,9);ctx.closePath();ctx.fill();ctx.fillStyle='#66351f';ctx.fillRect(-10,-8,20,12);ctx.fillStyle='#ffe87a';ctx.fillRect(-5,-6,10,7);ctx.fillStyle='#ff6a35';ctx.beginPath();ctx.moveTo(-14,8);ctx.lineTo(-9,8);ctx.lineTo(-12,flame+8);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(9,8);ctx.lineTo(14,8);ctx.lineTo(12,flame+8);ctx.closePath();ctx.fill();ctx.restore();}ctx.fillStyle='#ffcc83';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText('BOMBER SUPPORT x3 '+Math.ceil((galagaState.bomberUntil-Date.now())/1000)+'s',canvas.width/2,95);}
  // Draw animated Passive Rockets
  galagaState.rockets.forEach((r,i)=>{const now=performance.now(),angle=Math.atan2(r.vy,r.vx)+Math.PI/2, flicker=0.7+Math.random()*0.65;ctx.save();ctx.translate(r.x,r.y);ctx.rotate(angle);ctx.globalCompositeOperation='lighter';ctx.shadowColor='#ff6a00';ctx.shadowBlur=15;ctx.fillStyle='#ff5a18';ctx.beginPath();ctx.moveTo(-2,3);ctx.lineTo(0,12+flicker*7);ctx.lineTo(2,3);ctx.closePath();ctx.fill();ctx.fillStyle='#ffe9a1';ctx.shadowColor='#fff0a0';ctx.shadowBlur=10;ctx.beginPath();ctx.moveTo(-1,4);ctx.lineTo(0,9+flicker*4);ctx.lineTo(1,4);ctx.closePath();ctx.fill();ctx.globalAlpha=0.5;ctx.strokeStyle='#ff9d42';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,7);ctx.lineTo(Math.sin(now*0.03+i)*3,19+flicker*8);ctx.stroke();ctx.globalAlpha=1;ctx.fillStyle='#ff9d42';ctx.shadowColor='#ff6a00';ctx.shadowBlur=12;ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(5,5);ctx.lineTo(0,3);ctx.lineTo(-5,5);ctx.closePath();ctx.fill();ctx.fillStyle='#fff0d0';ctx.fillRect(-1.5,-6,3,7);ctx.restore();}); // Draw player bullets as simple rectangles (no trails, glow, or per-bullet particles).
@@ -1964,6 +2230,7 @@ function renderGalaga() { ctx.fillStyle = '#050515'; ctx.fillRect(0, 0, canvas.w
    if(b.goldenAscensionShot){ctx.save();ctx.fillStyle='#ffd84a';ctx.strokeStyle='#fff4a8';ctx.lineWidth=1;ctx.fillRect(b.x,b.y,b.w,b.h);ctx.strokeRect(b.x+0.5,b.y+0.5,Math.max(1,b.w-1),Math.max(1,b.h-1));ctx.restore();}
    else if(b.solarFire){ctx.save();ctx.fillStyle='#ff8a24';ctx.strokeStyle='#ffe89a';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(b.x+b.w/2,b.y);ctx.lineTo(b.x+b.w,b.y+b.h);ctx.lineTo(b.x,b.y+b.h);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#fff0a0';ctx.fillRect(b.x+b.w/2-1,b.y+b.h-4,2,3);ctx.restore();}
    else if(b.isCannonBomb){ctx.fillStyle='#cc5500';ctx.beginPath();ctx.arc(b.x+b.w/2,b.y+b.h/2,5,0,Math.PI*2);ctx.fill();}
+   else if(b.isSpiritLaser){ctx.save();ctx.strokeStyle=b.color||'#6ee7ff';ctx.shadowColor='#6ee7ff';ctx.shadowBlur=14;ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(b.x+b.w/2,b.y+b.h);ctx.lineTo(b.x+b.w/2+b.vx*2,b.y);ctx.stroke();ctx.strokeStyle='#e0fbff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(b.x+b.w/2,b.y+b.h);ctx.lineTo(b.x+b.w/2+b.vx*2,b.y);ctx.stroke();ctx.restore();}
    else if (b.homingPowerup && galagaState.abilities.homing > 0) {
      // Rotate the simple rectangle to face its current target/flight direction only while the power-up is active.
      const angle = Math.atan2(b.vy, b.vx) + Math.PI / 2;
@@ -1988,7 +2255,21 @@ function renderGalaga() { ctx.fillStyle = '#050515'; ctx.fillRect(0, 0, canvas.w
  ctx.fillStyle = '#ffffff'; ctx.fillRect(-4, -3, 3, 3); ctx.fillRect(1, -3, 3, 3); } else if (e.type === 'yellow') { ctx.fillStyle = '#ffcc00'; ctx.beginPath(); ctx.moveTo(0, 12); ctx.lineTo(14 + wingSway, -8); ctx.lineTo(0, -2); ctx.lineTo(-14 - wingSway, -8); ctx.closePath(); ctx.fill(); // Core
  ctx.fillStyle = '#ff3300'; ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill(); } else if (e.type === 'orange') { ctx.fillStyle = '#ff6600'; ctx.fillRect(-12, -10, 24, 20); ctx.fillStyle = '#ff0033'; ctx.fillRect(-8 - wingSway, -6, 6, 12); ctx.fillRect(2 + wingSway, -6, 6, 12); ctx.fillStyle = '#ffff00'; ctx.fillRect(-4, -4, 8, 8); } else if(e.type==='purple'){ctx.fillStyle='#bd66ff';ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(13,-4);ctx.lineTo(10,11);ctx.lineTo(0,15);ctx.lineTo(-10,11);ctx.lineTo(-13,-4);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(-5,-3,3,3);ctx.fillRect(2,-3,3,3);} else if(e.type==='red'){ctx.fillStyle='#ff335e';ctx.beginPath();ctx.moveTo(0,13);ctx.lineTo(13,-10);ctx.lineTo(4,-6);ctx.lineTo(0,-14);ctx.lineTo(-4,-6);ctx.lineTo(-13,-10);ctx.closePath();ctx.fill();ctx.fillStyle='#ffe66d';ctx.fillRect(-3,-2,6,5);} else if(e.type==='shield'){ctx.fillStyle='#55e9cf';ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(14,-7);ctx.lineTo(11,9);ctx.lineTo(0,15);ctx.lineTo(-11,9);ctx.lineTo(-14,-7);ctx.closePath();ctx.fill();ctx.strokeStyle='#d4fff6';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,19+Math.sin(e.animTick)*2,0,Math.PI*2);ctx.stroke();} else if(e.type==='splitter'){ctx.fillStyle='#ffb84d';ctx.beginPath();for(let a=0;a<8;a++){const rr=a%2?8:15,ang=a*Math.PI/4;ctx.lineTo(Math.cos(ang)*rr,Math.sin(ang)*rr);}ctx.closePath();ctx.fill();ctx.fillStyle='#fff0b8';ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();} else if(e.type==='sniper'){ctx.fillStyle='#ff70df';ctx.beginPath();ctx.moveTo(0,-17);ctx.lineTo(8,0);ctx.lineTo(4,13);ctx.lineTo(-4,13);ctx.lineTo(-8,0);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(-2,-7,4,12);} else if(e.type==='leech'){ctx.fillStyle='#8cff65';ctx.beginPath();ctx.ellipse(0,0,14,10,Math.sin(e.animTick)*.2,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#d8ffc5';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,6);ctx.lineTo(-13,13);ctx.moveTo(0,8);ctx.lineTo(0,15);ctx.moveTo(8,6);ctx.lineTo(13,13);ctx.stroke();} else if(e.type==='bomber'){ctx.fillStyle='#ff7838';ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(14,0);ctx.lineTo(8,13);ctx.lineTo(-8,13);ctx.lineTo(-14,0);ctx.closePath();ctx.fill();ctx.fillStyle='#ffe3a3';ctx.beginPath();ctx.arc(0,0,5,0,Math.PI*2);ctx.fill();} // HP Bar for damaged enemies
  if (e.hp > 0 && e.hp < e.maxHp && e.maxHp > 0) { const hpRatio = Math.max(0, Math.min(1, e.hp / e.maxHp)); ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(-12, 14, 24, 3); ctx.fillStyle = '#00ff00'; ctx.fillRect(-12, 14, hpRatio * 24, 3); } if(e.golden){ctx.filter='none';ctx.strokeStyle='#fff0a0';ctx.lineWidth=2;ctx.strokeRect(-e.w/2-3,-e.h/2-3,e.w+6,e.h+6);ctx.fillStyle='#ffe36b';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText('GOLD',0,-e.h/2-7);} ctx.restore(); }); // Draw Boss
- if (galagaState.boss) { const b = galagaState.boss; ctx.save(); if(b.type==='specter' && b.invisibleUntil>Date.now()) ctx.globalAlpha=0.28; ctx.translate(b.x + b.w / 2, b.y + b.h / 2); // Main Boss Body
+ if (galagaState.boss && galagaState.boss.type==='charger' && galagaState.boss.chState==='telegraph') {
+  const cb = galagaState.boss, ccx = cb.x + cb.w/2, ccy = cb.y + cb.h/2;
+  const locked = cb.chTimer <= 20;
+  const on = locked ? (Math.floor(performance.now()/60) % 2 === 0) : true;
+  ctx.save();
+  ctx.strokeStyle = on ? '#ff1f1f' : '#ff9a9a';
+  ctx.lineWidth = locked ? 5 : 2;
+  ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 14;
+  ctx.setLineDash(locked ? [] : [14, 10]);
+  ctx.beginPath(); ctx.moveTo(ccx, ccy); ctx.lineTo(ccx + cb.chDirX * 1400, ccy + cb.chDirY * 1400); ctx.stroke();
+  ctx.setLineDash([]); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cb.chTargetX, cb.chTargetY, locked ? 16 : 22, 0, Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+if (galagaState.boss) { const b = galagaState.boss; ctx.save(); if(b.type==='specter' && b.invisibleUntil>Date.now()) ctx.globalAlpha=0.28; ctx.translate(b.x + b.w / 2, b.y + b.h / 2); // Main Boss Body
  ctx.fillStyle = b.color || '#ff0055'; ctx.beginPath(); if(b.type==='laser'){ctx.moveTo(0,-38);ctx.lineTo(15,-8);ctx.lineTo(43,5);ctx.lineTo(17,12);ctx.lineTo(0,32);ctx.lineTo(-17,12);ctx.lineTo(-43,5);ctx.lineTo(-15,-8);ctx.closePath();}else if(b.type==='rocket'){ctx.moveTo(0,-35);ctx.lineTo(23,-4);ctx.lineTo(39,18);ctx.lineTo(15,12);ctx.lineTo(0,29);ctx.lineTo(-15,12);ctx.lineTo(-39,18);ctx.lineTo(-23,-4);ctx.closePath();}else if(b.type==='guardian'){ctx.moveTo(0,-34);ctx.lineTo(30,-20);ctx.lineTo(37,8);ctx.lineTo(20,29);ctx.lineTo(0,37);ctx.lineTo(-20,29);ctx.lineTo(-37,8);ctx.lineTo(-30,-20);ctx.closePath();}else if(b.type==='leviathan'){ctx.ellipse(0,0,42,25,0,0,Math.PI*2);ctx.moveTo(-25,-8);ctx.lineTo(-48,-26);ctx.lineTo(-35,2);ctx.moveTo(25,-8);ctx.lineTo(48,-26);ctx.lineTo(35,2);}else if(b.type==='queen'){ctx.moveTo(0,34);ctx.lineTo(14,12);ctx.lineTo(42,0);ctx.lineTo(25,-15);ctx.lineTo(28,-32);ctx.lineTo(7,-23);ctx.lineTo(0,-38);ctx.lineTo(-7,-23);ctx.lineTo(-28,-32);ctx.lineTo(-25,-15);ctx.lineTo(-42,0);ctx.lineTo(-14,12);ctx.closePath();}else if(b.type==='charger'){
   // Pointed battering-ram hull with reinforced spike nose
   ctx.moveTo(0,40);ctx.lineTo(14,12);ctx.lineTo(28,4);ctx.lineTo(18,-8);ctx.lineTo(10,-28);ctx.lineTo(0,-42);ctx.lineTo(-10,-28);ctx.lineTo(-18,-8);ctx.lineTo(-28,4);ctx.lineTo(-14,12);ctx.closePath();
@@ -2048,7 +2329,7 @@ function renderGalaga() { ctx.fillStyle = '#050515'; ctx.fillRect(0, 0, canvas.w
        rp.x = rx; rp.y = ry;
      }
      const shipId = rp.ship || 'fighter';
-     const shipColors = {fighter:'#00f3ff',laser:'#ff5656',stormwing:'#45eaff',guardian:'#76ffc4',nova:'#ffe87a',teleporter:'#b78aff',bomber:'#ff9d42'};
+     const shipColors = {fighter:'#00f3ff',laser:'#ff5656',stormwing:'#45eaff',guardian:'#76ffc4',nova:'#ffe87a',teleporter:'#b78aff',bomber:'#ff9d42',spiritbeam:'#6ee7ff'};
      const col = shipColors[shipId] || '#00f3ff';
      if (Array.isArray(rp.bullets)) {
        rp.bullets = rp.bullets.filter(b => {
@@ -2209,7 +2490,7 @@ function renderGalaga() { ctx.fillStyle = '#050515'; ctx.fillRect(0, 0, canvas.w
    const squadSize = Math.max(1, Object.keys(mpPlayers || {}).length || 1);
    const hpPct = Math.round(mpEnemyHpScale() * 100);
    ctx.fillText('CO-OP · ' + aliveCount + '/' + squadSize + ' alive · enemy HP ' + hpPct + '% · room ' + formatRoomCode(mpRoomCode), canvas.width / 2, 12);
- } if(galagaState.selectedShip==='laser'){ctx.fillStyle='#ff9b9b';ctx.font='bold 9px system-ui';ctx.fillText(galagaState.shipLaserActive>0?'SOLAR LANCE FIRING!':'SOLAR LANCE · NEXT BEAM '+Math.max(0,60-galagaState.shipLaserTimer)+'f',canvas.width/2,62);} if(galagaState.selectedShip==='guardian'){ctx.fillStyle='#76ffc4';ctx.font='bold 9px system-ui';ctx.fillText(galagaState.guardianCooldown<=0?'AEGIS SHIELD READY':'AEGIS SHIELD '+Math.ceil(galagaState.guardianCooldown/60)+'s',canvas.width/2,62);} if(galagaState.selectedShip==='nova'){ctx.fillStyle='#ffe87a';ctx.font='bold 10px system-ui';ctx.fillText(galagaState.novaCooldown<=0?'NOVA ARTILLERY READY · PRESS Q':'NOVA ARTILLERY '+Math.ceil(galagaState.novaCooldown/60)+'s',canvas.width/2,76);} if(galagaState.selectedShip==='teleporter'){ctx.fillStyle='#d8a8ff';ctx.font='bold 9px system-ui';ctx.fillText(Date.now()<teleportCooldownUntil?'PHASE JUMP '+Math.ceil((teleportCooldownUntil-Date.now())/1000)+'s':'PHASE JUMP READY',canvas.width/2,62);if(Date.now()<galagaState.phasePortalUntil){ctx.fillStyle='#c7a0ff';ctx.font='bold 10px system-ui';ctx.fillText('PORTAL STORM '+Math.ceil((galagaState.phasePortalUntil-Date.now())/1000)+'s',canvas.width/2,80);}} if(galagaState.passives.shield){ctx.fillStyle='#70f5ff';ctx.fillText(galagaState.shieldCooldown<=0?'AUTO SHIELD READY':'AUTO SHIELD '+(galagaState.shieldCooldown/60).toFixed(1)+'s',canvas.width-180,59);} if(Date.now()<galagaState.flameShipUntil){ctx.fillStyle='#ff9b42';ctx.font='bold 11px system-ui';ctx.fillText('🔥 FLAME SHIP '+((galagaState.flameShipUntil-Date.now())/1000).toFixed(1)+'s',canvas.width/2,95);} // Larger, high-contrast active ability timers HUD
+ } if(galagaState.selectedShip==='spiritbeam'){const now=Date.now(),active=now<(galagaState.kamehamehaUntil||0),cool=now<(galagaState.spiritBeamQCooldown||0);ctx.save();ctx.textAlign='center';ctx.font='bold 11px system-ui';ctx.fillStyle=active?'#ffffff':'#6ee7ff';ctx.shadowColor='#39dfff';ctx.shadowBlur=active?16:8;const label=active?'PICKUP KAMEHAMEHA ACTIVE · '+Math.max(0,((galagaState.kamehamehaUntil-now)/1000)).toFixed(1)+'s':(cool?'SPIRIT BEAM · Q RECHARGING '+Math.ceil((galagaState.spiritBeamQCooldown-now)/1000)+'s':'SPIRIT BEAM · PRESS Q: RANDOM TARGET BLAST');ctx.fillText(label,canvas.width/2,82);ctx.restore();} if(galagaState.selectedShip==='laser'){ctx.fillStyle='#ff9b9b';ctx.font='bold 9px system-ui';ctx.fillText(galagaState.shipLaserActive>0?'SOLAR LANCE FIRING!':'SOLAR LANCE · NEXT BEAM '+Math.max(0,60-galagaState.shipLaserTimer)+'f',canvas.width/2,62);} if(galagaState.selectedShip==='guardian'){ctx.fillStyle='#76ffc4';ctx.font='bold 9px system-ui';ctx.fillText(galagaState.guardianCooldown<=0?'AEGIS SHIELD READY':'AEGIS SHIELD '+Math.ceil(galagaState.guardianCooldown/60)+'s',canvas.width/2,62);} if(galagaState.selectedShip==='nova'){ctx.fillStyle='#ffe87a';ctx.font='bold 10px system-ui';ctx.fillText(galagaState.novaCooldown<=0?'NOVA ARTILLERY READY · PRESS Q':'NOVA ARTILLERY '+Math.ceil(galagaState.novaCooldown/60)+'s',canvas.width/2,76);} if(galagaState.selectedShip==='teleporter'){ctx.fillStyle='#d8a8ff';ctx.font='bold 9px system-ui';ctx.fillText(Date.now()<teleportCooldownUntil?'PHASE JUMP '+Math.ceil((teleportCooldownUntil-Date.now())/1000)+'s':'PHASE JUMP READY',canvas.width/2,62);if(Date.now()<galagaState.phasePortalUntil){ctx.fillStyle='#c7a0ff';ctx.font='bold 10px system-ui';ctx.fillText('PORTAL STORM '+Math.ceil((galagaState.phasePortalUntil-Date.now())/1000)+'s',canvas.width/2,80);}} if(galagaState.passives.shield){ctx.fillStyle='#70f5ff';ctx.fillText(galagaState.shieldCooldown<=0?'AUTO SHIELD READY':'AUTO SHIELD '+(galagaState.shieldCooldown/60).toFixed(1)+'s',canvas.width-180,59);} if(Date.now()<galagaState.flameShipUntil){ctx.fillStyle='#ff9b42';ctx.font='bold 11px system-ui';ctx.fillText('🔥 FLAME SHIP '+((galagaState.flameShipUntil-Date.now())/1000).toFixed(1)+'s',canvas.width/2,95);} // Larger, high-contrast active ability timers HUD
  const activeAbilities = Object.keys(galagaState.abilities).filter(k => galagaState.abilities[k] > 0);
  if (activeAbilities.length > 0) {
    const cardW = 112, cardH = 40, gap = 7;
@@ -2293,6 +2574,50 @@ requestAnimationFrame(frame);
  // PATCHES: newest first. To log a new update, add an entry at the TOP of this list.
  // The 3 newest are shown on their own; anything older is folded into "Earlier updates".
  const PATCHES=[
+  {version:'v21.4',notes:[
+   'Spike Juggernaut reworked into an old-school charger: it hovers and shoots, then a red warning line locks onto your position, it dashes along the line, and backs off if it misses.',
+   'After ramming you, the Spike Juggernaut cannot shoot for 2 seconds. It also holds fire while the warning line is showing and while it is charging.'
+  ]},
+  {version:'v21.3',notes:[
+   'Fixed the "detonateCannonBomb is not a function" error that broke the game loop when Bomber Command support bombs hit an enemy or boss.'
+  ]},
+  {version:'v21.2',notes:[
+   'Kamehameha now has its own sound: a single big laser blast with a charge-up swell, a roaring sustained beam for 3 seconds, and a fade-out.',
+   'The normal Spirit Beam firing sound is muted while Kamehameha is active so only the big blast plays.'
+  ]},
+  {version:'v21.1',notes:[
+   'Spirit Beam ship now has a big, layered laser firing sound (deep rumble, heavy body and a bright zap) instead of the standard laser blip.'
+  ]},
+  {version:'v21',notes:[
+   'Spirit Beam now fires about 60% slower between beam pulses. Rapid Fire and fire-rate upgrades still speed it up.'
+  ]},
+  {version:'v20.9',notes:[
+   'Spirit Beam ship now fires a real continuous laser beam from the ship to the top of the screen instead of any bullet-style projectile.',
+   'The beam damages every enemy and the boss in its lane each shot, for about 20% less damage than an average bullet. Damage upgrades still apply.'
+  ]},
+  {version:'v20.8',notes:[
+   'Spirit Beam ship no longer fires laser bullets: it now fires a single thin, long beam that pierces through every enemy in its path.',
+   'Each beam hits an enemy once and does about 20% less damage than an average bullet. Damage upgrades still apply.'
+  ]},
+  {version:'v20.7',notes:[
+   'Moved the Spirit Beam ability HUD lower on the screen so it no longer overlaps the top HUD text.'
+  ]},
+  {version:'v20.6',notes:[
+   'Corrected Spirit Beam controls: Q fires a smaller laser blast at a random enemy with a radius of 10.',
+   'The massive 3-second Kamehameha is reserved for the special undefined/megalaser ability pickup, not the Q button.',
+   'The top HUD now correctly says PRESS Q: RANDOM TARGET BLAST and displays Q cooldown or pickup Kamehameha status.'
+  ]},
+  {version:'v20.5',notes:[
+   'Fixed Spirit Beam Q so it consistently fires the full-width Kamehameha beam instead of feeling like a small targeted laser blast.',
+   'Kamehameha beam is wider and deals stronger continuous damage across its lane; the finisher now creates a much larger explosion that can hit multiple enemies and heavily damage bosses.',
+   'Added a prominent top-of-screen Spirit Beam HUD showing PRESS Q, beam active time, and cooldown status.'
+  ]},
+  {version:'v20.4',notes:[
+   'Spirit Beam Q now fires a massive 3-second Kamehameha beam with continuous damage and a powerful final explosion.',
+   'Kamehameha visuals enhanced with a wider glowing beam, energy streaks, brighter impact effects and extra screen energy.',
+   'Harpoon pickup activates your ship-specific ability immediately: Spirit Beam unleashes Kamehameha; Nova Artillery fires a unique orbital strike.',
+   'Nova Artillery Harpoon strike hits all enemies and heavily damages the boss, with bright laser impacts and explosions.'
+  ]},
   {version:'v20.3',notes:[
    'Fixed multiplayer connection issues (join timeouts, silent failures, page reloads on join).',
    'Players can join while the host is in the lobby or after the mission has started.',
@@ -2315,13 +2640,13 @@ requestAnimationFrame(frame);
    'Shared co-op battlefield: host streams the same wave/enemies to everyone. Teammates see each other\'s ships, bullets, and active abilities.'
   ]},
   {version:'v20',notes:[
-   'Regular enemies get tougher every wave: +20% HP per wave up to wave 35.',
-   'From wave 35 onward, enemy HP grows +150% per wave (fixed off-by-one so the late-game ramp actually starts on wave 35).',
+   'Regular enemies get tougher every wave: +30% HP per wave up to wave 35.',
+   'After wave 35, enemy HP grows +60% per wave.',
    'Patch Notes screen added (press Y).'
   ]}
  ];
  const BASE_EARLIER=[
-  'Six special ships: Solar Lance, Stormwing, Aegis Guardian, Nova Artillery, Phase Jumper and Bomber Command, each with its own ability.',
+  'Special ships: Solar Lance, Stormwing, Aegis Guardian, Nova Artillery, Phase Jumper, Bomber Command and Spirit Beam, each with its own ability.',
   'Coin Shop passives: Auto-Rockets, Magnet, Repair Drone, Twin Cannons, Chain Lightning, Emergency Shield, Void Pulse, Overdrive Core, Titanium Plating, Lucky Reactor and Nova Burst, plus the Rocket Lab upgrade.',
   'Points Shop upgrades, including Bullet Accelerator and Weapon Capacitor.',
   'Boss waves every 5 waves with 17 boss designs, plus rare Golden bosses and Golden enemies.',
