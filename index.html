@@ -452,6 +452,7 @@ function mpLocalSnapshot() {
       megalaser: (ab.megalaser || 0) > 0 || (galagaState.shipLaserActive || 0) > 0 || Date.now() < (galagaState.kamehamehaUntil || 0),
       kamehameha: Date.now() < (galagaState.kamehamehaUntil || 0),
       spiritLaser: (galagaState.selectedShip || selectedShip) === 'spiritbeam' && Date.now() < (galagaState.spiritLaserUntil || 0),
+      spiritOverload: (galagaState.abilities.multishot || 0) > 0,
       beamWide: (galagaState.selectedShip || selectedShip) === 'laser' || Date.now() < (galagaState.kamehamehaUntil || 0) || (galagaState.selectedShip || selectedShip) === 'spiritbeam',
       drones: nowFx < (galagaState.droneSquadronUntil || 0),
       starfall: nowFx < (galagaState.starfallUntil || 0),
@@ -1600,7 +1601,7 @@ function stormNodes(){
 function spiritBeamStrike(cooldownFrames){
  const p=galagaState.player, lw=24, lx=p.x+p.w/2-lw/2;
  galagaState.spiritLaserUntil=Date.now()+cooldownFrames*17+40;
- const dmg=Math.max(0.5,galagaState.player.baseDamage*0.8);
+ const dmg=Math.max(0.5,galagaState.player.baseDamage*0.8*((galagaState.abilities.multishot||0)>0?4:1));
  for(let i=galagaState.enemies.length-1;i>=0;i--){
   const e=galagaState.enemies[i];
   if(e.captured||e.y+e.h>p.y)continue;
@@ -1620,7 +1621,7 @@ function spiritBeamStrike(cooldownFrames){
  }
  const b=galagaState.boss;
  if(b&&b.y+b.h<=p.y+10&&b.x+b.w>lx&&b.x<lx+lw){
-  b.hp-=dmg;createExplosion(p.x+p.w/2,b.y+b.h,'#6ee7ff',3);maybeDropBossPowerup(b);maybeDropHarpoonShip(b.x+b.w/2,b.y+b.h/2);
+  b.hp-=dmg*3+(b.maxHp||0)*0.05;createExplosion(p.x+p.w/2,b.y+b.h,'#6ee7ff',3);maybeDropBossPowerup(b);maybeDropHarpoonShip(b.x+b.w/2,b.y+b.h/2);
  }
 }
 function activateNovaArtillery(){
@@ -1659,8 +1660,9 @@ function activateSpiritBeamBlast() {
   const py = galagaState.player.y;
   galagaState.abilityLasers.push({x1:px,y1:py,x2:tx,y2:ty,life:22,color:'#6ee7ff',width:7});
   createExplosion(tx, ty, '#6ee7ff', 10);
-  // Small radius-10 blast: damage the chosen target and anything almost touching it.
-  const blastRadius = 10;
+  // Wide blast: hits the chosen target and every enemy within the blast radius.
+  const blastRadius = 100;
+  for (let ang = 0; ang < 12; ang++) createExplosion(tx + Math.cos(ang / 12 * Math.PI * 2) * blastRadius * 0.8, ty + Math.sin(ang / 12 * Math.PI * 2) * blastRadius * 0.8, '#6ee7ff', 3);
   for (let i = galagaState.enemies.length - 1; i >= 0; i--) {
     const e = galagaState.enemies[i];
     const ex = e.x + e.w / 2, ey = e.y + e.h / 2;
@@ -2280,18 +2282,19 @@ function renderGalaga() { ctx.fillStyle = '#050515'; ctx.fillRect(0, 0, canvas.w
   if(galagaState.abilities.twinlasers>0){for(const side of [-1,1]){const rx=p.x+p.w/2+side*14,ry=p.y+5;ctx.save();ctx.translate(rx,ry);ctx.fillStyle='#6ee7ff';ctx.strokeStyle='#d9fbff';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(3,2);ctx.lineTo(0,0);ctx.lineTo(-3,2);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#ffb45e';ctx.fillRect(-1,2,2,3);ctx.restore();}}
   // Draw Rainbow Mega Laser Beam
  if (galagaState.abilities.megalaser > 0 || galagaState.shipLaserActive > 0) { const now=performance.now(), lx=p.x+p.w/2; ctx.save();ctx.globalCompositeOperation='lighter'; if(galagaState.selectedShip==='laser' && galagaState.shipLaserActive>0){ /* Solar Lance: a broad pixelated fire beam */ const half=38; for(let sy=0;sy<p.y;sy+=12){const sway=Math.sin(now*.012+sy*.045)*5;const width=half*(0.72+0.22*Math.sin(now*.018+sy*.03));for(let x=-width;x<=width;x+=10){const jitter=Math.sin(now*.02+sy*.17+x*.11)*3;ctx.globalAlpha=.72+Math.sin(now*.025+sy*.1+x)*.2;ctx.fillStyle=(Math.abs(x)<width*.22)?(sy%24===0?'#fff4a3':'#ffe34d'):(Math.abs(x)<width*.62?'#ff9d28':'#ff4b18');ctx.fillRect(lx+x+sway+jitter,sy,8,13);} }ctx.globalAlpha=.85;ctx.fillStyle='#fff6bf';ctx.fillRect(lx-5,0,10,p.y); } else {const pulse=0.82+Math.sin(now*0.025)*0.12,beamHalf=12;ctx.globalAlpha=.24+Math.sin(now*.035)*.08;ctx.fillStyle='#55eaff';ctx.shadowColor='#7df7ff';ctx.shadowBlur=20;ctx.fillRect(lx-beamHalf-5,0,beamHalf*2+10,p.y);ctx.globalAlpha=.88;const grad=ctx.createLinearGradient(lx-beamHalf,0,lx+beamHalf,0);grad.addColorStop(0,'#ff245f');grad.addColorStop(.5,'#fff66b');grad.addColorStop(1,'#bd69ff');ctx.fillStyle=grad;ctx.fillRect(lx-beamHalf*pulse,0,beamHalf*2*pulse,p.y);ctx.globalAlpha=.75;ctx.fillStyle='#ffffff';ctx.fillRect(lx-3,0,6,p.y);}ctx.restore(); } if(galagaState.selectedShip==='spiritbeam'&&Date.now()<(galagaState.spiritLaserUntil||0)){
- const t=performance.now(),bx=p.x+p.w/2,by=p.y-4,w=22+Math.sin(t*.04)*2;
+ const t=performance.now(),bx=p.x+p.w/2,by=p.y-4,ov=(galagaState.abilities.multishot||0)>0,w=(ov?34:22)+Math.sin(t*.04)*2;
+ const c1=ov?'#ff2a5a':'#2fd8ff',c2=ov?'#a43cff':'#1a9fe8',c3=ov?'#ff8aa8':'#7df7ff',c4=ov?'#ffd9e6':'#e6ffff',c5=ov?'#ff3d6e':'#39dfff';
  ctx.save();ctx.globalCompositeOperation='lighter';
- ctx.shadowColor='#39dfff';ctx.shadowBlur=30;
- ctx.globalAlpha=.35;ctx.fillStyle='#2fd8ff';ctx.fillRect(bx-w/2-7,0,w+14,by);
+ ctx.shadowColor=c5;ctx.shadowBlur=ov?40:30;
+ ctx.globalAlpha=.35;ctx.fillStyle=c1;ctx.fillRect(bx-w/2-7,0,w+14,by);
  const g=ctx.createLinearGradient(bx-w/2,0,bx+w/2,0);
- g.addColorStop(0,'#1a9fe8');g.addColorStop(.35,'#7df7ff');g.addColorStop(.5,'#ffffff');g.addColorStop(.65,'#7df7ff');g.addColorStop(1,'#1a9fe8');
+ g.addColorStop(0,c2);g.addColorStop(.35,c3);g.addColorStop(.5,'#ffffff');g.addColorStop(.65,c3);g.addColorStop(1,c2);
  ctx.globalAlpha=.92;ctx.fillStyle=g;ctx.fillRect(bx-w/2,0,w,by);
  ctx.globalAlpha=1;ctx.fillStyle='#ffffff';ctx.fillRect(bx-3,0,6,by);
- ctx.shadowBlur=0;ctx.globalAlpha=.8;ctx.fillStyle='#e6ffff';
+ ctx.shadowBlur=0;ctx.globalAlpha=.8;ctx.fillStyle=c4;
  for(let i=0;i<10;i++){const yy=by-((t*.9+i*61)%by);ctx.fillRect(bx-w/2+((i*7)%(w-3)),yy,3,12);}
- ctx.globalAlpha=.9;ctx.shadowColor='#7df7ff';ctx.shadowBlur=22;ctx.fillStyle='#e6ffff';
- ctx.beginPath();ctx.arc(bx,by,11+Math.sin(t*.05)*2,0,Math.PI*2);ctx.fill();
+ ctx.globalAlpha=.9;ctx.shadowColor=c3;ctx.shadowBlur=22;ctx.fillStyle=c4;
+ ctx.beginPath();ctx.arc(bx,by,(ov?15:11)+Math.sin(t*.05)*2,0,Math.PI*2);ctx.fill();
  ctx.restore();
 }
 // Animated Bomber Command support ship, only while its 6-second deployment is active.
@@ -2503,11 +2506,11 @@ if (galagaState.boss) { const b = galagaState.boss; ctx.save(); if(b.type==='spe
      }
      // Spirit Beam: continuous laser and the big Kamehameha, visible to every pilot
      if (fx.spiritLaser) {
-       const tt = performance.now(), w = 22 + Math.sin(tt * .04) * 2, hh = ry + 2;
-       ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.shadowColor = '#39dfff'; ctx.shadowBlur = 26;
-       ctx.globalAlpha = .35; ctx.fillStyle = '#2fd8ff'; ctx.fillRect(-w / 2 - 7, -hh - 12, w + 14, hh);
+       const tt = performance.now(), ov = !!fx.spiritOverload, w = (ov ? 34 : 22) + Math.sin(tt * .04) * 2, hh = ry + 2;
+       ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.shadowColor = ov ? '#ff3d6e' : '#39dfff'; ctx.shadowBlur = 26;
+       ctx.globalAlpha = .35; ctx.fillStyle = ov ? '#ff2a5a' : '#2fd8ff'; ctx.fillRect(-w / 2 - 7, -hh - 12, w + 14, hh);
        const sg = ctx.createLinearGradient(-w / 2, 0, w / 2, 0);
-       sg.addColorStop(0, '#1a9fe8'); sg.addColorStop(.35, '#7df7ff'); sg.addColorStop(.5, '#ffffff'); sg.addColorStop(.65, '#7df7ff'); sg.addColorStop(1, '#1a9fe8');
+       sg.addColorStop(0, ov ? '#a43cff' : '#1a9fe8'); sg.addColorStop(.35, ov ? '#ff8aa8' : '#7df7ff'); sg.addColorStop(.5, '#ffffff'); sg.addColorStop(.65, ov ? '#ff8aa8' : '#7df7ff'); sg.addColorStop(1, ov ? '#a43cff' : '#1a9fe8');
        ctx.globalAlpha = .92; ctx.fillStyle = sg; ctx.fillRect(-w / 2, -hh - 12, w, hh);
        ctx.globalAlpha = 1; ctx.fillStyle = '#ffffff'; ctx.fillRect(-3, -hh - 12, 6, hh);
        ctx.beginPath(); ctx.arc(0, -12, 9 + Math.sin(tt * .05) * 2, 0, Math.PI * 2); ctx.fill();
@@ -2690,6 +2693,19 @@ requestAnimationFrame(frame);
  // PATCHES: newest first. To log a new update, add an entry at the TOP of this list.
  // The 3 newest are shown on their own; anything older is folded into "Earlier updates".
  const PATCHES=[
+  {version:'v22.2',notes:[
+   'Spirit Beam ship: every beam shot that hits a boss now also removes a guaranteed 5% of the boss\'s max HP, on top of its normal damage.'
+  ]},
+  {version:'v22.1',notes:[
+   'Spirit Beam ship: the beam now does 3x damage to bosses (stacks with the Multi-Shot overload).'
+  ]},
+  {version:'v22',notes:[
+   'Spirit Beam Q blast: explosion range increased from 10 to 100, so it now hits every enemy near the target. Damage is unchanged.'
+  ]},
+  {version:'v21.9',notes:[
+   'Spirit Beam ship + Multi-Shot pickup: the laser turns a red-and-purple-blue colour, gets wider, and does 4x damage while Multi-Shot is active. Other ships are unchanged.',
+   'Teammates see the red-blue overloaded beam in multiplayer too.'
+  ]},
   {version:'v21.8',notes:[
    'Multiplayer: the game can no longer be paused. The Pause button is disabled, and opening the shops or patch notes no longer freezes the action while you are in a co-op room.'
   ]},
