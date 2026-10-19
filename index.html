@@ -120,7 +120,7 @@ body.crt-on .gamebox{box-shadow:0 0 0 2px #253f6b,0 0 36px #00d9ff2b,inset 0 0 2
  </div>
 </div>
 
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'"></script>
 <div class="multiplayer-modal" id="multiplayerModal" role="dialog" aria-modal="true" aria-labelledby="mpTitle">
  <div class="multiplayer-card">
   <h2 id="mpTitle">🌐 MULTIPLAYER</h2>
@@ -494,24 +494,49 @@ function mpHandleMessage(raw, fromPeerId) {
   let msg;
   try { msg = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { return; }
   if (!msg || !msg.type) return;
+  try { mpHandleMessageInner(msg, fromPeerId); } catch (err) { console.error('mpHandleMessage', err); }
+}
+function mpHandleMessageInner(msg, fromPeerId) {
+  if (!msg || !msg.type) return;
   if (msg.type === 'hello') {
     if (!mpIsHost) return;
-    if (Object.keys(mpPlayers).length >= 5) {
+    if (Object.keys(mpPlayers).length >= 5 && !(msg.player && mpPlayers[msg.player.id])) {
       const conn = mpClientConns[fromPeerId];
       if (conn) try { conn.send(JSON.stringify({ type: 'full' })); } catch (e) {}
       return;
     }
-    mpPlayers[msg.player.id] = msg.player;
+    if (msg.player && msg.player.id) {
+      mpPlayers[msg.player.id] = Object.assign({}, mpPlayers[msg.player.id] || {}, msg.player, { alive: true });
+    }
     mpUpdatePlayerListUI();
-    // Send full roster back to everyone
+    // Everyone (lobby or mid-match) gets the roster
     mpBroadcast({ type: 'roster', players: mpPlayers, status: mpRoomStatus });
+    // Late join: pull them into the live mission with current world state
+    if (mpRoomStatus === 'playing') {
+      const conn = mpClientConns[fromPeerId];
+      const send = (payload) => {
+        if (!conn || !conn.open) return;
+        try { conn.send(typeof payload === 'string' ? payload : JSON.stringify(payload)); } catch (e) {}
+      };
+      send({ type: 'start' });
+      try {
+        const world = mpWorldSnapshot();
+        world.players = Object.assign({}, mpPlayers);
+        send(world);
+      } catch (e) {}
+      mpSetLobbyStatus('Player joined mid-mission.');
+      document.getElementById('status').textContent = 'A pilot joined the active mission.';
+    } else {
+      mpSetLobbyStatus('Player joined the lobby (' + Object.keys(mpPlayers).length + '/5).');
+    }
   } else if (msg.type === 'roster') {
     mpPlayers = msg.players || {};
     mpRoomStatus = msg.status || mpRoomStatus;
     mpUpdatePlayerListUI();
+    // Joining a room that is already in progress
     if (mpRoomStatus === 'playing' && gameState !== 'PLAYING' && gameState !== 'GAMEOVER') {
-      startGame();
-      document.getElementById('multiplayerModal').classList.remove('open');
+      mpSafeStartGame('roster');
+      document.getElementById('status').textContent = mpIsHost ? 'Mission in progress.' : 'Joined mid-mission — syncing to host wave…';
     }
   } else if (msg.type === 'state') {
     if (msg.player && msg.player.id && msg.player.id !== mpPlayerId) {
@@ -546,16 +571,7 @@ function mpHandleMessage(raw, fromPeerId) {
   } else if (msg.type === 'start') {
     mpRoomStatus = 'playing';
     if (gameState !== 'PLAYING') {
-      startGame();
-      // Clear local enemies — wait for host world so everyone is on the same wave
-      if (!mpIsHost) {
-        galagaState.enemies = [];
-        galagaState.boss = null;
-        galagaState.bossSpawned = false;
-        galagaState.enemyBullets = [];
-        waveTransitionPending = false;
-      }
-      document.getElementById('multiplayerModal').classList.remove('open');
+      mpSafeStartGame('start');
       document.getElementById('status').textContent = 'Co-op mission started — syncing to host wave…';
     }
   } else if (msg.type === 'death') {
@@ -694,12 +710,33 @@ function mpShowCombinedGameOver() {
   const first = multiRow.querySelector('input');
   if (first) first.focus();
 }
+
+function mpPeerOptions() {
+  return {
+    debug: 1,
+    host: '0.peerjs.com',
+    port: 443,
+    path: '/',
+    secure: true,
+    config: {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:global.stun.twilio.com:3478' }
+      ]
+    }
+  };
+}
+function mpSetLobbyStatus(msg) {
+  const el = document.getElementById('mpLobbyStatus');
+  if (el) el.textContent = msg || '';
+}
 function mpHostRoom() {
   if (typeof Peer === 'undefined') {
-    document.getElementById('mpLobbyStatus').textContent = 'PeerJS failed to load. Check your internet connection and try again.';
+    mpSetLobbyStatus('PeerJS failed to load. Check your internet connection and refresh the page.');
     return;
   }
-  document.getElementById('mpLobbyStatus').textContent = 'Creating room…';
+  mpSetLobbyStatus('Creating room…');
   mpDestroyPeer();
   mpPlayerId = mpMakePlayerId();
   mpRoomCode = generateRoomCode();
@@ -708,9 +745,26 @@ function mpHostRoom() {
   mpCombinedPending = false;
   mpRoomStatus = 'lobby';
   mpPlayers = {};
+  mpClientConns = {};
   const peerId = mpPeerIdFromCode(mpRoomCode);
-  mpPeer = new Peer(peerId, { debug: 0 });
+  let opened = false;
+  try {
+    mpPeer = new Peer(peerId, mpPeerOptions());
+  } catch (e) {
+    mpSetLobbyStatus('Could not start networking: ' + (e.message || e));
+    mpActive = false;
+    return;
+  }
+  const openTimer = setTimeout(() => {
+    if (!opened) {
+      mpSetLobbyStatus('Peer server timed out. Check internet / firewall and try Create Room again.');
+      mpActive = false;
+      mpDestroyPeer();
+    }
+  }, 12000);
   mpPeer.on('open', () => {
+    opened = true;
+    clearTimeout(openTimer);
     mpPlayers[mpPlayerId] = {
       id: mpPlayerId, name: 'HOST', score: 0, lives: 3, x: 300, y: 530,
       ship: selectedShip || 'fighter', alive: true
@@ -718,44 +772,96 @@ function mpHostRoom() {
     document.getElementById('mpLobbyView').style.display = 'none';
     document.getElementById('mpRoomView').style.display = '';
     document.getElementById('mpRoomCodeDisplay').textContent = formatRoomCode(mpRoomCode);
-    document.getElementById('mpRoomHint').textContent = 'Share this code with friends (format XXX XXX). Max 5 players. Keep this tab open.';
+    document.getElementById('mpRoomHint').textContent = 'Share this code (XXX XXX). Friends can join in the lobby or after the mission starts. Max 5. Keep this tab open.';
     mpUpdatePlayerListUI();
     mpStartSync();
-    document.getElementById('mpLobbyStatus').textContent = '';
+    mpSetLobbyStatus('Room ready — waiting for players.');
     document.getElementById('status').textContent = 'Hosting room ' + formatRoomCode(mpRoomCode) + ' — waiting for players.';
   });
   mpPeer.on('connection', conn => {
+    // Wire immediately so early hello messages are not missed
+    mpWireConnection(conn, true);
     conn.on('open', () => {
-      mpWireConnection(conn, true);
-      // Send current roster immediately
       try { conn.send(JSON.stringify({ type: 'roster', players: mpPlayers, status: mpRoomStatus })); } catch (e) {}
+      // Allow join while host waits in lobby OR after the mission has started
+      if (mpRoomStatus === 'playing') {
+        try { conn.send(JSON.stringify({ type: 'start' })); } catch (e) {}
+        try {
+          const world = mpWorldSnapshot();
+          world.players = Object.assign({}, mpPlayers);
+          conn.send(JSON.stringify(world));
+        } catch (e) {}
+        mpSetLobbyStatus('Player linked mid-mission.');
+      } else {
+        mpSetLobbyStatus('Player linked — waiting in lobby (' + Object.keys(mpPlayers).length + '/5).');
+      }
+      mpUpdatePlayerListUI();
+    });
+    conn.on('error', err => {
+      mpSetLobbyStatus('A player failed to connect (' + ((err && err.type) || 'error') + ').');
     });
   });
+  mpPeer.on('disconnected', () => {
+    mpSetLobbyStatus('Lost peer server link — attempting reconnect…');
+    try { if (mpPeer && !mpPeer.destroyed) mpPeer.reconnect(); } catch (e) {}
+  });
   mpPeer.on('error', err => {
-    const msg = (err && err.type) ? err.type : 'unknown';
+    const msg = (err && err.type) ? err.type : ((err && err.message) || 'unknown');
     if (msg === 'unavailable-id') {
-      // Code taken — try a new one
-      document.getElementById('mpLobbyStatus').textContent = 'Code busy, retrying…';
+      mpSetLobbyStatus('Code busy, picking a new one…');
+      clearTimeout(openTimer);
       mpDestroyPeer();
-      setTimeout(mpHostRoom, 200);
+      setTimeout(mpHostRoom, 250);
       return;
     }
-    document.getElementById('mpLobbyStatus').textContent = 'Could not create room (' + msg + '). Try again.';
+    clearTimeout(openTimer);
+    mpSetLobbyStatus('Could not create room (' + msg + '). Try again.');
     mpActive = false;
     mpDestroyPeer();
   });
 }
+
+function mpSafeStartGame(reason) {
+  try {
+    if (gameState === 'PLAYING') {
+      // Already in a run — only clear world to resync for late joiners
+      if (!mpIsHost) {
+        galagaState.enemies = [];
+        galagaState.boss = null;
+        galagaState.bossSpawned = false;
+        galagaState.enemyBullets = [];
+        waveTransitionPending = false;
+      }
+      return;
+    }
+    startGame();
+    if (!mpIsHost) {
+      galagaState.enemies = [];
+      galagaState.boss = null;
+      galagaState.bossSpawned = false;
+      galagaState.enemyBullets = [];
+      waveTransitionPending = false;
+    }
+    const modal = document.getElementById('multiplayerModal');
+    if (modal) modal.classList.remove('open');
+  } catch (err) {
+    console.error('mpSafeStartGame', reason, err);
+    if (typeof mpSetLobbyStatus === 'function') {
+      mpSetLobbyStatus('Could not enter mission: ' + (err && err.message ? err.message : err));
+    }
+  }
+}
 function mpJoinRoom() {
   if (typeof Peer === 'undefined') {
-    document.getElementById('mpLobbyStatus').textContent = 'PeerJS failed to load. Check your internet connection and try again.';
+    mpSetLobbyStatus('PeerJS failed to load. Check your internet connection and refresh the page.');
     return;
   }
   const code = parseRoomCode(document.getElementById('mpJoinCode').value);
   if (code.length !== 6) {
-    document.getElementById('mpLobbyStatus').textContent = 'Enter a full 6-digit code (e.g. 123 456).';
+    mpSetLobbyStatus('Enter a full 6-digit code (e.g. 123 456).');
     return;
   }
-  document.getElementById('mpLobbyStatus').textContent = 'Connecting to room…';
+  mpSetLobbyStatus('Connecting to peer server…');
   mpDestroyPeer();
   mpPlayerId = mpMakePlayerId();
   mpRoomCode = code;
@@ -764,17 +870,53 @@ function mpJoinRoom() {
   mpCombinedPending = false;
   mpRoomStatus = 'lobby';
   mpPlayers = {};
-  mpPeer = new Peer(undefined, { debug: 0 });
+  mpHostConn = null;
+  let opened = false;
+  let linked = false;
+  try {
+    mpPeer = new Peer(undefined, mpPeerOptions());
+  } catch (e) {
+    mpSetLobbyStatus('Could not start networking: ' + (e.message || e));
+    mpActive = false;
+    return;
+  }
+  const openTimer = setTimeout(() => {
+    if (!opened) {
+      mpSetLobbyStatus('Peer server timed out. Check internet and try Join again.');
+      mpActive = false;
+      mpDestroyPeer();
+    }
+  }, 12000);
   mpPeer.on('open', () => {
+    opened = true;
+    clearTimeout(openTimer);
+    mpSetLobbyStatus('Looking up room ' + formatRoomCode(code) + '…');
     const hostId = mpPeerIdFromCode(code);
-    const conn = mpPeer.connect(hostId, { reliable: true });
+    let conn;
+    try {
+      conn = mpPeer.connect(hostId, { reliable: true });
+    } catch (e) {
+      mpSetLobbyStatus('Could not reach host: ' + (e.message || e));
+      mpActive = false;
+      mpDestroyPeer();
+      return;
+    }
     const timeout = setTimeout(() => {
-      if (!mpHostConn || !mpHostConn.open) {
-        document.getElementById('mpLobbyStatus').textContent = 'Could not find that room. Check the code and that the host is still in the lobby.';
-        mpLeaveRoom();
+      if (!linked) {
+        const errMsg = 'Could not connect to room ' + formatRoomCode(code) + '. Check the code, that the host clicked Create Room, and that they kept the tab open.';
+        mpDestroyPeer();
+        mpActive = false;
+        mpIsHost = false;
+        mpRoomCode = '';
+        mpPlayers = {};
+        document.getElementById('mpRoomView').style.display = 'none';
+        document.getElementById('mpLobbyView').style.display = '';
+        mpSetLobbyStatus(errMsg);
+        document.getElementById('status').textContent = 'Join failed.';
       }
-    }, 8000);
+    }, 15000);
     conn.on('open', () => {
+      linked = true;
       clearTimeout(timeout);
       mpWireConnection(conn, false);
       const me = {
@@ -782,26 +924,35 @@ function mpJoinRoom() {
         ship: selectedShip || 'fighter', alive: true
       };
       mpPlayers[mpPlayerId] = me;
-      try { conn.send(JSON.stringify({ type: 'hello', player: me })); } catch (e) {}
+      try { conn.send({ type: 'hello', player: me }); } catch (e) {
+        try { conn.send(JSON.stringify({ type: 'hello', player: me })); } catch (e2) {}
+      }
       document.getElementById('mpLobbyView').style.display = 'none';
       document.getElementById('mpRoomView').style.display = '';
       document.getElementById('mpRoomCodeDisplay').textContent = formatRoomCode(code);
-      document.getElementById('mpRoomHint').textContent = 'Joined! Waiting for the host to start the mission.';
+      document.getElementById('mpRoomHint').textContent = (mpRoomStatus === 'playing') ? 'Joined mid-mission — syncing…' : 'Joined lobby! Waiting for the host to start.';
       mpUpdatePlayerListUI();
       mpStartSync();
-      document.getElementById('mpLobbyStatus').textContent = '';
+      mpSetLobbyStatus('Connected to host — wait for Start.');
       document.getElementById('status').textContent = 'Joined room ' + formatRoomCode(code) + ' — waiting for host.';
     });
-    conn.on('error', () => {
+    conn.on('error', err => {
+      if (linked) return;
       clearTimeout(timeout);
-      document.getElementById('mpLobbyStatus').textContent = 'Connection failed. Check the code.';
-      mpLeaveRoom();
+      mpDestroyPeer();
+      mpActive = false;
+      mpSetLobbyStatus('Connection failed (' + ((err && err.type) || (err && err.message) || 'error') + '). Is the host still in the lobby?');
     });
   });
   mpPeer.on('error', err => {
-    const msg = (err && err.type) ? err.type : 'error';
-    document.getElementById('mpLobbyStatus').textContent = 'Could not join (' + msg + '). Try again.';
+    const msg = (err && err.type) ? err.type : ((err && err.message) || 'error');
+    if (msg === 'peer-unavailable') {
+      mpSetLobbyStatus('Room not found. Host must Create Room first and share the exact code.');
+    } else {
+      mpSetLobbyStatus('Could not join (' + msg + '). Try again.');
+    }
     mpActive = false;
+    try { clearTimeout(openTimer); } catch (e) {}
     mpDestroyPeer();
   });
 }
@@ -822,7 +973,8 @@ function mpStartMission() {
   document.getElementById('multiplayerModal').classList.remove('open');
   document.getElementById('status').textContent = 'Co-op mission started — shared battlefield (host controls the wave).';
 }
-function mpLeaveRoom() {
+function mpLeaveRoom(keepStatus) {
+  const prev = keepStatus ? ((document.getElementById('mpLobbyStatus') || {}).textContent || '') : '';
   mpDestroyPeer();
   mpActive = false;
   mpIsHost = false;
@@ -832,8 +984,11 @@ function mpLeaveRoom() {
   mpRoomStatus = 'lobby';
   document.getElementById('mpRoomView').style.display = 'none';
   document.getElementById('mpLobbyView').style.display = '';
-  document.getElementById('mpLobbyStatus').textContent = '';
-  document.getElementById('status').textContent = 'Left multiplayer room.';
+  if (keepStatus && prev) mpSetLobbyStatus(prev);
+  else {
+    mpSetLobbyStatus('');
+    document.getElementById('status').textContent = 'Left multiplayer room.';
+  }
 }
 function openMultiplayerModal() {
   document.getElementById('multiplayerModal').classList.add('open');
@@ -845,13 +1000,22 @@ function openMultiplayerModal() {
 document.getElementById('hostMpBtn').addEventListener('click', openMultiplayerModal);
 document.getElementById('joinMpBtn').addEventListener('click', openMultiplayerModal);
 document.getElementById('mpCloseBtn').addEventListener('click', () => document.getElementById('multiplayerModal').classList.remove('open'));
-document.getElementById('mpHostBtn').addEventListener('click', () => mpHostRoom());
-document.getElementById('mpJoinBtn').addEventListener('click', () => mpJoinRoom());
+document.getElementById('mpHostBtn').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); try { mpHostRoom(); } catch (err) { if (typeof mpSetLobbyStatus === 'function') mpSetLobbyStatus('Host error: ' + (err && err.message ? err.message : err)); } });
+document.getElementById('mpJoinBtn').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); try { mpJoinRoom(); } catch (err) { if (typeof mpSetLobbyStatus === 'function') mpSetLobbyStatus('Join error: ' + (err && err.message ? err.message : err)); } });
 document.getElementById('mpStartBtn').addEventListener('click', () => mpStartMission());
 document.getElementById('mpLeaveBtn').addEventListener('click', () => { mpLeaveRoom(); document.getElementById('multiplayerModal').classList.remove('open'); });
 document.getElementById('mpJoinCode').addEventListener('input', (e) => {
   const raw = parseRoomCode(e.target.value);
   e.target.value = formatRoomCode(raw);
+});
+document.getElementById('mpJoinCode').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.keyCode === 13) {
+    e.preventDefault();
+    e.stopPropagation();
+    try { mpJoinRoom(); } catch (err) {
+      if (typeof mpSetLobbyStatus === 'function') mpSetLobbyStatus('Join error: ' + (err && err.message ? err.message : err));
+    }
+  }
 });
 
 // Patch score form submit for multiplayer multi-initials
@@ -860,6 +1024,7 @@ document.getElementById('mpJoinCode').addEventListener('input', (e) => {
   form.addEventListener('submit', function mpScoreSubmit(e) {
     if (!mpCombinedPending) return;
     e.preventDefault();
+    e.stopPropagation();
     e.stopImmediatePropagation();
     const inputs = Array.from(document.querySelectorAll('#multiInitialsRow input'));
     const initialsList = inputs.map(inp => inp.value.trim().toUpperCase()).filter(v => /^[A-Z]{3}$/.test(v));
