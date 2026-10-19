@@ -259,7 +259,7 @@ function renderDeathAnimation(now) {
 let pendingFinalScore = 0;
 // ---- Worldwide leaderboard (Firebase Firestore REST API) ----
 // Fill these two values in after creating a free Firebase project (see setup notes). Leave empty to keep scores local-only.
-const ONLINE_LEADERBOARD = { projectId: '', apiKey: '', collection: 'scores_galaga' };
+const ONLINE_LEADERBOARD = { projectId: 'galacta-shooter', apiKey: 'AIzaSyA-7s6Dl9baq40l-MGrTHjtgSQplPQnzLE', collection: 'scores_galaga' };
 function onlineEnabled(){ return !!(ONLINE_LEADERBOARD.projectId && ONLINE_LEADERBOARD.apiKey); }
 function firestoreBase(){ return 'https://firestore.googleapis.com/v1/projects/' + encodeURIComponent(ONLINE_LEADERBOARD.projectId) + '/databases/(default)/documents'; }
 async function submitOnlineScore(initials, score){
