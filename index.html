@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -144,6 +144,17 @@ body.crt-on .gamebox{box-shadow:0 0 0 2px #253f6b,0 0 36px #00d9ff2b,inset 0 0 2
   <button type="button" id="mpCloseBtn" style="margin-top:10px">Close</button>
  </div>
 </div>
+<div class="multiplayer-modal" id="resetModal" role="dialog" aria-modal="true" aria-labelledby="resetTitle">
+ <div class="multiplayer-card">
+  <h2 id="resetTitle">RESET PROGRESS?</h2>
+  <p style="color:#b8c8e8;font-size:13px;line-height:1.45">This only works in normal (solo) mode. Choose what to wipe:</p>
+  <button type="button" id="resetAllBtn" style="width:100%;margin:6px 0;border-color:#ff6b6b;color:#ffb0b0">Reset ALL — points, coins, stats &amp; shop purchases</button>
+  <button type="button" id="resetPartialBtn" style="width:100%;margin:6px 0">Reset points, coins &amp; stats only (keep purchases)</button>
+  <button type="button" id="resetCancelBtn" style="width:100%;margin:6px 0">Continue normally (No)</button>
+  <p id="resetStatus" style="color:#ffd866;font-size:12px;min-height:1.2em"></p>
+ </div>
+</div>
+
 
 <script>
 'use strict';
@@ -359,11 +370,15 @@ function mpLocalSnapshot() {
   const activeAbs = {};
   Object.keys(ab).forEach(k => { if (ab[k] > 0) activeAbs[k] = Math.round(ab[k] * 10) / 10; });
   // Compact local bullets so teammates can see your shots
-  const bullets = (galagaState.bullets || []).slice(0, 40).map(b => ({
-    x: Math.round(b.x), y: Math.round(b.y), w: b.w || 4, h: b.h || 10,
-    vx: Math.round((b.vx || 0) * 10) / 10, vy: Math.round((b.vy || -8) * 10) / 10,
-    homing: !!b.homing, solarFire: !!b.solarFire, isCannonBomb: !!b.isCannonBomb
-  }));
+  const bullets = (galagaState.bullets || [])
+    .filter(b => b && b.y > -40 && b.y < (typeof canvas !== 'undefined' ? canvas.height + 40 : 700) && b.x > -40 && b.x < (typeof canvas !== 'undefined' ? canvas.width + 40 : 700))
+    .slice(0, 24)
+    .map(b => ({
+      x: Math.round(b.x), y: Math.round(b.y), w: b.w || 4, h: b.h || 10,
+      vx: Math.round((b.vx || 0) * 10) / 10, vy: Math.round((b.vy || -8) * 10) / 10,
+      homing: !!b.homing, solarFire: !!b.solarFire, isCannonBomb: !!b.isCannonBomb
+    }));
+  const nowFx = Date.now();
   return {
     id: mpPlayerId,
     name: (mpPlayers[mpPlayerId] && mpPlayers[mpPlayerId].name) || (mpIsHost ? 'HOST' : 'PLT'),
@@ -375,8 +390,30 @@ function mpLocalSnapshot() {
     alive: alive || (gameState !== 'PLAYING' && gameState !== 'GAMEOVER'),
     abilities: activeAbs,
     shield: (ab.shield || 0) > 0,
-    flame: Date.now() < (galagaState.flameShipUntil || 0),
-    bullets
+    flame: nowFx < (galagaState.flameShipUntil || 0),
+    bullets,
+    fx: {
+      megalaser: (ab.megalaser || 0) > 0 || (galagaState.shipLaserActive || 0) > 0,
+      beamWide: (galagaState.selectedShip || selectedShip) === 'laser',
+      drones: nowFx < (galagaState.droneSquadronUntil || 0),
+      starfall: nowFx < (galagaState.starfallUntil || 0),
+      solarBlades: nowFx < (galagaState.solarBladesUntil || 0),
+      twinlasers: (ab.twinlasers || 0) > 0,
+      homing: (ab.homing || 0) > 0,
+      slowmo: (ab.slowmo || 0) > 0,
+      multishot: (ab.multishot || 0) > 0,
+      rapidfire: (ab.rapidfire || 0) > 0,
+      harpoon: (ab.harpoon || 0) > 0,
+      // Compact laser flashes / special shots for teammates to see
+      lasers: (galagaState.abilityLasers || []).slice(0, 12).map(l => ({
+        x1: Math.round(l.x1), y1: Math.round(l.y1), x2: Math.round(l.x2), y2: Math.round(l.y2),
+        color: l.color || '#70f5ff', life: l.life || 4, width: l.width || 3
+      })),
+      specials: (galagaState.specialProjectiles || []).slice(0, 16).map(q => ({
+        x: Math.round(q.x), y: Math.round(q.y), vx: q.vx || 0, vy: q.vy || 0,
+        color: q.color || '#70f5ff', fast: !!q.fast
+      }))
+    }
   };
 }
 function mpSerializeEnemies() {
@@ -557,7 +594,18 @@ function mpHandleMessageInner(msg, fromPeerId) {
     }
   } else if (msg.type === 'state') {
     if (msg.player && msg.player.id && msg.player.id !== mpPlayerId) {
-      mpPlayers[msg.player.id] = Object.assign({}, mpPlayers[msg.player.id] || {}, msg.player);
+      const prev = mpPlayers[msg.player.id] || {};
+      const bullets = Array.isArray(msg.player.bullets) ? msg.player.bullets.map(b => Object.assign({}, b, {
+        _t: performance.now(),
+        vx: (b.vx === 0 || b.vx == null) ? 0 : b.vx,
+        vy: (b.vy === 0 || b.vy == null) ? -8 : b.vy
+      })) : [];
+      mpPlayers[msg.player.id] = Object.assign({}, prev, msg.player, {
+        bullets,
+        _sx: prev.x, _sy: prev.y,
+        _tx: msg.player.x, _ty: msg.player.y,
+        _interpT: performance.now()
+      });
     }
     // Host relays teammate state to other clients
     if (mpIsHost && fromPeerId) {
@@ -569,16 +617,21 @@ function mpHandleMessageInner(msg, fromPeerId) {
       // Host injects remote player bullets into the shared simulation so everyone shares one battlefield
       if (msg.player && msg.player.bullets && Array.isArray(msg.player.bullets) && gameState === 'PLAYING') {
         const owner = msg.player.id;
-        // Avoid unbounded growth: only add a few freshest shots tagged with owner
-        msg.player.bullets.slice(0, 12).forEach(b => {
-          if (!b || b.y < -20) return;
-          // Skip near-duplicates already present from this owner
-          const exists = (galagaState.bullets || []).some(lb => lb.mpOwner === owner && Math.abs(lb.x - b.x) < 6 && Math.abs(lb.y - b.y) < 10);
+        // Drop any off-screen bullets owned by this pilot first
+        galagaState.bullets = (galagaState.bullets || []).filter(lb => {
+          if (lb.mpOwner !== owner) return true;
+          return lb.y > -50 && lb.y < canvas.height + 50 && lb.x > -50 && lb.x < canvas.width + 50;
+        });
+        msg.player.bullets.slice(0, 10).forEach(b => {
+          if (!b || b.y < -30 || b.y > canvas.height + 30) return;
+          const exists = (galagaState.bullets || []).some(lb => lb.mpOwner === owner && Math.abs(lb.x - b.x) < 8 && Math.abs(lb.y - b.y) < 12);
           if (exists) return;
           galagaState.bullets.push({
             x: b.x, y: b.y, w: b.w || 4, h: b.h || 10,
-            vx: b.vx || 0, vy: b.vy || -8, dmg: Math.max(1, (galagaState.player && galagaState.player.baseDamage) || 1),
-            mpOwner: owner, homing: !!b.homing, solarFire: !!b.solarFire, isCannonBomb: !!b.isCannonBomb
+            vx: b.vx || 0, vy: (b.vy === 0 || b.vy == null) ? -8 : b.vy,
+            dmg: Math.max(1, (galagaState.player && galagaState.player.baseDamage) || 1),
+            mpOwner: owner, homing: !!b.homing, solarFire: !!b.solarFire, isCannonBomb: !!b.isCannonBomb,
+            mpLife: 90
           });
         });
       }
@@ -636,15 +689,13 @@ function mpStartSync() {
     const snap = mpLocalSnapshot();
     mpPlayers[mpPlayerId] = Object.assign({}, mpPlayers[mpPlayerId] || {}, snap);
     mpBroadcast({ type: 'state', player: snap });
-    // Host streams the shared level so every pilot is on the same wave with the same enemies
     if (mpIsHost && gameState === 'PLAYING') {
-      // Keep host's own player entry fresh in the world payload
       const world = mpWorldSnapshot();
       world.players = Object.assign({}, mpPlayers);
       world.players[mpPlayerId] = snap;
       mpBroadcast(world);
     }
-  }, 120);
+  }, 80);
 }
 function mpStopSync() {
   if (mpSyncTimer) { clearInterval(mpSyncTimer); mpSyncTimer = null; }
@@ -881,6 +932,24 @@ function mpHostRoom() {
   });
 }
 
+
+function mpCleanupBullets() {
+  if (!galagaState.bullets || !galagaState.bullets.length) return;
+  galagaState.bullets = galagaState.bullets.filter(b => {
+    if (!b) return false;
+    if (b.mpLife != null) {
+      b.mpLife--;
+      if (b.mpLife <= 0) return false;
+    }
+    // Always drop off-screen shots (prevents frozen remote copies)
+    if (b.y < -80 || b.y > canvas.height + 80 || b.x < -80 || b.x > canvas.width + 80) return false;
+    return true;
+  });
+  // Hard cap during multiplayer to reduce lag
+  if (mpActive && galagaState.bullets.length > 180) {
+    galagaState.bullets.splice(0, galagaState.bullets.length - 180);
+  }
+}
 function mpSafeStartGame(reason) {
   try {
     if (gameState === 'PLAYING') {
@@ -1060,6 +1129,75 @@ function mpLeaveRoom(keepStatus) {
     document.getElementById('status').textContent = 'Left multiplayer room.';
   }
 }
+
+function openResetModal() {
+  if (mpActive) {
+    document.getElementById('status').textContent = 'Reset is only available in normal (solo) mode — leave multiplayer first.';
+    return;
+  }
+  document.getElementById('resetStatus').textContent = '';
+  document.getElementById('resetModal').classList.add('open');
+  paused = true;
+}
+function closeResetModal() {
+  document.getElementById('resetModal').classList.remove('open');
+  if (gameState === 'PLAYING' && !document.getElementById('multiplayerModal').classList.contains('open')) {
+    paused = false;
+  }
+}
+function applyResetPartial() {
+  // Points (local high scores), coins, rocket level / run stats — keep ships & passive purchases
+  try { localStorage.removeItem('arc_scores_galaga'); } catch (e) {}
+  try { localStorage.removeItem(coinWalletKey); } catch (e) {}
+  try { localStorage.removeItem(coinUpgradeKey); } catch (e) {}
+  galagaState.coinsCollected = 0;
+  galagaState.rocketUpgradeLevel = 0;
+  galagaState.score = 0;
+  galagaState.player.extraBullets = 0;
+  galagaState.player.extraSpeed = galagaState.passives.overdrive ? 1 : 0;
+  galagaState.player.baseDamage = 1;
+  galagaState.player.fireRateBonus = 0;
+  galagaState.player.bulletSpeedBonus = 0;
+  galagaState.lives = 3 + (galagaState.passives.plating ? 1 : 0);
+  galagaState.rocketTimer = 5;
+  saveCoinWallet();
+  saveRocketLevel();
+  if (typeof renderLocalLeaderboard === 'function') try { renderLocalLeaderboard(); } catch (e) {}
+  document.getElementById('resetStatus').textContent = 'Points, coins & stats reset. Shop purchases kept.';
+  document.getElementById('status').textContent = 'Progress partially reset (purchases kept).';
+  setTimeout(closeResetModal, 700);
+}
+function applyResetAll() {
+  try { localStorage.removeItem('arc_scores_galaga'); } catch (e) {}
+  try { localStorage.removeItem(coinWalletKey); } catch (e) {}
+  try { localStorage.removeItem(coinUnlockKey); } catch (e) {}
+  try { localStorage.removeItem(coinUpgradeKey); } catch (e) {}
+  try { localStorage.removeItem('galactaOwnedShips_v1'); } catch (e) {}
+  try { localStorage.setItem('galactaSelectedShip_v1', 'fighter'); } catch (e) {}
+  ownedShips = { fighter: true };
+  selectedShip = 'fighter';
+  galagaState.selectedShip = 'fighter';
+  galagaState.coinsCollected = 0;
+  galagaState.rocketUpgradeLevel = 0;
+  galagaState.passives = loadCoinUnlocks();
+  galagaState.score = 0;
+  galagaState.player.extraBullets = 0;
+  galagaState.player.extraSpeed = 0;
+  galagaState.player.baseDamage = 1;
+  galagaState.player.fireRateBonus = 0;
+  galagaState.player.bulletSpeedBonus = 0;
+  galagaState.lives = 3;
+  galagaState.rocketTimer = 5;
+  saveCoinWallet();
+  saveCoinUnlocks();
+  saveRocketLevel();
+  saveOwnedShips();
+  if (typeof refreshShipCards === 'function') try { refreshShipCards(); } catch (e) {}
+  if (typeof renderLocalLeaderboard === 'function') try { renderLocalLeaderboard(); } catch (e) {}
+  document.getElementById('resetStatus').textContent = 'Everything reset (including shop purchases).';
+  document.getElementById('status').textContent = 'Full reset complete.';
+  setTimeout(closeResetModal, 700);
+}
 function openMultiplayerModal() {
   document.getElementById('multiplayerModal').classList.add('open');
   if (!mpActive) {
@@ -1070,6 +1208,16 @@ function openMultiplayerModal() {
 document.getElementById('hostMpBtn').addEventListener('click', openMultiplayerModal);
 document.getElementById('joinMpBtn').addEventListener('click', openMultiplayerModal);
 document.getElementById('mpCloseBtn').addEventListener('click', () => document.getElementById('multiplayerModal').classList.remove('open'));
+(function wireResetModal() {
+  const allBtn = document.getElementById('resetAllBtn');
+  const partialBtn = document.getElementById('resetPartialBtn');
+  const cancelBtn = document.getElementById('resetCancelBtn');
+  const resetModal = document.getElementById('resetModal');
+  if (allBtn) allBtn.addEventListener('click', (e) => { e.preventDefault(); applyResetAll(); });
+  if (partialBtn) partialBtn.addEventListener('click', (e) => { e.preventDefault(); applyResetPartial(); });
+  if (cancelBtn) cancelBtn.addEventListener('click', (e) => { e.preventDefault(); closeResetModal(); document.getElementById('status').textContent = 'Reset cancelled — continuing normally.'; });
+  if (resetModal) resetModal.addEventListener('click', (e) => { if (e.target && e.target.id === 'resetModal') closeResetModal(); });
+})();
 document.getElementById('mpHostBtn').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); try { mpHostRoom(); } catch (err) { if (typeof mpSetLobbyStatus === 'function') mpSetLobbyStatus('Host error: ' + (err && err.message ? err.message : err)); } });
 document.getElementById('mpJoinBtn').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); try { mpJoinRoom(); } catch (err) { if (typeof mpSetLobbyStatus === 'function') mpSetLobbyStatus('Join error: ' + (err && err.message ? err.message : err)); } });
 document.getElementById('mpStartBtn').addEventListener('click', () => mpStartMission());
@@ -1177,6 +1325,14 @@ window.addEventListener('keydown', e => {
   if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code)) e.preventDefault();
   keys[e.code] = true;
   if (e.code === 'KeyZ' && !e.repeat) { e.preventDefault(); toggleFullscreen(); }
+  if (e.code === 'KeyR' && !e.repeat) {
+    e.preventDefault();
+    if (mpActive) {
+      document.getElementById('status').textContent = 'Reset (R) is only available in normal mode.';
+    } else {
+      openResetModal();
+    }
+  }
   if (e.code === 'KeyX' && !e.repeat && gameState === 'PLAYING') { e.preventDefault(); openShop(); }
   if (e.code === 'KeyC' && !e.repeat && gameState === 'PLAYING') { e.preventDefault(); openCoinShop(); }
   if (e.code === 'KeyV' && !e.repeat && gameState === 'PLAYING' && (shopPanel.classList.contains('open') || coinShopPanel.classList.contains('open'))) { e.preventDefault(); shopPanel.classList.remove('open'); coinShopPanel.classList.remove('open'); paused = false; }
@@ -1385,7 +1541,7 @@ function grantAbility(type, duration) {
 function updateGalaga() { if (gameState !== 'PLAYING' || currentGame !== 'galaga') return;
  // Hard limits prevent rare ability/boss combinations from accumulating enough objects to stall the browser.
  const limits = { bullets: 260, enemyBullets: 320, particles: 1200, bossDebris: 90, drops: 10, coins: 5, harpoons: 40, rockets: 60, specialProjectiles: 100, abilityLasers: 80, novaRings: 30, phasePortals: 12, playerTrail: 100 };
- for (const [key, max] of Object.entries(limits)) { const list = galagaState[key]; if (Array.isArray(list) && list.length > max) list.splice(0, list.length - max); } if(galagaState.goldenAscensionUntil && Date.now()>=galagaState.goldenAscensionUntil){const p=galagaState.player,orig=galagaState.goldenAscensionOriginal;if(orig){p.baseDamage=orig.baseDamage;p.extraBullets=orig.extraBullets;p.fireRateBonus=orig.fireRateBonus;galagaState.abilities.rapidfire=orig.abilities.rapidfire;galagaState.abilities.multishot=orig.abilities.multishot;galagaState.abilities.shield=orig.abilities.shield;}galagaState.goldenAscensionOriginal=null;galagaState.goldenAscensionUntil=0;galagaState.bullets.forEach(b=>{if(b.goldenAscensionShot){delete b.goldenAscensionShot;delete b.color;delete b.w;delete b.h;}});} if(galagaState.selectedShip==='bomber' && Date.now()<galagaState.bomberUntil){galagaState.bomberShotTimer++;galagaState.bomberShipX+=galagaState.bomberShipX<canvas.width+90?3.5:0;if(galagaState.bomberShipX>canvas.width+90)galagaState.bomberShipX=-80;if(galagaState.bomberShotTimer%48===0){const target=biggestEnemyCluster();if(target){for(const offset of [-34,0,34]){const sx=galagaState.bomberShipX+22+offset,sy=75;const dx=target.x-sx,dy=target.y-sy,len=Math.hypot(dx,dy)||1;galagaState.specialProjectiles.push({x:sx,y:sy,vx:dx/len*5.5,vy:dy/len*5.5,life:150,damage:4*galagaState.player.baseDamage,color:'#ff9d42',fast:true,bomb:true,blastRadius:60,trail:[]});}playSfx('laser');}}} if (teleportTargeting || Date.now() < aliensFrozenUntil) return; const speed = galagaState.player.speed + galagaState.player.extraSpeed; if (Date.now() >= (galagaState.frozenUntil||0)) { if (keys['ArrowLeft'] || keys['KeyA']) galagaState.player.x -= speed; if (keys['ArrowRight'] || keys['KeyD']) galagaState.player.x += speed; if (keys['ArrowUp'] || keys['KeyW']) galagaState.player.y -= speed; if (keys['ArrowDown'] || keys['KeyS']) galagaState.player.y += speed; } galagaState.player.x = Math.max(0, Math.min(canvas.width - galagaState.player.w, galagaState.player.x)); galagaState.player.y = Math.max(100, Math.min(canvas.height - 120, galagaState.player.y)); sniperPlayerHistory.push({x:galagaState.player.x+galagaState.player.w/2,y:galagaState.player.y+galagaState.player.h/2}); if(sniperPlayerHistory.length>90)sniperPlayerHistory.shift(); // Tick active abilities
+ for (const [key, max] of Object.entries(limits)) { const list = galagaState[key]; if (Array.isArray(list) && list.length > max) list.splice(0, list.length - max); } mpCleanupBullets(); if(galagaState.goldenAscensionUntil && Date.now()>=galagaState.goldenAscensionUntil){const p=galagaState.player,orig=galagaState.goldenAscensionOriginal;if(orig){p.baseDamage=orig.baseDamage;p.extraBullets=orig.extraBullets;p.fireRateBonus=orig.fireRateBonus;galagaState.abilities.rapidfire=orig.abilities.rapidfire;galagaState.abilities.multishot=orig.abilities.multishot;galagaState.abilities.shield=orig.abilities.shield;}galagaState.goldenAscensionOriginal=null;galagaState.goldenAscensionUntil=0;galagaState.bullets.forEach(b=>{if(b.goldenAscensionShot){delete b.goldenAscensionShot;delete b.color;delete b.w;delete b.h;}});} if(galagaState.selectedShip==='bomber' && Date.now()<galagaState.bomberUntil){galagaState.bomberShotTimer++;galagaState.bomberShipX+=galagaState.bomberShipX<canvas.width+90?3.5:0;if(galagaState.bomberShipX>canvas.width+90)galagaState.bomberShipX=-80;if(galagaState.bomberShotTimer%48===0){const target=biggestEnemyCluster();if(target){for(const offset of [-34,0,34]){const sx=galagaState.bomberShipX+22+offset,sy=75;const dx=target.x-sx,dy=target.y-sy,len=Math.hypot(dx,dy)||1;galagaState.specialProjectiles.push({x:sx,y:sy,vx:dx/len*5.5,vy:dy/len*5.5,life:150,damage:4*galagaState.player.baseDamage,color:'#ff9d42',fast:true,bomb:true,blastRadius:60,trail:[]});}playSfx('laser');}}} if (teleportTargeting || Date.now() < aliensFrozenUntil) return; const speed = galagaState.player.speed + galagaState.player.extraSpeed; if (Date.now() >= (galagaState.frozenUntil||0)) { if (keys['ArrowLeft'] || keys['KeyA']) galagaState.player.x -= speed; if (keys['ArrowRight'] || keys['KeyD']) galagaState.player.x += speed; if (keys['ArrowUp'] || keys['KeyW']) galagaState.player.y -= speed; if (keys['ArrowDown'] || keys['KeyS']) galagaState.player.y += speed; } galagaState.player.x = Math.max(0, Math.min(canvas.width - galagaState.player.w, galagaState.player.x)); galagaState.player.y = Math.max(100, Math.min(canvas.height - 120, galagaState.player.y)); sniperPlayerHistory.push({x:galagaState.player.x+galagaState.player.w/2,y:galagaState.player.y+galagaState.player.h/2}); if(sniperPlayerHistory.length>90)sniperPlayerHistory.shift(); // Tick active abilities
  Object.keys(galagaState.abilities).forEach(abi => { if (galagaState.abilities[abi] > 0) { galagaState.abilities[abi] -= 1/60; if (galagaState.abilities[abi] <= 0) galagaState.abilities[abi] = 0; } });
  if(galagaState.novaCooldown>0)galagaState.novaCooldown--; if(galagaState.guardianHarpoonUntil && Date.now()>=galagaState.guardianHarpoonUntil){galagaState.guardianHarpoonShields=0;galagaState.guardianHarpoonUntil=0;document.getElementById('status').textContent='AEGIS BARRIER EXPIRED';} galagaState.abilityLasers=galagaState.abilityLasers.filter(l=>--l.life>0);
  // Three new timed power-ups: homing Starfall missiles, orbiting Solar Blades, and six auto-firing support drones.
@@ -1875,18 +2031,34 @@ function renderGalaga() { ctx.fillStyle = '#050515'; ctx.fillRect(0, 0, canvas.w
  galagaState.drops.forEach(d => { const spin=performance.now()*0.0018; const styles={multishot:{c:'#ffca55',icon:'✦'},rapidfire:{c:'#ff5a68',icon:'»'},shield:{c:'#42eaff',icon:'⬡'},slowmo:{c:'#b78aff',icon:'◷'},homing:{c:'#7dff9b',icon:'⌖'},megalaser:{c:'#ff66e8',icon:'⚡'},twinlasers:{c:'#6ee7ff',icon:'🚀'},harpoon:{c:'#bd7bff',icon:'◉'},starfall:{c:'#ff9d42',icon:'☄'},drones:{c:'#62eaff',icon:'✣'}}; const st=styles[d.type]||{c:'#ffffff',icon:'+'}; ctx.save();ctx.translate(d.x,d.y);ctx.rotate(spin);ctx.fillStyle='#07101f';ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();ctx.strokeStyle=st.c;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.stroke();ctx.fillStyle=st.c;ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(st.icon,0,0.5);ctx.restore(); }); // Draw Coin Drops
  galagaState.coins.forEach(c => { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.fillStyle = '#ffcc00'; ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#000000'; ctx.font = '7px "Press Start 2P"'; ctx.fillText('$', -3, 3); ctx.restore(); }); // Draw Explosions / Particles
  galagaState.bossDebris.forEach(d=>{ctx.save();ctx.globalAlpha=Math.min(1,d.life/24);ctx.translate(d.x,d.y);ctx.rotate(d.rot);ctx.fillStyle=d.color;ctx.shadowColor=d.color;ctx.shadowBlur=8;ctx.fillRect(-d.w/2,-d.h/2,d.w,d.h);ctx.strokeStyle='#fff2c4';ctx.lineWidth=1;ctx.strokeRect(-d.w/2,-d.h/2,d.w,d.h);ctx.restore();}); galagaState.particles.forEach(pt => { ctx.fillStyle = pt.color; ctx.globalAlpha = pt.alpha; ctx.fillRect(pt.x, pt.y, 3, 3); ctx.globalAlpha = 1.0; });
- // Remote multiplayer ships — same designs as local player via drawShipBody
+ // Remote multiplayer ships — interpolate position; advance bullets so they never freeze on screen
  if (mpActive && mpPlayers) {
+   const nowR = performance.now();
    Object.keys(mpPlayers).forEach(id => {
      if (id === mpPlayerId) return;
      const rp = mpPlayers[id];
      if (!rp || rp.alive === false || (rp.lives || 0) <= 0) return;
-     const rx = rp.x || 0, ry = rp.y || 0;
+     // Smooth ship motion toward last network target
+     let rx = rp.x || 0, ry = rp.y || 0;
+     if (rp._tx != null && rp._interpT != null) {
+       const u = Math.min(1, (nowR - rp._interpT) / 80);
+       const sx = rp._sx != null ? rp._sx : rx, sy = rp._sy != null ? rp._sy : ry;
+       rx = sx + (rp._tx - sx) * u;
+       ry = sy + (rp._ty - sy) * u;
+       rp.x = rx; rp.y = ry;
+     }
      const shipId = rp.ship || 'fighter';
-     // Remote bullets (same colours as that ship)
      const shipColors = {fighter:'#00f3ff',laser:'#ff5656',stormwing:'#45eaff',guardian:'#76ffc4',nova:'#ffe87a',teleporter:'#b78aff',bomber:'#ff9d42'};
      const col = shipColors[shipId] || '#00f3ff';
      if (Array.isArray(rp.bullets)) {
+       rp.bullets = rp.bullets.filter(b => {
+         if (!b) return false;
+         const dt = Math.min(0.05, (nowR - (b._t || nowR)) / 1000);
+         b._t = nowR;
+         b.x += (b.vx || 0) * dt * 60;
+         b.y += ((b.vy == null || b.vy === 0) ? -8 : b.vy) * dt * 60;
+         return b.y > -50 && b.y < canvas.height + 50 && b.x > -50 && b.x < canvas.width + 50;
+       });
        rp.bullets.forEach(b => {
          ctx.save();
          ctx.globalAlpha = 0.9;
@@ -1899,12 +2071,121 @@ function renderGalaga() { ctx.fillStyle = '#050515'; ctx.fillRect(0, 0, canvas.w
          ctx.restore();
        });
      }
+     // Teammate ability lasers & special projectiles (world space)
+     if (rp.fx) {
+       if (Array.isArray(rp.fx.lasers)) {
+         rp.fx.lasers.forEach(l => {
+           ctx.save();
+           ctx.globalAlpha = Math.min(1, (l.life || 4) / 8);
+           ctx.strokeStyle = l.color || col;
+           ctx.shadowColor = l.color || col;
+           ctx.shadowBlur = 14;
+           ctx.lineWidth = l.width || 3;
+           ctx.beginPath();
+           ctx.moveTo(l.x1, l.y1);
+           ctx.lineTo(l.x2, l.y2);
+           ctx.stroke();
+           ctx.restore();
+         });
+       }
+       if (Array.isArray(rp.fx.specials)) {
+         const nowS = performance.now();
+         rp.fx.specials = rp.fx.specials.filter(q => {
+           if (!q) return false;
+           if (q._t == null) q._t = nowS;
+           const dt = Math.min(0.05, (nowS - q._t) / 1000);
+           q._t = nowS;
+           q.x += (q.vx || 0) * dt * 60;
+           q.y += (q.vy || 0) * dt * 60;
+           return q.y > -40 && q.y < canvas.height + 40;
+         });
+         rp.fx.specials.forEach(q => {
+           ctx.save();
+           ctx.fillStyle = q.color || col;
+           ctx.shadowColor = q.color || col;
+           ctx.shadowBlur = q.fast ? 8 : 12;
+           ctx.beginPath();
+           ctx.arc(q.x, q.y, q.fast ? 3 : 5, 0, Math.PI * 2);
+           ctx.fill();
+           ctx.restore();
+         });
+       }
+     }
      ctx.save();
      ctx.translate(rx + 14, ry + 14);
      ctx.globalAlpha = 0.95;
-     drawShipBody(ctx, shipId, { harpoon: !!(rp.abilities && rp.abilities.harpoon > 0), shadowBlur: 12 });
-     if (rp.shield) { ctx.strokeStyle = '#00f3ff'; ctx.lineWidth = 3; ctx.globalAlpha = 0.75; ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.stroke(); }
-     if (rp.flame) { ctx.globalAlpha = 0.7; ctx.fillStyle = '#ff7b22'; ctx.fillRect(-5, 12, 10, 14); }
+     drawShipBody(ctx, shipId, { harpoon: !!(rp.abilities && rp.abilities.harpoon > 0) || !!(rp.fx && rp.fx.harpoon), shadowBlur: 12 });
+     const fx = rp.fx || {};
+     // Mega / solar beam visible to all pilots
+     if (fx.megalaser || (rp.abilities && rp.abilities.megalaser > 0)) {
+       const bw = fx.beamWide ? 76 : 24;
+       ctx.save();
+       ctx.globalAlpha = 0.55;
+       const grad = ctx.createLinearGradient(0, 0, 0, -ry - 14);
+       grad.addColorStop(0, fx.beamWide ? '#ff9a43' : '#70f5ff');
+       grad.addColorStop(1, 'rgba(112,245,255,0)');
+       ctx.fillStyle = grad;
+       ctx.shadowColor = fx.beamWide ? '#ff6a20' : '#70f5ff';
+       ctx.shadowBlur = 16;
+       ctx.fillRect(-bw / 2, -ry - 14, bw, ry + 14);
+       ctx.restore();
+     }
+     // Orbiting drones / solar blades
+     if (fx.drones || fx.solarBlades) {
+       const count = fx.solarBlades ? 4 : 6;
+       const rad = fx.solarBlades ? 48 : 66;
+       const t = performance.now();
+       for (let n = 0; n < count; n++) {
+         const a = t * 0.006 + n * Math.PI * 2 / count;
+         const dx = Math.cos(a) * rad, dy = Math.sin(a) * rad;
+         ctx.save();
+         ctx.globalAlpha = 0.9;
+         ctx.fillStyle = fx.solarBlades ? '#ffe87a' : '#70f5ff';
+         ctx.shadowColor = ctx.fillStyle;
+         ctx.shadowBlur = 10;
+         if (fx.solarBlades) {
+           ctx.translate(dx, dy);
+           ctx.rotate(a);
+           ctx.fillRect(-3, -10, 6, 20);
+         } else {
+           ctx.beginPath();
+           ctx.arc(dx, dy, 6, 0, Math.PI * 2);
+           ctx.fill();
+         }
+         ctx.restore();
+       }
+     }
+     if (rp.shield || fx.shield) { ctx.strokeStyle = '#00f3ff'; ctx.lineWidth = 3; ctx.globalAlpha = 0.75; ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.stroke(); }
+     if (rp.flame || fx.flame) { ctx.globalAlpha = 0.7; ctx.fillStyle = '#ff7b22'; ctx.fillRect(-5, 12, 10, 14); }
+     // Starfall indicator ring
+     if (fx.starfall) {
+       ctx.save();
+       ctx.globalAlpha = 0.35 + 0.2 * Math.sin(performance.now() * 0.01);
+       ctx.strokeStyle = '#ff4cff';
+       ctx.lineWidth = 2;
+       ctx.beginPath();
+       ctx.arc(0, 0, 28, 0, Math.PI * 2);
+       ctx.stroke();
+       ctx.restore();
+     }
+     // Twin / multi cue
+     if (fx.twinlasers || fx.multishot || fx.rapidfire || fx.homing) {
+       ctx.save();
+       ctx.globalAlpha = 0.85;
+       ctx.fillStyle = '#eaf4ff';
+       ctx.font = '7px system-ui';
+       ctx.textAlign = 'center';
+       const tags = [];
+       if (fx.twinlasers) tags.push('TWIN');
+       if (fx.multishot) tags.push('MULTI');
+       if (fx.rapidfire) tags.push('RAPID');
+       if (fx.homing) tags.push('HOME');
+       if (fx.megalaser) tags.push('MEGA');
+       if (fx.drones) tags.push('DRONES');
+       if (fx.starfall) tags.push('STAR');
+       if (tags.length) ctx.fillText(tags.join('·'), 0, -30);
+       ctx.restore();
+     }
      ctx.globalAlpha = 1; ctx.shadowBlur = 0;
      ctx.font = 'bold 9px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = '#eaf4ff';
      ctx.fillText((rp.name || 'PLT').slice(0, 6), 0, 28);
@@ -2012,6 +2293,14 @@ requestAnimationFrame(frame);
  // PATCHES: newest first. To log a new update, add an entry at the TOP of this list.
  // The 3 newest are shown on their own; anything older is folded into "Earlier updates".
  const PATCHES=[
+  {version:'v20.3',notes:[
+   'Fixed multiplayer connection issues (join timeouts, silent failures, page reloads on join).',
+   'Players can join while the host is in the lobby or after the mission has started.',
+   'Smoother co-op: faster sync, interpolated teammate ships, stuck bullets cleaned up.',
+   'BroadcastChannel + TURN support for more reliable links on the same PC or across networks.',
+   'Press R in normal (solo) mode to open Reset Progress: Reset ALL (points, coins, stats & shop purchases), reset points/coins/stats only (keep purchases), or continue (No).',
+   'Co-op: teammates can see each other\'s active abilities (mega beam, drones, starfall, lasers, and more).'
+  ]},
   {version:'v20.2',notes:[
    'New boss: SPIKE JUGGERNAUT — a pointed ramming hull that charges at the player instead of strafing.',
    'Spike Juggernaut fires 5 tracking cluster bombs that detonate near you for 2 hearts each, and EMP pulses that briefly freeze your controls.',
@@ -2061,4 +2350,5 @@ requestAnimationFrame(frame);
  document.getElementById('patchBtn').addEventListener('click',e=>{e.currentTarget.blur();toggle();});
  modal.addEventListener('click',e=>{if(e.target===modal)close();});
 })();
-</script></body></html>
+</script>
+</body></html>
