@@ -453,6 +453,7 @@ function mpLocalSnapshot() {
       kamehameha: Date.now() < (galagaState.kamehamehaUntil || 0),
       spiritLaser: (galagaState.selectedShip || selectedShip) === 'spiritbeam' && Date.now() < (galagaState.spiritLaserUntil || 0),
       spiritOverload: (galagaState.abilities.multishot || 0) > 0,
+      spiritGold: Date.now() < (galagaState.goldenAscensionUntil || 0),
       beamWide: (galagaState.selectedShip || selectedShip) === 'laser' || Date.now() < (galagaState.kamehamehaUntil || 0) || (galagaState.selectedShip || selectedShip) === 'spiritbeam',
       drones: nowFx < (galagaState.droneSquadronUntil || 0),
       starfall: nowFx < (galagaState.starfallUntil || 0),
@@ -848,6 +849,8 @@ function mpPeerOptions() {
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
         { urls: 'stun:stun.cloudflare.com:3478' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:global.stun.twilio.com:3478' },
         {
           urls: [
             'turn:openrelay.metered.ca:80',
@@ -1098,9 +1101,21 @@ function mpJoinRoom() {
       mpDestroyPeer();
       return;
     }
+    let iceNote = '';
+    const watchIce = setInterval(() => {
+      try {
+        const pc = conn.peerConnection;
+        if (pc) {
+          const st = pc.iceConnectionState;
+          if (st === 'checking') mpSetLobbyStatus('Found the host, linking devices… (' + st + ')');
+          if (st === 'failed' || st === 'disconnected') iceNote = ' Your network is blocking device-to-device links (ICE ' + st + ').';
+        }
+      } catch (e) {}
+    }, 1000);
     const timeout = setTimeout(() => {
+      clearInterval(watchIce);
       if (!linked && !mpLinkOk) {
-        const errMsg = 'Could not connect to room ' + formatRoomCode(code) + '. Same Wi‑Fi helps. Host must keep the room open. Try again, or both open the game in Chrome.';
+        const errMsg = 'Could not connect to room ' + formatRoomCode(code) + '.' + (iceNote || ' The host was found but the devices could not link.') + ' Try: both devices in Chrome, turn off any VPN, or put every device on one phone hotspot (home/guest/school Wi‑Fi often blocks devices from talking to each other).';
         mpDestroyPeer();
         mpActive = false;
         mpIsHost = false;
@@ -1111,8 +1126,9 @@ function mpJoinRoom() {
         mpSetLobbyStatus(errMsg);
         document.getElementById('status').textContent = 'Join failed.';
       }
-    }, 15000);
+    }, 30000);
     conn.on('open', () => {
+      clearInterval(watchIce);
       linked = true;
       mpLinkOk = true;
       clearTimeout(timeout);
@@ -1658,7 +1674,7 @@ function activateSpiritBeamBlast() {
   }
   const px = galagaState.player.x + galagaState.player.w / 2;
   const py = galagaState.player.y;
-  galagaState.abilityLasers.push({x1:px,y1:py,x2:tx,y2:ty,life:22,color:'#6ee7ff',width:7});
+  galagaState.abilityLasers.push({x1:px,y1:py,x2:tx,y2:ty,life:22,color:(Date.now()<(galagaState.goldenAscensionUntil||0)?'#ffc933':'#6ee7ff'),width:7});
   createExplosion(tx, ty, '#6ee7ff', 10);
   // Wide blast: hits the chosen target and every enemy within the blast radius.
   const blastRadius = 100;
@@ -2282,8 +2298,8 @@ function renderGalaga() { ctx.fillStyle = '#050515'; ctx.fillRect(0, 0, canvas.w
   if(galagaState.abilities.twinlasers>0){for(const side of [-1,1]){const rx=p.x+p.w/2+side*14,ry=p.y+5;ctx.save();ctx.translate(rx,ry);ctx.fillStyle='#6ee7ff';ctx.strokeStyle='#d9fbff';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(3,2);ctx.lineTo(0,0);ctx.lineTo(-3,2);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#ffb45e';ctx.fillRect(-1,2,2,3);ctx.restore();}}
   // Draw Rainbow Mega Laser Beam
  if (galagaState.abilities.megalaser > 0 || galagaState.shipLaserActive > 0) { const now=performance.now(), lx=p.x+p.w/2; ctx.save();ctx.globalCompositeOperation='lighter'; if(galagaState.selectedShip==='laser' && galagaState.shipLaserActive>0){ /* Solar Lance: a broad pixelated fire beam */ const half=38; for(let sy=0;sy<p.y;sy+=12){const sway=Math.sin(now*.012+sy*.045)*5;const width=half*(0.72+0.22*Math.sin(now*.018+sy*.03));for(let x=-width;x<=width;x+=10){const jitter=Math.sin(now*.02+sy*.17+x*.11)*3;ctx.globalAlpha=.72+Math.sin(now*.025+sy*.1+x)*.2;ctx.fillStyle=(Math.abs(x)<width*.22)?(sy%24===0?'#fff4a3':'#ffe34d'):(Math.abs(x)<width*.62?'#ff9d28':'#ff4b18');ctx.fillRect(lx+x+sway+jitter,sy,8,13);} }ctx.globalAlpha=.85;ctx.fillStyle='#fff6bf';ctx.fillRect(lx-5,0,10,p.y); } else {const pulse=0.82+Math.sin(now*0.025)*0.12,beamHalf=12;ctx.globalAlpha=.24+Math.sin(now*.035)*.08;ctx.fillStyle='#55eaff';ctx.shadowColor='#7df7ff';ctx.shadowBlur=20;ctx.fillRect(lx-beamHalf-5,0,beamHalf*2+10,p.y);ctx.globalAlpha=.88;const grad=ctx.createLinearGradient(lx-beamHalf,0,lx+beamHalf,0);grad.addColorStop(0,'#ff245f');grad.addColorStop(.5,'#fff66b');grad.addColorStop(1,'#bd69ff');ctx.fillStyle=grad;ctx.fillRect(lx-beamHalf*pulse,0,beamHalf*2*pulse,p.y);ctx.globalAlpha=.75;ctx.fillStyle='#ffffff';ctx.fillRect(lx-3,0,6,p.y);}ctx.restore(); } if(galagaState.selectedShip==='spiritbeam'&&Date.now()<(galagaState.spiritLaserUntil||0)){
- const t=performance.now(),bx=p.x+p.w/2,by=p.y-4,ov=(galagaState.abilities.multishot||0)>0,w=(ov?34:22)+Math.sin(t*.04)*2;
- const c1=ov?'#ff2a5a':'#2fd8ff',c2=ov?'#a43cff':'#1a9fe8',c3=ov?'#ff8aa8':'#7df7ff',c4=ov?'#ffd9e6':'#e6ffff',c5=ov?'#ff3d6e':'#39dfff';
+ const t=performance.now(),bx=p.x+p.w/2,by=p.y-4,ov=(galagaState.abilities.multishot||0)>0,gold=Date.now()<(galagaState.goldenAscensionUntil||0),w=(ov?34:22)+Math.sin(t*.04)*2;
+ const c1=gold?'#ffc933':ov?'#ff2a5a':'#2fd8ff',c2=gold?'#e08a00':ov?'#a43cff':'#1a9fe8',c3=gold?'#ffe27a':ov?'#ff8aa8':'#7df7ff',c4=gold?'#fff6c8':ov?'#ffd9e6':'#e6ffff',c5=gold?'#ffb800':ov?'#ff3d6e':'#39dfff';
  ctx.save();ctx.globalCompositeOperation='lighter';
  ctx.shadowColor=c5;ctx.shadowBlur=ov?40:30;
  ctx.globalAlpha=.35;ctx.fillStyle=c1;ctx.fillRect(bx-w/2-7,0,w+14,by);
@@ -2507,10 +2523,10 @@ if (galagaState.boss) { const b = galagaState.boss; ctx.save(); if(b.type==='spe
      // Spirit Beam: continuous laser and the big Kamehameha, visible to every pilot
      if (fx.spiritLaser) {
        const tt = performance.now(), ov = !!fx.spiritOverload, w = (ov ? 34 : 22) + Math.sin(tt * .04) * 2, hh = ry + 2;
-       ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.shadowColor = ov ? '#ff3d6e' : '#39dfff'; ctx.shadowBlur = 26;
-       ctx.globalAlpha = .35; ctx.fillStyle = ov ? '#ff2a5a' : '#2fd8ff'; ctx.fillRect(-w / 2 - 7, -hh - 12, w + 14, hh);
+       ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gd = !!fx.spiritGold; ctx.shadowColor = gd ? '#ffb800' : ov ? '#ff3d6e' : '#39dfff'; ctx.shadowBlur = 26;
+       ctx.globalAlpha = .35; ctx.fillStyle = gd ? '#ffc933' : ov ? '#ff2a5a' : '#2fd8ff'; ctx.fillRect(-w / 2 - 7, -hh - 12, w + 14, hh);
        const sg = ctx.createLinearGradient(-w / 2, 0, w / 2, 0);
-       sg.addColorStop(0, ov ? '#a43cff' : '#1a9fe8'); sg.addColorStop(.35, ov ? '#ff8aa8' : '#7df7ff'); sg.addColorStop(.5, '#ffffff'); sg.addColorStop(.65, ov ? '#ff8aa8' : '#7df7ff'); sg.addColorStop(1, ov ? '#a43cff' : '#1a9fe8');
+       sg.addColorStop(0, gd ? '#e08a00' : ov ? '#a43cff' : '#1a9fe8'); sg.addColorStop(.35, gd ? '#ffe27a' : ov ? '#ff8aa8' : '#7df7ff'); sg.addColorStop(.5, '#ffffff'); sg.addColorStop(.65, gd ? '#ffe27a' : ov ? '#ff8aa8' : '#7df7ff'); sg.addColorStop(1, gd ? '#e08a00' : ov ? '#a43cff' : '#1a9fe8');
        ctx.globalAlpha = .92; ctx.fillStyle = sg; ctx.fillRect(-w / 2, -hh - 12, w, hh);
        ctx.globalAlpha = 1; ctx.fillStyle = '#ffffff'; ctx.fillRect(-3, -hh - 12, 6, hh);
        ctx.beginPath(); ctx.arc(0, -12, 9 + Math.sin(tt * .05) * 2, 0, Math.PI * 2); ctx.fill();
@@ -2693,6 +2709,13 @@ requestAnimationFrame(frame);
  // PATCHES: newest first. To log a new update, add an entry at the TOP of this list.
  // The 3 newest are shown on their own; anything older is folded into "Earlier updates".
  const PATCHES=[
+  {version:'v22.4',notes:[
+   'Multiplayer joining: waits up to 30 seconds (was 15) before giving up, shows live link progress, and the failure message now says whether your network is blocking device-to-device links and what to try (Chrome, no VPN, phone hotspot).',
+   'Added extra STUN servers to help devices find each other.'
+  ]},
+  {version:'v22.3',notes:[
+   'Spirit Beam ship: while Golden Ascension is active, your laser turns gold (this overrides the red-blue Multi-Shot colour). Teammates see the golden beam too.'
+  ]},
   {version:'v22.2',notes:[
    'Spirit Beam ship: every beam shot that hits a boss now also removes a guaranteed 5% of the boss\'s max HP, on top of its normal damage.'
   ]},
