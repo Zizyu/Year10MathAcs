@@ -32,6 +32,33 @@
 .leaderboard-list{padding:0;list-style:none;text-align:left}.leaderboard-list li{display:flex;justify-content:space-between;padding:7px 9px;border-bottom:1px solid #ffffff18}.leaderboard-note{font-size:11px!important;color:#ffd866!important}
 .multiplayer-modal{display:none;position:fixed;inset:0;z-index:1050;background:#020611ef;align-items:center;justify-content:center;padding:16px}
 .multiplayer-modal.open{display:flex}.multiplayer-card{width:min(100%,420px);max-height:90vh;overflow:auto;background:#0b1630;border:2px solid #70f5ff;border-radius:12px;padding:22px;box-shadow:0 0 32px #00bfff55;text-align:center}
+.mp-vis{display:flex;gap:6px;margin:6px 0}
+.mp-vis label{flex:1;border:1px solid #3a5a8a;border-radius:8px;padding:6px 4px;font-size:12px;cursor:pointer;color:#b8c8e8;text-align:center}
+.mp-vis input{display:none}
+.mp-vis label:has(input:checked){border-color:#7df7ff;color:#7df7ff;background:#0e2a3e}
+#mpLobbyName{width:100%;box-sizing:border-box;margin:4px 0}
+.mp-listhead{display:flex;align-items:center;justify-content:space-between;margin:14px 0 4px;color:#b8c8e8}
+.mp-listhead button{padding:2px 10px;font-size:12px}
+.mp-lobbies{list-style:none;margin:0;padding:0;max-height:170px;overflow:auto;text-align:left}
+.mp-lobbies li{border:1px solid #2c4468;border-radius:8px;padding:6px 8px;margin:4px 0;font-size:13px;background:#0b1626}
+.mp-lobbies .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mp-lobbies .meta{color:#8fa6cc;font-size:11px}
+.mp-lobbies .pass{display:none;gap:6px;margin-top:6px}
+.mp-lobbies li.open .pass{display:flex}
+.mp-lobbies .pass input{flex:1;min-width:0;margin:0}
+.mp-lobbies .empty{color:#8fa6cc;text-align:center;font-size:12px;border-style:dashed}
+.mp-loading{display:none;align-items:center;justify-content:center;gap:12px;margin:10px 0 2px;color:#7df7ff;font-size:12px;letter-spacing:.08em}
+.mp-loading.on{display:flex}
+.mp-orbit{position:relative;width:34px;height:34px;animation:mpSpin 1.1s linear infinite}
+.mp-orbit i{position:absolute;top:50%;left:50%;width:7px;height:7px;margin:-3.5px;border-radius:50%;background:#70f5ff;box-shadow:0 0 8px #70f5ff}
+.mp-orbit i:nth-child(1){transform:rotate(0deg) translate(14px)}
+.mp-orbit i:nth-child(2){transform:rotate(90deg) translate(14px);opacity:.75}
+.mp-orbit i:nth-child(3){transform:rotate(180deg) translate(14px);opacity:.5}
+.mp-orbit i:nth-child(4){transform:rotate(270deg) translate(14px);opacity:.25}
+.mp-dots span{animation:mpBlink 1.2s infinite both}.mp-dots span:nth-child(2){animation-delay:.2s}.mp-dots span:nth-child(3){animation-delay:.4s}
+@keyframes mpSpin{to{transform:rotate(360deg)}}
+@keyframes mpBlink{0%,80%,100%{opacity:.15}40%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.mp-orbit{animation-duration:3s}}
 .multiplayer-card h2{color:#70f5ff;margin:0 0 8px}.multiplayer-card p{color:#b8c8e8;font-size:13px;line-height:1.5}
 .multiplayer-card input{width:100%;padding:12px;margin:8px 0;background:#050817;color:#fff;border:1px solid #70f5ff;border-radius:6px;text-align:center;font-size:22px;letter-spacing:.25em;text-transform:uppercase}
 .mp-code{font-size:32px;letter-spacing:.2em;color:#ffdc55;font-weight:900;margin:12px 0;text-shadow:0 0 16px #ffdc5560}
@@ -95,8 +122,13 @@ body.crt-on .gamebox{box-shadow:0 0 0 2px #253f6b,0 0 36px #00d9ff2b,inset 0 0 2
 <button class="item-card" data-ship-buy="teleporter"><span class="item-art ship-preview phase-preview"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M24 7 32 20 40 7 46 34 59 47 42 42 37 57 32 48 27 57 22 42 5 47 18 34Z" fill="#a987ff" stroke="#e6d9ff" stroke-width="2"/><circle cx="32" cy="31" r="7" fill="#17102e" stroke="#fff" stroke-width="2"/></svg></span><span class="item-name">PHASE JUMPER SHIP</span><small>🧊 When a bullet hits you, freeze the aliens and click anywhere in the arena to teleport. Aliens unfreeze 0.5 seconds later. Ability recharges every 5 seconds.</small><b class="item-price">🪙 50 COINS + 50,000 POINTS</b></button>
 <button class="item-card" data-ship-buy="bomber"><span class="item-art ship-preview bomber-preview"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 5 43 22 59 37 43 39 38 55 32 49 26 55 21 39 5 37 21 22Z" fill="#ff9d42" stroke="#fff0c4" stroke-width="2"/><path d="M23 29 32 19 41 29 37 43 27 43Z" fill="#63321f" stroke="#ffd08a" stroke-width="2"/><circle cx="32" cy="34" r="5" fill="#ffe87a"/><path d="M27 46 24 57M37 46 40 57" stroke="#ff6a35" stroke-width="3" stroke-linecap="round"/></svg></span><span class="item-name">BOMBER COMMAND SHIP</span><small>💣 Press Q every 5 seconds to summon an animated support rocket ship for 6 seconds. It bombs the biggest enemy cluster. While active, your shots become smaller cannon bombs.</small><b class="item-price">🪙 80 COINS + 200,000 POINTS</b></button>
 <button class="item-card" data-ship-buy="spiritbeam"><span class="item-art ship-preview" style="display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 64 64" width="48" height="48" aria-hidden="true"><path d="M32 6 40 22 52 28 40 32 36 50 32 44 28 50 24 32 12 28 24 22Z" fill="#6ee7ff" stroke="#e0fbff" stroke-width="2"/><rect x="29" y="8" width="6" height="28" fill="#b8f4ff" opacity="0.9"/><path d="M20 48h24" stroke="#5cf" stroke-width="3"/></svg></span><span class="item-body"><b>SPIRIT BEAM</b><small>Fires a continuous laser beam that burns through every enemy in its lane (slightly weaker than a normal bullet per hit). Q: 3-second Kamehameha beam + final explosion. Harpoon pickup instantly triggers it.</small><b class="item-price">🪙 95 COINS + 320,000 POINTS</b></span></button>
-</div></section></aside><section class="game-main"><h1 class="title">GALACTA SHOOTER</h1><div class="help">Move: Arrow keys or WASD · Shoot: Space or K · Upgrade: 1 Bullet, 2 Speed, 3 Life, 4 Damage · Rare Harpoon ship: 1% drop chance · Q: Ship ability (special ships) · Press Z for fullscreen · Y: Patch notes · Multiplayer: Host / Join (6-digit code, max 5 pilots — each keeps their own ship & upgrades)</div><div class="gamebox"><canvas id="gameCanvas" width="600" height="650" aria-label="Galacta Shooter game"></canvas></div><div><button id="startBtn">Start / Restart</button><button id="twoPlayerBtn">👥 2 Player (Local)</button><label id="p2ShipLabel" style="font-size:12px;color:#ffb27a;margin:0 6px">P2 ship: <select id="p2ShipSelect" aria-label="Player 2 ship"></select></label><button id="hostMpBtn">🌐 Host Multiplayer</button><button id="joinMpBtn">🔗 Join Multiplayer</button><button id="pauseBtn">Pause</button><button id="shopBtn">Points Shop</button><button id="coinShopBtn" onclick="openCoinShop()">🪙 Coin Shop</button><button id="fullscreenBtn">Fullscreen (Z)</button><button id="soundBtn" aria-pressed="true">🔊 Sound: ON</button><button id="crtBtn" type="button" aria-pressed="false">📺 CRT: OFF</button><button id="patchBtn" type="button">📋 Patch Notes (Y)</button></div><div class="status" id="status">Press Start / Restart to play.</div></section></main>
+<button class="item-card" data-ship-buy="killerdrone"><span class="item-art ship-preview" style="color:#ff315f;background:radial-gradient(circle,#3a1230 0%,#090d20 68%);border:1px solid #ff315f;box-shadow:0 0 14px #ff315f">◈</span><span class="item-name">SECRET: KILLER DRONE</span><small>Every fifth shot launches a perfectly homing explosive drone. Huge damage, medium blast, and survivors are slowed and silenced.</small><b class="item-price">🔒 REDEEM CODESADDED</b></button></div></section></aside><section class="game-main"><h1 class="title">GALACTA SHOOTER</h1><div class="help">Move: Arrow keys or WASD · Shoot: Space or K · Upgrade: 1 Bullet, 2 Speed, 3 Life, 4 Damage · Rare Harpoon ship: 1% drop chance · Q: Ship ability (special ships) · Press Z for fullscreen · Y: Patch notes · Multiplayer: Host / Join (6-digit code, max 5 pilots — each keeps their own ship & upgrades)</div><div class="gamebox"><canvas id="gameCanvas" width="600" height="650" aria-label="Galacta Shooter game"></canvas></div><div><button id="startBtn">Start / Restart</button><button id="twoPlayerBtn">👥 2 Player (Local)</button><label id="p2ShipLabel" style="font-size:12px;color:#ffb27a;margin:0 6px">P2 ship: <select id="p2ShipSelect" aria-label="Player 2 ship"></select></label><button id="hostMpBtn">🌐 Host Multiplayer</button><button id="joinMpBtn">🔗 Join Multiplayer</button><button id="pauseBtn">Pause</button><button id="shopBtn">Points Shop</button><button id="coinShopBtn" onclick="openCoinShop()">🪙 Coin Shop</button><button id="fullscreenBtn">Fullscreen (Z)</button><button id="soundBtn" aria-pressed="true">🔊 Sound: ON</button><button id="crtBtn" type="button" aria-pressed="false">📺 CRT: OFF</button><button id="patchBtn" type="button">📋 Patch Notes (Y)</button><button id="codesBtn" type="button">🎟️ Redeem Code</button></div><div class="status" id="status">Press Start / Restart to play.</div></section></main>
 
+<div class="multiplayer-modal" id="codesModal" role="dialog" aria-modal="true" aria-labelledby="codesTitle">
+ <div class="multiplayer-card"><h2 id="codesTitle">🎟️ SECRET CODES</h2><p>Enter a game code to unlock rewards.</p>
+ <input id="redeemCodeInput" maxlength="32" placeholder="ENTER CODE" autocomplete="off" aria-label="Redeem code" style="letter-spacing:.12em">
+ <button id="redeemCodeBtn" type="button" style="width:100%">Redeem Code</button><p id="redeemCodeStatus" role="status" style="min-height:1.4em;color:#ffd866"></p>
+ <button id="codesCloseBtn" type="button">Close</button></div></div>
 <div class="patch-modal" id="patchModal" role="dialog" aria-modal="true" aria-labelledby="patchTitle">
  <div class="patch-card">
   <h2 id="patchTitle">📋 PATCH NOTES</h2>
@@ -127,11 +159,27 @@ body.crt-on .gamebox{box-shadow:0 0 0 2px #253f6b,0 0 36px #00d9ff2b,inset 0 0 2
   <h2 id="mpTitle">🌐 MULTIPLAYER</h2>
   <p id="mpDesc">Host a room or join with a 6-digit code. Up to 5 players. Each player keeps their own ship, upgrades and coins. Uses peer-to-peer (no special server setup).</p>
   <div id="mpLobbyView">
+   <input id="mpLobbyName" maxlength="20" placeholder="Lobby name (optional)" autocomplete="off" aria-label="Lobby name">
+   <div class="mp-vis" role="radiogroup" aria-label="Lobby visibility">
+    <label><input type="radio" name="mpVis" id="mpVisPublic" value="public" checked>🌐 Public (shown in list)</label>
+    <label><input type="radio" name="mpVis" id="mpVisPrivate" value="private">🔒 Private (code only)</label>
+   </div>
    <button type="button" id="mpHostBtn" style="width:100%;margin:6px 0">Create Room (Host)</button>
-   <p style="margin:12px 0 4px;color:#b8c8e8">Or enter a code to join</p>
+   <div class="mp-listhead"><span>Open public lobbies</span><button type="button" id="mpListRefresh">↻ Refresh</button></div>
+   <ul class="mp-lobbies" id="mpLobbyList"><li class="empty">Loading…</li></ul>
+   <p style="margin:12px 0 4px;color:#b8c8e8">Or enter a passcode (room code) to join directly</p>
    <input id="mpJoinCode" maxlength="7" placeholder="123 456" autocomplete="off" aria-label="6 digit room code">
    <button type="button" id="mpJoinBtn" style="width:100%;margin:6px 0">Join Room</button>
+   <div class="mp-loading" id="mpLoading" role="status" aria-live="polite"><div class="mp-orbit" aria-hidden="true"><i></i><i></i><i></i><i></i></div><span id="mpLoadingText">CONNECTING<span class="mp-dots"><span>.</span><span>.</span><span>.</span></span></span></div>
    <p id="mpLobbyStatus" style="color:#ffd866;font-size:12px;min-height:1.2em"></p>
+   <details id="mpNetDetails" style="margin-top:8px;text-align:left;font-size:12px;color:#b8c8e8">
+    <summary style="cursor:pointer;color:#7df7ff">Network settings — use if joining fails on some Wi‑Fi</summary>
+    <p style="margin:8px 0 4px;line-height:1.4">Some Wi‑Fi (school, work, guest, some home routers) blocks devices from linking directly. A free <b>relay (TURN) server</b> fixes this. Get free credentials (e.g. a free Metered.ca or Cloudflare Calls account), then paste them here <b>on every device</b>: either the JSON "iceServers" list they give you, or one line like <code>turn:host:443?transport=tcp|username|password</code>.</p>
+    <textarea id="mpTurnInput" rows="4" style="width:100%;box-sizing:border-box;font-size:11px" placeholder='[{"urls":"turn:example.metered.ca:443","username":"…","credential":"…"}]'></textarea>
+    <label style="display:block;margin:6px 0"><input type="checkbox" id="mpForceRelay"> Always send game data through the relay (slower but works on strict Wi‑Fi)</label>
+    <button type="button" id="mpTurnSaveBtn" style="width:100%;margin:4px 0">Save network settings</button>
+    <p id="mpTurnMsg" style="color:#ffd866;min-height:1.2em"></p>
+   </details>
   </div>
   <div id="mpRoomView" style="display:none">
    <p>Room code</p>
@@ -467,6 +515,144 @@ let mpCombinedScore = 0;
 let mpMyReportedScore = null;
 let mpRoomStatus = 'lobby'; // lobby | playing | finished
 let mpLinkOk = false;
+
+// ---- Public lobby list (Firestore REST registry; passcode = room code) ----
+// Public lobbies publish name / player count / status and a HASH of the passcode (never the code itself).
+// Joiners pick a lobby from the list and must type the passcode. Private lobbies are never listed.
+const MP_LOBBY_COLL = 'lobbies';
+const MP_LOBBY_TTL = 45000;
+const MP_LOCAL_KEY = 'galactaLobbies_v1';
+let mpLobbyDocId = '';
+let mpLobbyTimer = null;
+let mpLobbyPublic = false;
+let mpLobbyName = '';
+function mpCodeHash(code) {
+  let h = 2166136261;
+  const str = 'gs-lobby|' + code;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(36);
+}
+function mpLobbyUrl(id) { return firestoreBase() + '/' + MP_LOBBY_COLL + (id ? '/' + encodeURIComponent(id) : '') + '?key=' + encodeURIComponent(ONLINE_LEADERBOARD.apiKey); }
+function mpLocalLobbies() { try { return JSON.parse(localStorage.getItem(MP_LOCAL_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function mpSaveLocalLobbies(o) { try { localStorage.setItem(MP_LOCAL_KEY, JSON.stringify(o)); } catch (e) {} }
+function mpLobbyRecord() {
+  return { name: mpLobbyName, players: Object.keys(mpPlayers).length, status: mpRoomStatus, h: mpCodeHash(mpRoomCode), t: Date.now() };
+}
+function mpPublishLobby() {
+  if (!mpLobbyPublic || !mpIsHost || !mpActive || !mpLobbyDocId) return;
+  const r = mpLobbyRecord();
+  const loc = mpLocalLobbies(); loc[mpLobbyDocId] = r; mpSaveLocalLobbies(loc);
+  if (!onlineEnabled()) return;
+  const body = { fields: {
+    name: { stringValue: r.name }, players: { integerValue: String(r.players) },
+    status: { stringValue: r.status }, h: { stringValue: r.h }, t: { integerValue: String(r.t) }
+  } };
+  try {
+    fetch(mpLobbyUrl(mpLobbyDocId), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(res => { window.mpLobbyWriteOk = res.ok; }).catch(() => { window.mpLobbyWriteOk = false; });
+  } catch (e) {}
+}
+function mpStartLobbyPublish(isPublic, name) {
+  mpStopLobbyPublish();
+  mpLobbyPublic = !!isPublic;
+  if (!mpLobbyPublic) return;
+  mpLobbyName = name || 'Pilot lobby';
+  mpLobbyDocId = 'L' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  mpPublishLobby();
+  mpLobbyTimer = setInterval(mpPublishLobby, 15000);
+}
+function mpStopLobbyPublish(keepalive) {
+  if (mpLobbyTimer) { clearInterval(mpLobbyTimer); mpLobbyTimer = null; }
+  if (mpLobbyDocId) {
+    const loc = mpLocalLobbies(); delete loc[mpLobbyDocId]; mpSaveLocalLobbies(loc);
+    if (onlineEnabled()) { try { fetch(mpLobbyUrl(mpLobbyDocId), { method: 'DELETE', keepalive: !!keepalive }).catch(() => {}); } catch (e) {} }
+  }
+  mpLobbyDocId = '';
+  mpLobbyPublic = false;
+}
+window.addEventListener('pagehide', () => { if (mpLobbyDocId) mpStopLobbyPublish(true); });
+async function mpFetchLobbies() {
+  const out = {};
+  const now = Date.now();
+  const loc = mpLocalLobbies();
+  Object.keys(loc).forEach(id => { if (now - loc[id].t < MP_LOBBY_TTL) out[id] = loc[id]; });
+  let err = '';
+  if (onlineEnabled()) {
+    try {
+      const res = await fetch(firestoreBase() + '/' + MP_LOBBY_COLL + '?pageSize=50&key=' + encodeURIComponent(ONLINE_LEADERBOARD.apiKey));
+      if (!res.ok) err = res.status === 403 || res.status === 401 ? 'denied' : 'error';
+      else {
+        const j = await res.json();
+        (j.documents || []).forEach(d => {
+          const f = d.fields || {};
+          const id = String(d.name || '').split('/').pop();
+          const r = { name: (f.name || {}).stringValue || 'Pilot lobby', players: parseInt((f.players || {}).integerValue || '1', 10),
+            status: (f.status || {}).stringValue || 'lobby', h: (f.h || {}).stringValue || '', t: parseInt((f.t || {}).integerValue || '0', 10) };
+          if (now - r.t < MP_LOBBY_TTL) out[id] = r;
+          else if (now - r.t > 10 * 60000) { try { fetch(mpLobbyUrl(id), { method: 'DELETE' }).catch(() => {}); } catch (e) {} }
+        });
+      }
+    } catch (e) { err = 'offline'; }
+  }
+  const list = Object.keys(out).map(id => Object.assign({ id }, out[id])).filter(r => r.status !== 'finished' && r.players < 5);
+  list.sort((a, b) => b.t - a.t);
+  return { list, err };
+}
+let mpListBusy = false;
+async function mpRefreshLobbyList() {
+  const ul = document.getElementById('mpLobbyList');
+  if (!ul || mpListBusy) return;
+  mpListBusy = true;
+  const { list, err } = await mpFetchLobbies();
+  mpListBusy = false;
+  const openId = (ul.querySelector('li.open') || {}).dataset ? ul.querySelector('li.open').dataset.id : '';
+  const typed = openId ? (ul.querySelector('li.open input') || {}).value : '';
+  ul.innerHTML = '';
+  if (!list.length) {
+    const li = document.createElement('li'); li.className = 'empty';
+    li.textContent = err === 'denied' ? 'Lobby list is unavailable (server blocked access). You can still join with a passcode.'
+      : err === 'offline' ? 'Could not reach the lobby server. You can still join with a passcode.'
+      : 'No public lobbies right now. Create one, or join with a passcode.';
+    ul.appendChild(li); return;
+  }
+  list.forEach(r => {
+    const li = document.createElement('li'); li.dataset.id = r.id;
+    const row = document.createElement('div'); row.className = 'row';
+    const info = document.createElement('div');
+    const nm = document.createElement('div'); nm.textContent = '🔒 ' + r.name;
+    const meta = document.createElement('div'); meta.className = 'meta';
+    meta.textContent = r.players + ' / 5 pilots · ' + (r.status === 'playing' ? 'IN MISSION' : 'WAITING');
+    info.append(nm, meta);
+    const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = 'Join';
+    row.append(info, btn);
+    const pass = document.createElement('div'); pass.className = 'pass';
+    const inp = document.createElement('input'); inp.maxLength = 7; inp.placeholder = 'Passcode'; inp.autocomplete = 'off';
+    const go = document.createElement('button'); go.type = 'button'; go.textContent = 'Enter';
+    pass.append(inp, go);
+    li.append(row, pass);
+    const submit = () => {
+      const code = parseRoomCode(inp.value);
+      if (code.length !== 6) { mpSetLobbyStatus('Enter the full 6-digit passcode.'); return; }
+      if (r.h && mpCodeHash(code) !== r.h) { mpSetLobbyStatus('Wrong passcode for "' + r.name + '".'); return; }
+      document.getElementById('mpJoinCode').value = formatRoomCode(code);
+      try { mpJoinRoom(); } catch (e) { mpSetLobbyStatus('Join error: ' + (e.message || e)); }
+    };
+    btn.addEventListener('click', () => {
+      const wasOpen = li.classList.contains('open');
+      ul.querySelectorAll('li.open').forEach(x => x.classList.remove('open'));
+      if (!wasOpen) { li.classList.add('open'); inp.focus(); }
+    });
+    go.addEventListener('click', submit);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } e.stopPropagation(); });
+    inp.addEventListener('keyup', e => e.stopPropagation());
+    if (r.id === openId) { li.classList.add('open'); inp.value = typed || ''; }
+    ul.appendChild(li);
+  });
+}
+setInterval(() => {
+  const m = document.getElementById('multiplayerModal'), v = document.getElementById('mpLobbyView');
+  if (m && m.classList.contains('open') && v && v.style.display !== 'none' && !mpActive) mpRefreshLobbyList();
+}, 8000);
 
 function generateRoomCode() {
   let n = '';
@@ -893,6 +1079,7 @@ function mpStopSync() {
 }
 function mpDestroyPeer() {
   mpStopSync();
+  mpStopLobbyPublish();
   try {
     Object.values(mpClientConns).forEach(c => { try { c.close(); } catch (e) {} });
   } catch (e) {}
@@ -971,30 +1158,69 @@ function mpShowCombinedGameOver() {
   if (first) first.focus();
 }
 
+const MP_NET_KEY = 'galactaNetConfig_v1';
+function mpLoadNetCfg() { try { return JSON.parse(localStorage.getItem(MP_NET_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function mpSaveNetCfg(cfg) { try { localStorage.setItem(MP_NET_KEY, JSON.stringify(cfg)); } catch (e) {} }
+function mpParseTurnText(text) {
+  text = String(text || '').trim();
+  if (!text) return [];
+  const ok = x => x && x.urls && [].concat(x.urls).every(u => /^(turns?|stuns?):/i.test(String(u).trim()));
+  try {
+    const j = JSON.parse(text);
+    const arr = Array.isArray(j) ? j : (j.iceServers ? j.iceServers : [j]);
+    return arr.filter(ok);
+  } catch (e) { /* not JSON: use the one-line format */ }
+  return text.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const parts = l.split('|').map(x => x.trim());
+    return { urls: parts[0].split(',').map(x => x.trim()), username: parts[1] || undefined, credential: parts[2] || undefined };
+  }).filter(ok);
+}
+let mpForceRelayOnce = false;
 function mpPeerOptions() {
   // Use PeerJS default cloud broker + STUN/TURN so joiners behind NATs can connect
+  const cfg = mpLoadNetCfg();
+  const custom = mpParseTurnText(cfg.turnText);
+  const iceServers = custom.concat([
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun.cloudflare.com:3478' },
+    { urls: 'stun:global.stun.twilio.com:3478' },
+    // Free public relays (best effort — they come and go; your own relay in Network settings is more reliable)
+    { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turn:openrelay.metered.ca:443?transport=tcp', 'turns:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: ['turn:turn.anyfirewall.com:443?transport=tcp'], username: 'webrtc', credential: 'webrtc' },
+    { urls: ['turn:freestun.net:3478', 'turns:freestun.net:5349'], username: 'free', credential: 'free' }
+  ]);
   return {
     debug: 1,
     config: {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun.cloudflare.com:3478' },
-        { urls: 'stun:stun2.l.google.com:19302' },
-        { urls: 'stun:global.stun.twilio.com:3478' },
-        {
-          urls: [
-            'turn:openrelay.metered.ca:80',
-            'turn:openrelay.metered.ca:443',
-            'turn:openrelay.metered.ca:443?transport=tcp'
-          ],
-          username: 'openrelayproject',
-          credential: 'openrelayproject'
-        }
-      ]
+      iceServers,
+      iceTransportPolicy: (cfg.forceRelay || mpForceRelayOnce) ? 'relay' : 'all',
+      iceCandidatePoolSize: 2
     }
   };
 }
+function mpIceSummary(pc) {
+  const out = { host: 0, srflx: 0, relay: 0 };
+  try {
+    const sdp = (pc && pc.localDescription && pc.localDescription.sdp) || '';
+    (sdp.match(/a=candidate:[^\n]* typ (host|srflx|relay)/g) || []).forEach(l => { const m = l.match(/typ (host|srflx|relay)/); if (m) out[m[1]]++; });
+  } catch (e) {}
+  return out;
+}
+(function mpNetSettingsUI() {
+  const cfg = mpLoadNetCfg();
+  const input = document.getElementById('mpTurnInput'), force = document.getElementById('mpForceRelay'), msg = document.getElementById('mpTurnMsg');
+  if (!input) return;
+  input.value = cfg.turnText || ''; force.checked = !!cfg.forceRelay;
+  input.addEventListener('keydown', e => e.stopPropagation());
+  document.getElementById('mpTurnSaveBtn').addEventListener('click', () => {
+    const parsed = mpParseTurnText(input.value);
+    if (input.value.trim() && !parsed.length) { msg.textContent = 'Could not read that. Paste the JSON list from your relay provider, or a line like turn:host:443?transport=tcp|username|password'; return; }
+    mpSaveNetCfg({ turnText: input.value.trim(), forceRelay: !!force.checked });
+    msg.textContent = parsed.length ? ('Saved ' + parsed.length + ' relay server(s). Create / join a room again.') : 'Saved (using only the built-in servers).';
+  });
+})();
 /** Same-browser / same-device backup channel (works when PeerJS WebRTC is blocked). */
 let mpBC = null;
 function mpOpenBroadcast(code) {
@@ -1033,6 +1259,19 @@ function mpBCSend(msg) {
 function mpSetLobbyStatus(msg) {
   const el = document.getElementById('mpLobbyStatus');
   if (el) el.textContent = msg || '';
+  // Loading animation while we are creating / joining / linking a room
+  const busy = /^(connecting|looking up|creating room|found the host|direct link blocked)/i.test(String(msg || ''));
+  const box = document.getElementById('mpLoading');
+  if (box) {
+    box.classList.toggle('on', busy);
+    const t = document.getElementById('mpLoadingText');
+    if (t && busy) {
+      const label = /creating/i.test(msg) ? 'CREATING ROOM' : /looking up/i.test(msg) ? 'FINDING ROOM' : /found the host|direct link/i.test(msg) ? 'LINKING' : 'CONNECTING';
+      t.firstChild.nodeValue = label;
+    }
+  }
+  const jb = document.getElementById('mpJoinBtn'), hb = document.getElementById('mpHostBtn');
+  if (jb) jb.disabled = busy; if (hb) hb.disabled = busy;
 }
 function mpHostRoom() {
   if (typeof Peer === 'undefined') {
@@ -1076,10 +1315,12 @@ function mpHostRoom() {
     document.getElementById('mpLobbyView').style.display = 'none';
     document.getElementById('mpRoomView').style.display = '';
     document.getElementById('mpRoomCodeDisplay').textContent = formatRoomCode(mpRoomCode);
-    document.getElementById('mpRoomHint').textContent = 'Share this code (XXX XXX). Friends can join in the lobby or after the mission starts. Max 5. Keep this tab open.';
+    document.getElementById('mpRoomHint').textContent = 'Share this code (XXX XXX) — it is the lobby passcode. Friends can join in the lobby or after the mission starts. Max 5. Keep this tab open.';
     mpUpdatePlayerListUI();
     mpStartSync();
-    mpSetLobbyStatus('Room ready — waiting for players.');
+    const _pub = !!(document.getElementById('mpVisPublic') || {}).checked;
+    mpStartLobbyPublish(_pub, ((document.getElementById('mpLobbyName') || {}).value || '').trim());
+    mpSetLobbyStatus(_pub ? 'Room ready (public) — listed in the lobby list.' : 'Room ready (private) — share the code with friends.');
     document.getElementById('status').textContent = 'Hosting room ' + formatRoomCode(mpRoomCode) + ' — waiting for players.';
   });
   mpPeer.on('connection', conn => {
@@ -1232,12 +1473,13 @@ function mpJoinRoom() {
       mpDestroyPeer();
       return;
     }
-    let iceNote = '';
+    let iceNote = '', iceSum = { host: 0, srflx: 0, relay: 0 };
     const watchIce = setInterval(() => {
       try {
         const pc = conn.peerConnection;
         if (pc) {
           const st = pc.iceConnectionState;
+          iceSum = mpIceSummary(pc);
           if (st === 'checking') mpSetLobbyStatus('Found the host, linking devices… (' + st + ')');
           if (st === 'failed' || st === 'disconnected') iceNote = ' Your network is blocking device-to-device links (ICE ' + st + ').';
         }
@@ -1246,7 +1488,20 @@ function mpJoinRoom() {
     const timeout = setTimeout(() => {
       clearInterval(watchIce);
       if (!linked && !mpLinkOk) {
-        const errMsg = 'Could not connect to room ' + formatRoomCode(code) + '.' + (iceNote || ' The host was found but the devices could not link.') + ' Try: both devices in Chrome, turn off any VPN, or put every device on one phone hotspot (home/guest/school Wi‑Fi often blocks devices from talking to each other).';
+        try { iceSum = mpIceSummary(conn.peerConnection) || iceSum; } catch (e) {}
+        // Automatic second attempt that forces everything through a relay, when a relay is reachable.
+        if (iceSum.relay > 0 && !mpForceRelayOnce && !mpLoadNetCfg().forceRelay) {
+          mpForceRelayOnce = true;
+          mpDestroyPeer(); mpActive = false;
+          mpSetLobbyStatus('Direct link blocked — retrying through a relay server…');
+          setTimeout(() => { try { mpJoinRoom(); } finally { setTimeout(() => { mpForceRelayOnce = false; }, 40000); } }, 400);
+          return;
+        }
+        mpForceRelayOnce = false;
+        const relayHint = iceSum.relay === 0
+          ? ' No relay connection could be made (the free built-in relays are unreachable from this network). Open "Network settings" and add your own free relay (TURN) on every device.'
+          : ' A relay was reachable, but the link still failed — make sure the HOST also has the same relay saved in Network settings, then try again.';
+        const errMsg = 'Could not connect to room ' + formatRoomCode(code) + '.' + (iceNote || ' The host was found but the devices could not link.') + relayHint + ' Also try: both devices in Chrome, no VPN, or one phone hotspot.';
         mpDestroyPeer();
         mpActive = false;
         mpIsHost = false;
@@ -1329,6 +1584,7 @@ function mpLeaveRoom(keepStatus) {
   mpRoomStatus = 'lobby';
   document.getElementById('mpRoomView').style.display = 'none';
   document.getElementById('mpLobbyView').style.display = '';
+  mpRefreshLobbyList();
   if (keepStatus && prev) mpSetLobbyStatus(prev);
   else {
     mpSetLobbyStatus('');
@@ -1409,8 +1665,10 @@ function openMultiplayerModal() {
   if (!mpActive) {
     document.getElementById('mpLobbyView').style.display = '';
     document.getElementById('mpRoomView').style.display = 'none';
+    mpRefreshLobbyList();
   }
 }
+document.getElementById('mpListRefresh').addEventListener('click', () => mpRefreshLobbyList());
 document.getElementById('hostMpBtn').addEventListener('click', openMultiplayerModal);
 document.getElementById('joinMpBtn').addEventListener('click', openMultiplayerModal);
 document.getElementById('mpCloseBtn').addEventListener('click', () => document.getElementById('multiplayerModal').classList.remove('open'));
@@ -1505,8 +1763,20 @@ async function renderLocalLeaderboard() {
   }
   document.getElementById('leaderboardList').innerHTML = '<li>Loading worldwide scores…</li>';
   try {
-    renderLeaderboardEntries(await fetchOnlineScores());
-    note.textContent = '🌍 Worldwide high scores — shared by every player.';
+    // Keep local team entries (including names such as AAA & BBB) visible even
+    // if an older online leaderboard entry was saved with only 3 initials or
+    // the online write has not appeared in the query yet.
+    const online = await fetchOnlineScores();
+    const merged = online.concat(local).reduce((all, entry) => {
+      const initials = String(entry.initials || '???').trim().toUpperCase().slice(0,32);
+      const score = Number(entry.score || 0);
+      if (!all.some(x => Number(x.score) === score && String(x.initials || '').trim().toUpperCase() === initials)) {
+        all.push({ ...entry, initials, score });
+      }
+      return all;
+    }, []).sort((a,b) => Number(b.score) - Number(a.score)).slice(0,10);
+    renderLeaderboardEntries(merged);
+    note.textContent = '🌍 Worldwide high scores — team names are shown in full when available.';
   } catch (err) {
     renderLeaderboardEntries(local);
     note.textContent = 'Could not reach the worldwide leaderboard — showing scores saved on this device.';
@@ -1608,7 +1878,7 @@ document.querySelector('[data-coin-upgrade="rockets"]').addEventListener('click'
  if(galagaState.score<cost){document.getElementById('status').textContent='You need '+cost.toLocaleString()+' points to upgrade Auto-Rockets.';return;}
  galagaState.score-=cost;galagaState.rocketUpgradeLevel=(galagaState.rocketUpgradeLevel||0)+1;saveRocketLevel();refreshCoinShop();document.getElementById('status').textContent='Auto-Rockets upgraded!';playSfx('powerup');
 });
-const shipCosts={teleporter:{coins:50,points:50000,name:'Phase Jumper'},laser:{coins:100,points:400000,name:'Solar Lance'},stormwing:{coins:75,points:150000,name:'Stormwing'},guardian:{coins:60,points:100000,name:'Aegis Guardian'},nova:{coins:90,points:250000,name:'Nova Artillery'},bomber:{coins:80,points:200000,name:'Bomber Command'},spiritbeam:{coins:95,points:320000,name:'Spirit Beam'}};
+const shipCosts={killerdrone:{coins:0,points:0,name:'Killer Drone'},teleporter:{coins:50,points:50000,name:'Phase Jumper'},laser:{coins:100,points:400000,name:'Solar Lance'},stormwing:{coins:75,points:150000,name:'Stormwing'},guardian:{coins:60,points:100000,name:'Aegis Guardian'},nova:{coins:90,points:250000,name:'Nova Artillery'},bomber:{coins:80,points:200000,name:'Bomber Command'},spiritbeam:{coins:95,points:320000,name:'Spirit Beam'}};
 function loadOwnedShips(){try{return Object.assign({fighter:true},JSON.parse(localStorage.getItem('galactaOwnedShips_v1')||'{}'))}catch(e){return {fighter:true}}}
 let ownedShips=loadOwnedShips();ownedShips.fighter=true;ownedShips[selectedShip]=true;
 function saveOwnedShips(){try{localStorage.setItem('galactaOwnedShips_v1',JSON.stringify(ownedShips))}catch(e){}}
@@ -1709,8 +1979,8 @@ function spawnGalagaEnemies() { if (mpActive && !mpIsHost) return; galagaState.e
   galagaState.lastBossType = design.type; const goldenBoss=Math.random()<1/50; const bossHp = Math.round((100 + galagaState.wave * 42 + galagaState.wave*galagaState.wave*1.5) * design.hp * (goldenBoss?7:1) * mpEnemyHpScale()); galagaState.boss = { x: canvas.width / 2 - 44, y: 60, w: 88, h: 66, hp: bossHp, maxHp: bossHp, vx: design.vx, phase: 1, attackTimer: 0, type: design.type, name: (goldenBoss?'GOLDEN ':'')+design.name, color: goldenBoss?'#ffd84a':design.color, golden:goldenBoss, difficultyScale:goldenBoss?7:1, captured:false, abilityTick:0, abilityCooldown:180, dashTimer:0, invisibleUntil:0, summonTick:0 }; playSfx('bossIntro'); return; } const rows = Math.min(3 + Math.floor(galagaState.wave / 2), 7); const cols = 8; for (let r = 0; r < rows; r++) { for (let c = 0; c < cols; c++) { let type = 'green'; let hp = 1; let points = 100; const advanced = galagaState.wave >= 6; if (advanced && r===0 && c%5===0) { type='shield'; hp=7+Math.floor(galagaState.wave/3); points=650; } else if (advanced && r===1 && c%5===1) { type='splitter'; hp=3+Math.floor(galagaState.wave/4); points=500; } else if (advanced && r===0 && c%5===2) { type='sniper'; hp=2+Math.floor(galagaState.wave/5); points=550; } else if (advanced && r===1 && c%5===3) { type='leech'; hp=5+Math.floor(galagaState.wave/4); points=600; } else if (advanced && r===0 && c%5===4) { type='bomber'; hp=4+Math.floor(galagaState.wave/4); points=575; } else if(galagaState.wave>=4 && r===0 && c%3===0){type='purple';hp=4+Math.floor(galagaState.wave/4);points=450;} else if(galagaState.wave>=3 && r===1 && c%3===1){type='red';hp=2+Math.floor(galagaState.wave/5);points=350;} else if (r === 0 && galagaState.wave >= 2) { type = 'orange'; hp = 3; points = 300; } else if (r <= 1 && galagaState.wave >= 1) { type = 'yellow'; hp = 2; points = 200; } const scaling = enemyWaveHpMultiplier(galagaState.wave); const isGolden = Math.random() < 1/50; const scaledHp = Math.ceil(hp * scaling * (isGolden ? 7 : 1) * mpEnemyHpScale()); galagaState.enemies.push({ x: 60 + c * 60, y: 50 + r * 45, baseX: 60 + c * 60, baseY: 50 + r * 45, w: 32, h: 28, type: type, golden: isGolden, hp: scaledHp, maxHp: scaledHp, points: points * (isGolden ? 7 : 1), animTick: Math.random() * 10, specialTimer: Math.max(12,Math.floor((60+Math.random()*120) / (1 + (galagaState.wave-1)*0.012) / (isGolden ? 1.8 : 1))), shieldUntil:0, difficultyScale: (1 + Math.min(0.65,(galagaState.wave-1)*0.018)) * (isGolden ? 2 : 1), goldenSpeed: isGolden ? 1.65 : 1 }); } } } function buyGalagaUpgrade(type) { if (type === 'bullet' && galagaState.coinsCollected >= 1) { galagaState.coinsCollected -= 1; saveCoinWallet(); galagaState.player.extraBullets += 1; playSfx('powerup'); } else if (type === 'speed' && galagaState.coinsCollected >= 2) { galagaState.coinsCollected -= 2; saveCoinWallet(); galagaState.player.extraSpeed += 1; playSfx('powerup'); } else if (type === 'life' && galagaState.coinsCollected >= 3) { galagaState.coinsCollected -= 3; saveCoinWallet(); galagaState.lives += 1; playSfx('powerup'); } else if (type === 'damage' && galagaState.coinsCollected >= 3) { galagaState.coinsCollected -= 3; saveCoinWallet(); galagaState.player.baseDamage += 1; playSfx('powerup'); } } function detonateCannonBomb(x,y,radius,damage,color='#cc5500'){
   // Cheap visual: one small burst only (was double explosion + heavy particles per bomb)
   createExplosion(x,y,color,4);
-  if(galagaState.boss && Math.hypot(galagaState.boss.x+galagaState.boss.w/2-x,galagaState.boss.y+galagaState.boss.h/2-y)<=radius+Math.max(galagaState.boss.w,galagaState.boss.h)*0.25){galagaState.boss.hp-=damage*1.5;maybeDropBossPowerup(galagaState.boss);}
-  for(let ei=galagaState.enemies.length-1;ei>=0;ei--){const e=galagaState.enemies[ei];const d=Math.hypot(e.x+e.w/2-x,e.y+e.h/2-y);if(!e.captured&&d<=radius+Math.max(e.w,e.h)*0.25){e.hp-=damage;if(e.hp<=0){galagaState.score+=(e.golden?e.points:e.points*0.1);galagaState.enemies.splice(ei,1);}}}
+  if(galagaState.boss && Math.hypot(galagaState.boss.x+galagaState.boss.w/2-x,galagaState.boss.y+galagaState.boss.h/2-y)<=radius+Math.max(galagaState.boss.w,galagaState.boss.h)*0.25){galagaState.boss.hp-=damage*1.5; if(galagaState._killerDroneBlast){galagaState.boss.cannotFireUntil=Date.now()+2000;galagaState.boss.slowedUntil=Date.now()+2000;galagaState.boss.killerDroneDebuffUntil=Date.now()+2000;galagaState.boss.slowFactor=0.5;} maybeDropBossPowerup(galagaState.boss);}
+  for(let ei=galagaState.enemies.length-1;ei>=0;ei--){const e=galagaState.enemies[ei];const d=Math.hypot(e.x+e.w/2-x,e.y+e.h/2-y);if(!e.captured&&d<=radius+Math.max(e.w,e.h)*0.25){const falloff=Math.max(0.18,1-d/(radius+Math.max(e.w,e.h)*0.25));e.hp-=damage*falloff;if(galagaState._killerDroneBlast){e.cannotFireUntil=Date.now()+5000;e.slowedUntil=Date.now()+5000;e.killerDroneDebuffUntil=Date.now()+5000;e.slowFactor=0.45;}if(e.hp<=0){galagaState.score+=(e.golden?e.points:e.points*0.1);galagaState.enemies.splice(ei,1);}}}
  }
 function stormArc(x1,y1,x2,y2){
  galagaState.lightningArcs=galagaState.lightningArcs||[];
@@ -1784,7 +2054,7 @@ function p2Touches(x, y, size, wide) {
   return x < p.x + p.w * (wide ? 2 : 1) && x + size > p.x && y < p.y + p.h && y + size > p.y;
 }
 let p2Ship = 'fighter';
-const P2_SHIP_NAMES = { fighter: 'Fighter', teleporter: 'Phase Jumper', laser: 'Solar Lance', stormwing: 'Stormwing', guardian: 'Aegis Guardian', nova: 'Nova Artillery', bomber: 'Bomber Command', spiritbeam: 'Spirit Beam' };
+const P2_SHIP_NAMES = { killerdrone: 'Killer Drone', fighter: 'Fighter', teleporter: 'Phase Jumper', laser: 'Solar Lance', stormwing: 'Stormwing', guardian: 'Aegis Guardian', nova: 'Nova Artillery', bomber: 'Bomber Command', spiritbeam: 'Spirit Beam' };
 function refreshP2ShipSelect() {
   const sel = document.getElementById('p2ShipSelect'); if (!sel) return;
   sel.innerHTML = '';
@@ -2235,7 +2505,8 @@ function updateGalaga() { if (gameState !== 'PLAYING' || currentGame !== 'galaga
  if(galagaState.passives.rockets){galagaState.rocketTimer-=1/60;if(galagaState.rocketTimer<=0){galagaState.rocketTimer=Math.max(2,5-(galagaState.rocketUpgradeLevel||0)*0.2);for(let r=0;r<2;r++)galagaState.rockets.push({x:galagaState.player.x+galagaState.player.w/2+(r?8:-8),y:galagaState.player.y,vx:r?1:-1,vy:-4,damage:3});playSfx('laser');}}
  for(let ri=galagaState.rockets.length-1;ri>=0;ri--){const r=galagaState.rockets[ri];let target=galagaState.boss||galagaState.enemies[0];if(target){const dx=target.x+target.w/2-r.x,dy=target.y+target.h/2-r.y,d=Math.hypot(dx,dy)||1;r.vx+=(dx/d)*.22;r.vy+=(dy/d)*.22;const sp=Math.hypot(r.vx,r.vy)||1;r.vx=r.vx/sp*5;r.vy=r.vy/sp*5;}r.x+=r.vx;r.y+=r.vy;let hit=galagaState.boss&&r.x>=galagaState.boss.x-5&&r.x<=galagaState.boss.x+galagaState.boss.w+5&&r.y>=galagaState.boss.y-5&&r.y<=galagaState.boss.y+galagaState.boss.h+5; if(!hit)hit=galagaState.enemies.some(e=>r.x>=e.x-5&&r.x<=e.x+e.w+5&&r.y>=e.y-5&&r.y<=e.y+e.h+5);if(hit||r.y<-15){const radius=50+(galagaState.rocketUpgradeLevel||0);createExplosion(r.x,r.y,'#ff9d42',16);for(let ei=galagaState.enemies.length-1;ei>=0;ei--){const e=galagaState.enemies[ei];if(Math.hypot(e.x+e.w/2-r.x,e.y+e.h/2-r.y)<=radius){e.hp-=r.damage;if(e.hp<=0){galagaState.score+=(e.golden?e.points:e.points*0.1);createExplosion(e.x+e.w/2,e.y+e.h/2,'#ff7a22',18);if(Math.random()<.1)galagaState.coins.push({x:e.x+e.w/2,y:e.y+e.h/2,vy:2.2,rot:0});galagaState.enemies.splice(ei,1);}}}if(galagaState.boss&&Math.hypot(galagaState.boss.x+galagaState.boss.w/2-r.x,galagaState.boss.y+galagaState.boss.h/2-r.y)<=radius+35){galagaState.boss.hp-=r.damage*2;maybeDropBossPowerup(galagaState.boss);}galagaState.rockets.splice(ri,1);}}
  // Auto/Manual Firing
- if (galagaState.fireCooldown > 0) galagaState.fireCooldown--; if ((keys['Space'] || keys['KeyK']) && !galagaState.p1Out && galagaState.fireCooldown <= 0 && Date.now()>=(galagaState.empDisabledUntil||0) && (galagaState.abilities.harpoon <= 0 || galagaState.harpoonCooldown <= 0)) { const baseCooldown = galagaState.abilities.rapidfire > 0 ? 5 : 12; let cooldownRate = Math.max(2, baseCooldown / (1 + (galagaState.player.fireRateBonus || 0))); if (galagaState.selectedShip === 'spiritbeam') cooldownRate = cooldownRate * 1.6; galagaState.fireCooldown = cooldownRate + Math.max(-1, Math.min(0, galagaState.fireCooldown || 0)); /* keep the fractional remainder so every Weapon Capacitor level really speeds up fire */ const newBulletStart=galagaState.bullets.length; if (Date.now() >= (galagaState.kamehamehaUntil || 0)) playSfx(galagaState.selectedShip === 'spiritbeam' ? 'bigLaser' : (galagaState.abilities.rapidfire > 0 ? 'rapid' : 'laser')); const dmg = galagaState.player.baseDamage;  if(galagaState.selectedShip==='nova' && Math.random()<0.15){const rowY=galagaState.enemies.length?galagaState.enemies[0].y+galagaState.enemies[0].h/2:100;galagaState.abilityLasers.push({x1:0,y1:rowY,x2:canvas.width,y2:rowY,life:18,color:'#ffe87a',width:7});for(let ei=galagaState.enemies.length-1;ei>=0;ei--){const e=galagaState.enemies[ei];if(Math.abs(e.y+e.h/2-rowY)<28){galagaState.score+=(e.golden?e.points:e.points*0.1);createExplosion(e.x+e.w/2,e.y+e.h/2,'#ffe87a',12);galagaState.enemies.splice(ei,1);}}if(galagaState.boss){const b=galagaState.boss;for(let z=0;z<5;z++){const x=b.x+b.w/2+(Math.random()-.5)*70,y=b.y+b.h/2+(Math.random()-.5)*60;galagaState.abilityLasers.push({x1:x,y1:y-45,x2:x,y2:y+45,life:12,color:'#ffe87a',width:4});}if(Math.hypot(b.x+b.w/2-(galagaState.player.x+14),b.y+b.h/2-(galagaState.player.y+14))<125)b.hp-=25;}} if (galagaState.abilities.harpoon > 0) { galagaState.harpoons.push({ x: galagaState.player.x + galagaState.player.w/2, y: galagaState.player.y - 4, vx: 0, vy: -10, mode: 'flying', targets: [], maxTargets: 5, hold: 0 }); playSfx('laser'); } else if (galagaState.abilities.multishot > 0 || galagaState.player.extraBullets > 0) { const totalBullets = 3 + galagaState.player.extraBullets; const startAngle = -0.3; const step = 0.6 / Math.max(1, totalBullets - 1); for (let i = 0; i < totalBullets; i++) { const angle = startAngle + i * step; galagaState.bullets.push({ x: galagaState.player.x + galagaState.player.w / 2 - 3, y: galagaState.player.y, w: 6, h: 12, vx: Math.sin(angle) * 7, vy: -Math.cos(angle) * 9, homing: galagaState.abilities.homing > 0, homingPowerup: galagaState.abilities.homing > 0, dmg: dmg, stormChain:galagaState.selectedShip==='stormwing'&&Date.now()<galagaState.stormLightningUntil, guardianBullet:galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0 }); } } else { galagaState.bullets.push({ x: galagaState.player.x + galagaState.player.w / 2 - 3, y: galagaState.player.y, w: galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0?8:6, h: galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0?14:12, vx: 0, vy: -9, homing: galagaState.abilities.homing > 0, homingPowerup: galagaState.abilities.homing > 0, dmg: dmg, color:galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0?'#76ffc4':undefined, stormChain:galagaState.selectedShip==='stormwing'&&Date.now()<galagaState.stormLightningUntil, guardianBullet:galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0 }); } if(galagaState.passives.twin && galagaState.abilities.harpoon<=0 && !(galagaState.selectedShip==='teleporter'&&galagaState.phaseShotCount%5===0)){galagaState.bullets.push({x:galagaState.player.x+2,y:galagaState.player.y+7,w:5,h:11,vx:-2.4,vy:-8.7,dmg:dmg,color:'#ffcc66',homing:galagaState.abilities.homing>0,homingPowerup:galagaState.abilities.homing>0},{x:galagaState.player.x+galagaState.player.w-7,y:galagaState.player.y+7,w:5,h:11,vx:2.4,vy:-8.7,dmg:dmg,color:'#ffcc66',homing:galagaState.abilities.homing>0,homingPowerup:galagaState.abilities.homing>0});} if(Date.now()<(galagaState.goldenAscensionUntil||0)){for(let gi=newBulletStart;gi<galagaState.bullets.length;gi++){const shot=galagaState.bullets[gi];shot.goldenAscensionShot=true;shot.color='#ffd84a';shot.dmg*=7;}} if(galagaState.selectedShip==='laser' && Date.now() < (galagaState.solarFireUntil||0)){for(let si=newBulletStart;si<galagaState.bullets.length;si++){const shot=galagaState.bullets[si];shot.solarFire=true;shot.color='#ff8a24';shot.w=9;shot.h=14;shot.dmg=shot.dmg*1.2;}} if(galagaState.selectedShip==='bomber' && (Date.now()<galagaState.bomberUntil)){for(let bi=newBulletStart;bi<galagaState.bullets.length;bi++){const shot=galagaState.bullets[bi];shot.isCannonBomb=true;shot.color='#cc5500';shot.w=10;shot.h=10;shot.vy=-7.2;shot.vx*=0.65;shot.dmg=shot.dmg*1.35;shot.blastRadius=45;}}
+ if (galagaState.fireCooldown > 0) galagaState.fireCooldown--; if ((keys['Space'] || keys['KeyK']) && !galagaState.p1Out && galagaState.fireCooldown <= 0 && Date.now()>=(galagaState.empDisabledUntil||0) && (galagaState.abilities.harpoon <= 0 || galagaState.harpoonCooldown <= 0)) { const baseCooldown = galagaState.abilities.rapidfire > 0 ? 5 : 12; let cooldownRate = Math.max(2, baseCooldown / (1 + (galagaState.player.fireRateBonus || 0))); if (galagaState.selectedShip === 'spiritbeam') cooldownRate = cooldownRate * 1.6; galagaState.fireCooldown = cooldownRate + Math.max(-1, Math.min(0, galagaState.fireCooldown || 0)); /* keep the fractional remainder so every Weapon Capacitor level really speeds up fire */ const newBulletStart=galagaState.bullets.length; if (Date.now() >= (galagaState.kamehamehaUntil || 0)) playSfx(galagaState.selectedShip === 'spiritbeam' ? 'bigLaser' : (galagaState.abilities.rapidfire > 0 ? 'rapid' : 'laser')); const dmg = galagaState.player.baseDamage;  if(galagaState.selectedShip==='nova' && Math.random()<0.15){const rowY=galagaState.enemies.length?galagaState.enemies[0].y+galagaState.enemies[0].h/2:100;galagaState.abilityLasers.push({x1:0,y1:rowY,x2:canvas.width,y2:rowY,life:18,color:'#ffe87a',width:7});for(let ei=galagaState.enemies.length-1;ei>=0;ei--){const e=galagaState.enemies[ei];if(Math.abs(e.y+e.h/2-rowY)<28){galagaState.score+=(e.golden?e.points:e.points*0.1);createExplosion(e.x+e.w/2,e.y+e.h/2,'#ffe87a',12);galagaState.enemies.splice(ei,1);}}if(galagaState.boss){const b=galagaState.boss;for(let z=0;z<5;z++){const x=b.x+b.w/2+(Math.random()-.5)*70,y=b.y+b.h/2+(Math.random()-.5)*60;galagaState.abilityLasers.push({x1:x,y1:y-45,x2:x,y2:y+45,life:12,color:'#ffe87a',width:4});}if(Math.hypot(b.x+b.w/2-(galagaState.player.x+14),b.y+b.h/2-(galagaState.player.y+14))<125)b.hp-=25;}} if (galagaState.selectedShip==='killerdrone' && ((galagaState.killerDroneShotCount=(galagaState.killerDroneShotCount||0)+1)%5===0)) { galagaState.bullets.push({x:galagaState.player.x+galagaState.player.w/2-6,y:galagaState.player.y,w:12,h:15,vx:0,vy:-5,dmg:dmg*9,homing:true,homingPowerup:true,killerDrone:true,isCannonBomb:true,blastRadius:76,color:'#ff4d9d'}); }
+ else if (galagaState.abilities.harpoon > 0) { galagaState.harpoons.push({ x: galagaState.player.x + galagaState.player.w/2, y: galagaState.player.y - 4, vx: 0, vy: -10, mode: 'flying', targets: [], maxTargets: 5, hold: 0 }); playSfx('laser'); } else if (galagaState.abilities.multishot > 0 || galagaState.player.extraBullets > 0) { const totalBullets = 3 + galagaState.player.extraBullets; const startAngle = -0.3; const step = 0.6 / Math.max(1, totalBullets - 1); for (let i = 0; i < totalBullets; i++) { const angle = startAngle + i * step; galagaState.bullets.push({ x: galagaState.player.x + galagaState.player.w / 2 - 3, y: galagaState.player.y, w: 6, h: 12, vx: Math.sin(angle) * 7, vy: -Math.cos(angle) * 9, homing: galagaState.abilities.homing > 0, homingPowerup: galagaState.abilities.homing > 0, dmg: dmg, stormChain:galagaState.selectedShip==='stormwing'&&Date.now()<galagaState.stormLightningUntil, guardianBullet:galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0 }); } } else { galagaState.bullets.push({ x: galagaState.player.x + galagaState.player.w / 2 - 3, y: galagaState.player.y, w: galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0?8:6, h: galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0?14:12, vx: 0, vy: -9, homing: galagaState.abilities.homing > 0, homingPowerup: galagaState.abilities.homing > 0, dmg: dmg, color:galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0?'#76ffc4':undefined, stormChain:galagaState.selectedShip==='stormwing'&&Date.now()<galagaState.stormLightningUntil, guardianBullet:galagaState.selectedShip==='guardian'&&galagaState.abilities.harpoon>0 }); } if(galagaState.passives.twin && galagaState.abilities.harpoon<=0 && !(galagaState.selectedShip==='teleporter'&&galagaState.phaseShotCount%5===0)){galagaState.bullets.push({x:galagaState.player.x+2,y:galagaState.player.y+7,w:5,h:11,vx:-2.4,vy:-8.7,dmg:dmg,color:'#ffcc66',homing:galagaState.abilities.homing>0,homingPowerup:galagaState.abilities.homing>0},{x:galagaState.player.x+galagaState.player.w-7,y:galagaState.player.y+7,w:5,h:11,vx:2.4,vy:-8.7,dmg:dmg,color:'#ffcc66',homing:galagaState.abilities.homing>0,homingPowerup:galagaState.abilities.homing>0});} if(Date.now()<(galagaState.goldenAscensionUntil||0)){for(let gi=newBulletStart;gi<galagaState.bullets.length;gi++){const shot=galagaState.bullets[gi];shot.goldenAscensionShot=true;shot.color='#ffd84a';shot.dmg*=7;}} if(galagaState.selectedShip==='laser' && Date.now() < (galagaState.solarFireUntil||0)){for(let si=newBulletStart;si<galagaState.bullets.length;si++){const shot=galagaState.bullets[si];shot.solarFire=true;shot.color='#ff8a24';shot.w=9;shot.h=14;shot.dmg=shot.dmg*1.2;}} if(galagaState.selectedShip==='bomber' && (Date.now()<galagaState.bomberUntil)){for(let bi=newBulletStart;bi<galagaState.bullets.length;bi++){const shot=galagaState.bullets[bi];shot.isCannonBomb=true;shot.color='#cc5500';shot.w=10;shot.h=10;shot.vy=-7.2;shot.vx*=0.65;shot.dmg=shot.dmg*1.35;shot.blastRadius=45;}}
  for(let sl=newBulletStart;sl<galagaState.bullets.length;sl++){const sb=galagaState.bullets[sl];if(sb.stormChain)sb.stormChain=Math.random()<0.5;}
  if(galagaState.selectedShip==='spiritbeam'){galagaState.bullets.splice(newBulletStart);spiritBeamStrike(cooldownRate);}
  if (galagaState.selectedShip !== 'spiritbeam') playSfx('laser'); } // Mega Laser Damage Processing
@@ -2275,7 +2546,7 @@ if (galagaState.kamehamehaUntil && Date.now() >= galagaState.kamehamehaUntil && 
 if (galagaState.abilities.megalaser > 0 || galagaState.shipLaserActive > 0) { const beamWidth = galagaState.selectedShip==='laser' ? 76 : 24; const lx = galagaState.player.x + galagaState.player.w / 2 - beamWidth/2; const lw = beamWidth; // Damage enemies in the beam and remove them when defeated
  for (let i = galagaState.enemies.length - 1; i >= 0; i--) { const e = galagaState.enemies[i]; if (e.x + e.w > lx && e.x < lx + lw) { e.hp -= (galagaState.selectedShip==='laser' ? 0.24 : 0.35) * galagaState.player.baseDamage; if (e.hp <= 0) { galagaState.score += (e.golden?e.points:e.points*0.1); createExplosion(e.x + e.w / 2, e.y + e.h / 2, e.type === 'orange' ? '#ff6600' : (e.type === 'yellow' ? '#ffff00' : '#00ff66'), 15); playSfx('explosion'); maybeDropHarpoonShip(e.x + e.w/2, e.y + e.h/2); if (Math.random() < 0.10) galagaState.coins.push({ x: e.x + e.w / 2, y: e.y + e.h / 2, vy: 2.2, rot: 0 }); galagaState.enemies.splice(i, 1); } } } // Damage boss when the beam crosses it
  if (galagaState.boss && galagaState.boss.x + galagaState.boss.w > lx && galagaState.boss.x < lx + lw) { galagaState.boss.hp -= (galagaState.selectedShip==='laser' ? 0.24 : 0.35) * galagaState.player.baseDamage; maybeDropBossPowerup(galagaState.boss); maybeDropHarpoonShip(galagaState.boss.x + galagaState.boss.w/2, galagaState.boss.y + galagaState.boss.h/2); } } // Update Bullets
- for (let index = galagaState.bullets.length - 1; index >= 0; index--) { const b = galagaState.bullets[index]; if (b.homing && (!b.homingPowerup || galagaState.abilities.homing > 0)) { let target = null; let bestDist = Infinity; if (galagaState.boss) { target = galagaState.boss; bestDist = Math.hypot(target.x + target.w/2 - b.x, target.y + target.h/2 - b.y); } for (const enemy of galagaState.enemies) { if (enemy.captured) continue; const dist = Math.hypot(enemy.x + enemy.w/2 - b.x, enemy.y + enemy.h/2 - b.y); if (dist < bestDist) { bestDist = dist; target = enemy; } } if (target) { const tx = target.x + target.w / 2; const ty = target.y + target.h / 2; const dx = tx - b.x; const dy = ty - b.y; const dist = Math.hypot(dx, dy) || 1; const steer = b.twinLaser ? 0.42 : 0.22; /* gentle homing: guide toward targets without hard-locking */ b.vx += (dx / dist) * steer; b.vy += (dy / dist) * steer; const maxSpeed = b.twinLaser ? 10 : 9; const speed = Math.hypot(b.vx,b.vy); if(speed > maxSpeed){b.vx=b.vx/speed*maxSpeed;b.vy=b.vy/speed*maxSpeed;} } } const playerBulletSpeed = 1 + (galagaState.player.bulletSpeedBonus || 0); b.x += b.vx * playerBulletSpeed; b.y += b.vy * playerBulletSpeed; if (b.y < -20 || b.y > canvas.height + 20 || b.x < -20 || b.x > canvas.width + 20) galagaState.bullets.splice(index, 1); } // Solar Lance burn damage-over-time (matches the fire-beam tick strength).
+ for (let index = galagaState.bullets.length - 1; index >= 0; index--) { const b = galagaState.bullets[index]; if (b.homing && (b.killerDrone || !b.homingPowerup || galagaState.abilities.homing > 0)) { let target = null; let bestDist = Infinity; if (galagaState.boss) { target = galagaState.boss; bestDist = Math.hypot(target.x + target.w/2 - b.x, target.y + target.h/2 - b.y); } for (const enemy of galagaState.enemies) { if (enemy.captured) continue; const dist = Math.hypot(enemy.x + enemy.w/2 - b.x, enemy.y + enemy.h/2 - b.y); if (dist < bestDist) { bestDist = dist; target = enemy; } } if (target) { const tx = target.x + target.w / 2; const ty = target.y + target.h / 2; const dx = tx - b.x; const dy = ty - b.y; const dist = Math.hypot(dx, dy) || 1; const steer = b.killerDrone ? 1.35 : (b.twinLaser ? 0.42 : 0.22); /* Killer Drone uses strong target lock; regular homing stays gentle. */ if(b.killerDrone){b.vx=(dx/dist)*7.5;b.vy=(dy/dist)*7.5;}else{b.vx += (dx / dist) * steer; b.vy += (dy / dist) * steer;} const maxSpeed = b.killerDrone ? 7.5 : (b.twinLaser ? 10 : 9); const speed = Math.hypot(b.vx,b.vy); if(speed > maxSpeed){b.vx=b.vx/speed*maxSpeed;b.vy=b.vy/speed*maxSpeed;} } } const playerBulletSpeed = 1 + (galagaState.player.bulletSpeedBonus || 0); b.x += b.vx * playerBulletSpeed; b.y += b.vy * playerBulletSpeed; if (b.y < -20 || b.y > canvas.height + 20 || b.x < -20 || b.x > canvas.width + 20) galagaState.bullets.splice(index, 1); } // Solar Lance burn damage-over-time (matches the fire-beam tick strength).
  if(galagaState.boss && galagaState.boss.solarBurnUntil>Date.now() && Date.now()-(galagaState.boss.solarBurnTick||0)>=500){galagaState.boss.hp-=Math.max(1,galagaState.player.baseDamage);galagaState.boss.solarBurnTick=Date.now();createExplosion(galagaState.boss.x+galagaState.boss.w/2,galagaState.boss.y+galagaState.boss.h/2,'#ff8a24',3);}
  // Update Boss — in co-op only the host simulates boss/enemies/wave (shared match)
  if (!mpActive || mpIsHost) {
@@ -2563,7 +2834,7 @@ if (galagaState.abilities.megalaser > 0 || galagaState.shipLaserActive > 0) { co
   }
   continue;
  }
- if (galagaState.boss) { const bo = galagaState.boss; if (b.x < bo.x + bo.w && b.x + b.w > bo.x && b.y < bo.y + bo.h && b.y + b.h > bo.y) { if(b.isCannonBomb)detonateCannonBomb(b.x+b.w/2,b.y+b.h/2,b.blastRadius||45,b.dmg,'#ff9d42');else{bo.hp -= b.dmg; if(b.solarFire){bo.solarBurnUntil=Date.now()+3000;bo.solarBurnTick=Date.now();} maybeDropBossPowerup(bo); maybeDropHarpoonShip(bo.x + bo.w/2, bo.y + bo.h/2);} hit = true; } } if (!hit) { galagaState.enemies.forEach((e, eIdx) => { if (!hit && !e.captured && !e.stormDead && b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) { if(b.isCannonBomb)detonateCannonBomb(b.x+b.w/2,b.y+b.h/2,b.blastRadius||45,b.dmg,'#ff9d42');else {e.hp -= b.dmg; if(b.stormChain)stormChainStrike(e,b.dmg); if(b.solarFire){e.solarBurnUntil=Date.now()+3000;e.solarBurnTick=Date.now();}} if(!b.isCannonBomb && galagaState.passives.chain && Math.random()<0.18){createExplosion(e.x+e.w/2,e.y+e.h/2,'#70f5ff',12);for(const other of galagaState.enemies){if(other!==e&&Math.hypot(other.x+other.w/2-(e.x+e.w/2),other.y+other.h/2-(e.y+e.h/2))<115){other.hp-=2;if(other.hp<=0){galagaState.score+=(other.golden?other.points:other.points*0.1);createExplosion(other.x+other.w/2,other.y+other.h/2,'#70f5ff',12);other.hp=0;}}}galagaState.enemies=galagaState.enemies.filter(other=>other.hp>0);} hit = true; if (e.hp <= 0) { galagaState.score += (e.golden?e.points:e.points*0.1); createExplosion(e.x + e.w/2, e.y + e.h/2, e.type === 'orange' ? '#ff6600' : (e.type==='yellow'?'#ffff00':'#00ff66'), 15); playSfx('explosion'); maybeDropHarpoonShip(e.x + e.w/2, e.y + e.h/2); if(e.golden && Math.random()<0.10)galagaState.drops.push({x:e.x+e.w/2,y:e.y+e.h/2,type:'goldenascension',vy:2.2}); // Drops: 20% Ability Drop
+ if (galagaState.boss) { const bo = galagaState.boss; if (b.x < bo.x + bo.w && b.x + b.w > bo.x && b.y < bo.y + bo.h && b.y + b.h > bo.y) { if(b.isCannonBomb){galagaState._killerDroneBlast=!!b.killerDrone;detonateCannonBomb(b.x+b.w/2,b.y+b.h/2,b.blastRadius||45,b.dmg,b.killerDrone?'#ff4d9d':'#ff9d42');galagaState._killerDroneBlast=false;}else{bo.hp -= b.dmg; if(b.solarFire){bo.solarBurnUntil=Date.now()+3000;bo.solarBurnTick=Date.now();} maybeDropBossPowerup(bo); maybeDropHarpoonShip(bo.x + bo.w/2, bo.y + bo.h/2);} hit = true; } } if (!hit) { galagaState.enemies.forEach((e, eIdx) => { if (!hit && !e.captured && !e.stormDead && b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) { if(b.isCannonBomb){galagaState._killerDroneBlast=!!b.killerDrone;detonateCannonBomb(b.x+b.w/2,b.y+b.h/2,b.blastRadius||45,b.dmg,b.killerDrone?'#ff4d9d':'#ff9d42');galagaState._killerDroneBlast=false;}else {e.hp -= b.dmg; if(b.stormChain)stormChainStrike(e,b.dmg); if(b.solarFire){e.solarBurnUntil=Date.now()+3000;e.solarBurnTick=Date.now();}} if(!b.isCannonBomb && galagaState.passives.chain && Math.random()<0.18){createExplosion(e.x+e.w/2,e.y+e.h/2,'#70f5ff',12);for(const other of galagaState.enemies){if(other!==e&&Math.hypot(other.x+other.w/2-(e.x+e.w/2),other.y+other.h/2-(e.y+e.h/2))<115){other.hp-=2;if(other.hp<=0){galagaState.score+=(other.golden?other.points:other.points*0.1);createExplosion(other.x+other.w/2,other.y+other.h/2,'#70f5ff',12);other.hp=0;}}}galagaState.enemies=galagaState.enemies.filter(other=>other.hp>0);} hit = true; if (e.hp <= 0) { galagaState.score += (e.golden?e.points:e.points*0.1); createExplosion(e.x + e.w/2, e.y + e.h/2, e.type === 'orange' ? '#ff6600' : (e.type==='yellow'?'#ffff00':'#00ff66'), 15); playSfx('explosion'); maybeDropHarpoonShip(e.x + e.w/2, e.y + e.h/2); if(e.golden && Math.random()<0.10)galagaState.drops.push({x:e.x+e.w/2,y:e.y+e.h/2,type:'goldenascension',vy:2.2}); // Drops: 20% Ability Drop
  if (Math.random() < 0.10) { galagaState.drops.push({ x: e.x + e.w / 2, y: e.y + e.h / 2, type: 'twinlasers', vy: 2 }); } else if (Math.random() < 0.20) { const types = ['multishot', 'rapidfire', 'shield', 'slowmo', 'homing', 'megalaser']; const picked = types[Math.floor(Math.random() * types.length)]; galagaState.drops.push({ x: e.x + e.w / 2, y: e.y + e.h / 2, type: picked, vy: 2 }); } // 1/10 (10%) Chance to Drop Coin
  if (Math.random() < (galagaState.passives.fortune ? 0.28 : 0.10)) { galagaState.coins.push({ x: e.x + e.w / 2, y: e.y + e.h / 2, vy: 2.2, rot: 0 }); } galagaState.enemies.splice(eIdx, 1); } } }); } if (hit) galagaState.bullets.splice(bIdx, 1); } galagaState.enemies = galagaState.enemies.filter(en => !en.stormDead); } // end host-only shared world sim
  if (mpActive && !mpIsHost) { flameShipTick(); harpoonClientTick(); }
@@ -2619,6 +2890,15 @@ function drawShipBody(ctx, shipId, opts) {
     ctx.beginPath(); ctx.moveTo(0,-20); ctx.lineTo(8,-6); ctx.lineTo(16,4); ctx.lineTo(10,8); ctx.lineTo(6,16); ctx.lineTo(0,12); ctx.lineTo(-6,16); ctx.lineTo(-10,8); ctx.lineTo(-16,4); ctx.lineTo(-8,-6); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#e0fbff'; ctx.fillRect(-2,-18,4,22);
     ctx.strokeStyle = '#b8f4ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-12,10); ctx.lineTo(-18,18); ctx.moveTo(12,10); ctx.lineTo(18,18); ctx.stroke();
+  } else if (shipId === 'killerdrone') {
+    // Angular black-metal stealth fighter with red neon blades and a hot magenta cockpit.
+    ctx.shadowColor='#ff174f'; ctx.shadowBlur=18;
+    ctx.fillStyle='#151a2d'; ctx.strokeStyle='#ff315f'; ctx.lineWidth=1.6;
+    ctx.beginPath();ctx.moveTo(0,-23);ctx.lineTo(8,-10);ctx.lineTo(25,-3);ctx.lineTo(38,12);ctx.lineTo(19,8);ctx.lineTo(12,18);ctx.lineTo(5,12);ctx.lineTo(0,20);ctx.lineTo(-5,12);ctx.lineTo(-12,18);ctx.lineTo(-19,8);ctx.lineTo(-38,12);ctx.lineTo(-25,-3);ctx.lineTo(-8,-10);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='#303951';ctx.strokeStyle='#8e9bbd';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,-19);ctx.lineTo(7,-5);ctx.lineTo(4,12);ctx.lineTo(0,16);ctx.lineTo(-4,12);ctx.lineTo(-7,-5);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='#ff2671';ctx.shadowColor='#ff2671';ctx.shadowBlur=16;ctx.beginPath();ctx.ellipse(0,-3,4.5,8,0,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=8;ctx.fillStyle='#ff405c';ctx.beginPath();ctx.moveTo(-31,9);ctx.lineTo(-19,6);ctx.lineTo(-13,9);ctx.lineTo(-27,11);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(31,9);ctx.lineTo(19,6);ctx.lineTo(13,9);ctx.lineTo(27,11);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#ff6a35';ctx.beginPath();ctx.moveTo(-5,15);ctx.lineTo(-1,15);ctx.lineTo(-3,25);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(1,15);ctx.lineTo(5,15);ctx.lineTo(3,25);ctx.closePath();ctx.fill();
   } else {
     ctx.beginPath(); ctx.moveTo(0,-14); ctx.lineTo(12,12); ctx.lineTo(6,10); ctx.lineTo(0,14); ctx.lineTo(-6,10); ctx.lineTo(-12,12); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#ff0055'; ctx.fillRect(-3,-4,6,8);
@@ -2729,6 +3009,7 @@ function renderGalaga() { ctx.fillStyle = '#050515'; ctx.fillRect(0, 0, canvas.w
    ctx.fillStyle = b.isCannonBomb ? '#ff9d42' : ship === 'bomber' ? '#ff9d42' : b.homing ? '#ff4cff' : ship === 'laser' ? '#ff5b62' : ship === 'guardian' ? '#76ffc4' : ship === 'stormwing' ? '#45eaff' : ship === 'teleporter' ? '#b78aff' : '#00f3ff';
    if(b.goldenAscensionShot){ctx.save();ctx.fillStyle='#ffd84a';ctx.strokeStyle='#fff4a8';ctx.lineWidth=1;ctx.fillRect(b.x,b.y,b.w,b.h);ctx.strokeRect(b.x+0.5,b.y+0.5,Math.max(1,b.w-1),Math.max(1,b.h-1));ctx.restore();}
    else if(b.solarFire){ctx.save();ctx.fillStyle='#ff8a24';ctx.strokeStyle='#ffe89a';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(b.x+b.w/2,b.y);ctx.lineTo(b.x+b.w,b.y+b.h);ctx.lineTo(b.x,b.y+b.h);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#fff0a0';ctx.fillRect(b.x+b.w/2-1,b.y+b.h-4,2,3);ctx.restore();}
+   else if(b.killerDrone){ctx.save();ctx.translate(b.x+b.w/2,b.y+b.h/2);ctx.rotate(Math.atan2(b.vy,b.vx)+Math.PI/2);ctx.shadowColor='#ff285f';ctx.shadowBlur=16;ctx.fillStyle='#252a40';ctx.strokeStyle='#ff4775';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(7,-2);ctx.lineTo(10,5);ctx.lineTo(3,4);ctx.lineTo(0,8);ctx.lineTo(-3,4);ctx.lineTo(-10,5);ctx.lineTo(-7,-2);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#ff285f';ctx.beginPath();ctx.arc(0,0,3.2,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffb0c7';ctx.fillRect(-1,-6,2,5);ctx.strokeStyle='#ff315f';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(-7,1);ctx.lineTo(-13,5);ctx.lineTo(-9,8);ctx.moveTo(7,1);ctx.lineTo(13,5);ctx.lineTo(9,8);ctx.stroke();ctx.globalAlpha=.85;ctx.fillStyle='#ff315f';ctx.shadowColor='#ff174f';ctx.shadowBlur=12;ctx.beginPath();ctx.moveTo(-2,7);ctx.lineTo(0,7);ctx.lineTo(0,13+Math.sin(performance.now()*.05)*2);ctx.closePath();ctx.fill();ctx.restore();}
    else if(b.isCannonBomb){ctx.fillStyle='#cc5500';ctx.beginPath();ctx.arc(b.x+b.w/2,b.y+b.h/2,5,0,Math.PI*2);ctx.fill();}
    else if(b.isSpiritLaser){ctx.save();ctx.strokeStyle=b.color||'#6ee7ff';ctx.shadowColor='#6ee7ff';ctx.shadowBlur=14;ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(b.x+b.w/2,b.y+b.h);ctx.lineTo(b.x+b.w/2+b.vx*2,b.y);ctx.stroke();ctx.strokeStyle='#e0fbff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(b.x+b.w/2,b.y+b.h);ctx.lineTo(b.x+b.w/2+b.vx*2,b.y);ctx.stroke();ctx.restore();}
    else if (b.homingPowerup && galagaState.abilities.homing > 0) {
@@ -2763,11 +3044,11 @@ function renderGalaga() { ctx.fillStyle = '#050515'; ctx.fillRect(0, 0, canvas.w
  galagaState.specialProjectiles.filter(q=>q.bomb).forEach(q=>{ctx.save();ctx.globalAlpha=.5;ctx.strokeStyle='#ffb45e';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(q.x-q.vx*.7,q.y-q.vy*.7);ctx.lineTo(q.x,q.y);ctx.stroke();ctx.globalAlpha=1;ctx.fillStyle='#ff9d42';ctx.shadowColor='#ff8a35';ctx.shadowBlur=10;ctx.beginPath();ctx.arc(q.x,q.y,5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff0b0';ctx.lineWidth=1.5;ctx.stroke();ctx.restore();});
  // Draw Enemy Bullets
  galagaState.enemyBullets.forEach(eb => { if(eb.sniperBeam){ctx.save();ctx.globalAlpha=Math.min(1,eb.life/8);ctx.strokeStyle='#ff70df';ctx.shadowColor='#ff70df';ctx.shadowBlur=20;ctx.lineWidth=eb.beamWidth||10;ctx.beginPath();ctx.moveTo(eb.x1,eb.y1);ctx.lineTo(eb.x2,eb.y2);ctx.stroke();ctx.strokeStyle=eb.freezeOnHit?'#ffffff':'#fff0fc';ctx.shadowBlur=8;ctx.lineWidth=Math.max(3,(eb.beamWidth||10)*0.3);ctx.beginPath();ctx.moveTo(eb.x1,eb.y1);ctx.lineTo(eb.x2,eb.y2);ctx.stroke();ctx.restore();return;} ctx.fillStyle = eb.color || '#ff3366'; if (eb.cometBomb) { ctx.save(); ctx.translate(eb.x+eb.w/2,eb.y+eb.h/2); ctx.fillStyle='#ff7838'; ctx.beginPath(); ctx.arc(0,0,eb.w/2,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#ffd27a'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,eb.w/2-3,0,Math.PI*2); ctx.stroke(); ctx.fillStyle='#fff0b0'; ctx.beginPath(); ctx.arc(-2,-2,3,0,Math.PI*2); ctx.fill(); ctx.restore(); } else if (eb.missile) { ctx.save(); ctx.translate(eb.x+eb.w/2,eb.y+eb.h/2); ctx.rotate(Math.atan2(eb.vy,eb.vx)+Math.PI/2); ctx.fillRect(eb.bossRocket?-8:-4,eb.bossRocket?-13:-7,eb.bossRocket?16:8,eb.bossRocket?26:14); ctx.fillStyle='#ffd08a'; ctx.fillRect(eb.bossRocket?-4:-2,eb.bossRocket?11:6,eb.bossRocket?8:4,eb.bossRocket?12:6); ctx.restore(); } else if (eb.laser) { ctx.save(); ctx.shadowColor=eb.color; ctx.shadowBlur=12; ctx.fillRect(eb.x,eb.y,eb.w,eb.h); ctx.restore(); } else ctx.fillRect(eb.x, eb.y, eb.w, eb.h); }); // Draw Detailed Enemies
- galagaState.enemies.forEach(e => { if(e.solarBurnUntil>Date.now() && Date.now()-(e.solarBurnTick||0)>=500){e.hp-=Math.max(1,galagaState.player.baseDamage);e.solarBurnTick=Date.now();createExplosion(e.x+e.w/2,e.y+e.h/2,'#ff8a24',3);} ctx.save(); if(e.golden) ctx.filter='sepia(1) saturate(4) hue-rotate(350deg) brightness(1.15)'; if(e.type==='shield' && galagaState.wave>5 && e.attackTick%300<150) ctx.globalAlpha=.72; ctx.translate(e.x + e.w / 2, e.y + e.h / 2); const wingSway = Math.sin(e.animTick) * 4; if (e.type === 'green') { ctx.fillStyle = '#00ff66'; // Main bug core
+ galagaState.enemies.forEach(e => { if(e.solarBurnUntil>Date.now() && Date.now()-(e.solarBurnTick||0)>=500){e.hp-=Math.max(1,galagaState.player.baseDamage);e.solarBurnTick=Date.now();createExplosion(e.x+e.w/2,e.y+e.h/2,'#ff8a24',3);} ctx.save(); const droneDebuffed=Date.now()<(e.killerDroneDebuffUntil||0); if(droneDebuffed){ctx.filter='brightness(0)';ctx.shadowColor='#ff315f';ctx.shadowBlur=12;} else if(e.golden) ctx.filter='sepia(1) saturate(4) hue-rotate(350deg) brightness(1.15)'; if(e.type==='shield' && galagaState.wave>5 && e.attackTick%300<150) ctx.globalAlpha=.72; ctx.translate(e.x + e.w / 2, e.y + e.h / 2); const wingSway = Math.sin(e.animTick) * 4; if (e.type === 'green') { ctx.fillStyle = '#00ff66'; // Main bug core
  ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill(); // Antennae
  ctx.strokeStyle = '#00ff66'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-4, -8); ctx.lineTo(-8 + wingSway, -14); ctx.moveTo(4, -8); ctx.lineTo(8 - wingSway, -14); ctx.stroke(); // Eyes
  ctx.fillStyle = '#ffffff'; ctx.fillRect(-4, -3, 3, 3); ctx.fillRect(1, -3, 3, 3); } else if (e.type === 'yellow') { ctx.fillStyle = '#ffcc00'; ctx.beginPath(); ctx.moveTo(0, 12); ctx.lineTo(14 + wingSway, -8); ctx.lineTo(0, -2); ctx.lineTo(-14 - wingSway, -8); ctx.closePath(); ctx.fill(); // Core
- ctx.fillStyle = '#ff3300'; ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill(); } else if (e.type === 'orange') { ctx.fillStyle = '#ff6600'; ctx.fillRect(-12, -10, 24, 20); ctx.fillStyle = '#ff0033'; ctx.fillRect(-8 - wingSway, -6, 6, 12); ctx.fillRect(2 + wingSway, -6, 6, 12); ctx.fillStyle = '#ffff00'; ctx.fillRect(-4, -4, 8, 8); } else if(e.type==='purple'){ctx.fillStyle='#bd66ff';ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(13,-4);ctx.lineTo(10,11);ctx.lineTo(0,15);ctx.lineTo(-10,11);ctx.lineTo(-13,-4);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(-5,-3,3,3);ctx.fillRect(2,-3,3,3);} else if(e.type==='red'){ctx.fillStyle='#ff335e';ctx.beginPath();ctx.moveTo(0,13);ctx.lineTo(13,-10);ctx.lineTo(4,-6);ctx.lineTo(0,-14);ctx.lineTo(-4,-6);ctx.lineTo(-13,-10);ctx.closePath();ctx.fill();ctx.fillStyle='#ffe66d';ctx.fillRect(-3,-2,6,5);} else if(e.type==='shield'){ctx.fillStyle='#55e9cf';ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(14,-7);ctx.lineTo(11,9);ctx.lineTo(0,15);ctx.lineTo(-11,9);ctx.lineTo(-14,-7);ctx.closePath();ctx.fill();ctx.strokeStyle='#d4fff6';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,19+Math.sin(e.animTick)*2,0,Math.PI*2);ctx.stroke();} else if(e.type==='splitter'){ctx.fillStyle='#ffb84d';ctx.beginPath();for(let a=0;a<8;a++){const rr=a%2?8:15,ang=a*Math.PI/4;ctx.lineTo(Math.cos(ang)*rr,Math.sin(ang)*rr);}ctx.closePath();ctx.fill();ctx.fillStyle='#fff0b8';ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();} else if(e.type==='sniper'){ctx.fillStyle='#ff70df';ctx.beginPath();ctx.moveTo(0,-17);ctx.lineTo(8,0);ctx.lineTo(4,13);ctx.lineTo(-4,13);ctx.lineTo(-8,0);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(-2,-7,4,12);} else if(e.type==='leech'){ctx.fillStyle='#8cff65';ctx.beginPath();ctx.ellipse(0,0,14,10,Math.sin(e.animTick)*.2,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#d8ffc5';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,6);ctx.lineTo(-13,13);ctx.moveTo(0,8);ctx.lineTo(0,15);ctx.moveTo(8,6);ctx.lineTo(13,13);ctx.stroke();} else if(e.type==='bomber'){ctx.fillStyle='#ff7838';ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(14,0);ctx.lineTo(8,13);ctx.lineTo(-8,13);ctx.lineTo(-14,0);ctx.closePath();ctx.fill();ctx.fillStyle='#ffe3a3';ctx.beginPath();ctx.arc(0,0,5,0,Math.PI*2);ctx.fill();} // HP Bar for damaged enemies
+ ctx.fillStyle = '#ff3300'; ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill(); } else if (e.type === 'orange') { ctx.fillStyle = '#ff6600'; ctx.fillRect(-12, -10, 24, 20); ctx.fillStyle = '#ff0033'; ctx.fillRect(-8 - wingSway, -6, 6, 12); ctx.fillRect(2 + wingSway, -6, 6, 12); ctx.fillStyle = '#ffff00'; ctx.fillRect(-4, -4, 8, 8); } else if(e.type==='purple'){ctx.fillStyle='#bd66ff';ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(13,-4);ctx.lineTo(10,11);ctx.lineTo(0,15);ctx.lineTo(-10,11);ctx.lineTo(-13,-4);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(-5,-3,3,3);ctx.fillRect(2,-3,3,3);} else if(e.type==='red'){ctx.fillStyle='#ff335e';ctx.beginPath();ctx.moveTo(0,13);ctx.lineTo(13,-10);ctx.lineTo(4,-6);ctx.lineTo(0,-14);ctx.lineTo(-4,-6);ctx.lineTo(-13,-10);ctx.closePath();ctx.fill();ctx.fillStyle='#ffe66d';ctx.fillRect(-3,-2,6,5);} else if(e.type==='shield'){ctx.fillStyle='#55e9cf';ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(14,-7);ctx.lineTo(11,9);ctx.lineTo(0,15);ctx.lineTo(-11,9);ctx.lineTo(-14,-7);ctx.closePath();ctx.fill();ctx.strokeStyle='#d4fff6';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,19+Math.sin(e.animTick)*2,0,Math.PI*2);ctx.stroke();} else if(e.type==='splitter'){ctx.fillStyle='#ffb84d';ctx.beginPath();for(let a=0;a<8;a++){const rr=a%2?8:15,ang=a*Math.PI/4;ctx.lineTo(Math.cos(ang)*rr,Math.sin(ang)*rr);}ctx.closePath();ctx.fill();ctx.fillStyle='#fff0b8';ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();} else if(e.type==='sniper'){ctx.fillStyle='#ff70df';ctx.beginPath();ctx.moveTo(0,-17);ctx.lineTo(8,0);ctx.lineTo(4,13);ctx.lineTo(-4,13);ctx.lineTo(-8,0);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(-2,-7,4,12);} else if(e.type==='leech'){ctx.fillStyle='#8cff65';ctx.beginPath();ctx.ellipse(0,0,14,10,Math.sin(e.animTick)*.2,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#d8ffc5';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,6);ctx.lineTo(-13,13);ctx.moveTo(0,8);ctx.lineTo(0,15);ctx.moveTo(8,6);ctx.lineTo(13,13);ctx.stroke();} else if(e.type==='bomber'){ctx.fillStyle='#ff7838';ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(14,0);ctx.lineTo(8,13);ctx.lineTo(-8,13);ctx.lineTo(-14,0);ctx.closePath();ctx.fill();ctx.fillStyle='#ffe3a3';ctx.beginPath();ctx.arc(0,0,5,0,Math.PI*2);ctx.fill();} if(droneDebuffed){ctx.filter='none';ctx.globalAlpha=0.95;ctx.strokeStyle='#ff315f';ctx.shadowColor='#ff174f';ctx.shadowBlur=14;ctx.lineWidth=1.8;ctx.beginPath();ctx.ellipse(0,0,e.w*0.58,e.h*0.62,0,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;} // HP Bar for damaged enemies
  if (e.hp > 0 && e.hp < e.maxHp && e.maxHp > 0) { const hpRatio = Math.max(0, Math.min(1, e.hp / e.maxHp)); ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(-12, 14, 24, 3); ctx.fillStyle = '#00ff00'; ctx.fillRect(-12, 14, hpRatio * 24, 3); } if(e.golden){ctx.filter='none';ctx.strokeStyle='#fff0a0';ctx.lineWidth=2;ctx.strokeRect(-e.w/2-3,-e.h/2-3,e.w+6,e.h+6);ctx.fillStyle='#ffe36b';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText('GOLD',0,-e.h/2-7);} ctx.restore(); }); // Draw Boss
  if (galagaState.boss && galagaState.boss.type==='charger' && galagaState.boss.chState==='telegraph') {
   const cb = galagaState.boss, ccx = cb.x + cb.w/2, ccy = cb.y + cb.h/2;
@@ -2783,7 +3064,7 @@ function renderGalaga() { ctx.fillStyle = '#050515'; ctx.fillRect(0, 0, canvas.w
   ctx.beginPath(); ctx.arc(cb.chTargetX, cb.chTargetY, locked ? 16 : 22, 0, Math.PI*2); ctx.stroke();
   ctx.restore();
 }
-if (galagaState.boss) { const b = galagaState.boss; ctx.save(); if(b.type==='specter' && b.invisibleUntil>Date.now()) ctx.globalAlpha=0.28; ctx.translate(b.x + b.w / 2, b.y + b.h / 2); // Main Boss Body
+if (galagaState.boss) { const b = galagaState.boss; ctx.save(); const bossDroneDebuffed=Date.now()<(b.killerDroneDebuffUntil||0); if(b.type==='specter' && b.invisibleUntil>Date.now()) ctx.globalAlpha=0.28; if(bossDroneDebuffed){ctx.filter='brightness(0)';ctx.shadowColor='#ff315f';ctx.shadowBlur=18;} ctx.translate(b.x + b.w / 2, b.y + b.h / 2); // Main Boss Body
  ctx.fillStyle = b.color || '#ff0055'; ctx.beginPath(); if(b.type==='laser'){ctx.moveTo(0,-38);ctx.lineTo(15,-8);ctx.lineTo(43,5);ctx.lineTo(17,12);ctx.lineTo(0,32);ctx.lineTo(-17,12);ctx.lineTo(-43,5);ctx.lineTo(-15,-8);ctx.closePath();}else if(b.type==='rocket'){ctx.moveTo(0,-35);ctx.lineTo(23,-4);ctx.lineTo(39,18);ctx.lineTo(15,12);ctx.lineTo(0,29);ctx.lineTo(-15,12);ctx.lineTo(-39,18);ctx.lineTo(-23,-4);ctx.closePath();}else if(b.type==='guardian'){ctx.moveTo(0,-34);ctx.lineTo(30,-20);ctx.lineTo(37,8);ctx.lineTo(20,29);ctx.lineTo(0,37);ctx.lineTo(-20,29);ctx.lineTo(-37,8);ctx.lineTo(-30,-20);ctx.closePath();}else if(b.type==='leviathan'){ctx.ellipse(0,0,42,25,0,0,Math.PI*2);ctx.moveTo(-25,-8);ctx.lineTo(-48,-26);ctx.lineTo(-35,2);ctx.moveTo(25,-8);ctx.lineTo(48,-26);ctx.lineTo(35,2);}else if(b.type==='queen'){ctx.moveTo(0,34);ctx.lineTo(14,12);ctx.lineTo(42,0);ctx.lineTo(25,-15);ctx.lineTo(28,-32);ctx.lineTo(7,-23);ctx.lineTo(0,-38);ctx.lineTo(-7,-23);ctx.lineTo(-28,-32);ctx.lineTo(-25,-15);ctx.lineTo(-42,0);ctx.lineTo(-14,12);ctx.closePath();}else if(b.type==='charger'){
   // Pointed battering-ram hull with reinforced spike nose
   ctx.moveTo(0,40);ctx.lineTo(14,12);ctx.lineTo(28,4);ctx.lineTo(18,-8);ctx.lineTo(10,-28);ctx.lineTo(0,-42);ctx.lineTo(-10,-28);ctx.lineTo(-18,-8);ctx.lineTo(-28,4);ctx.lineTo(-14,12);ctx.closePath();
@@ -2822,7 +3103,7 @@ if (galagaState.boss) { const b = galagaState.boss; ctx.save(); if(b.type==='spe
    ctx.fillStyle='#f5faff';ctx.shadowBlur=0;for(const side of [-1,1]){ctx.beginPath();ctx.arc(side*17,-8,1.3,0,Math.PI*2);ctx.fill();}
    ctx.restore(); }
  if(b.type==='eclipse'&&b.eclipseCharge>0){ctx.save();ctx.globalAlpha=0.35+Math.sin(Date.now()*.04)*.2;ctx.strokeStyle='#ff7a35';ctx.lineWidth=3;ctx.setLineDash([8,6]);ctx.beginPath();ctx.moveTo((b.eclipseTargetX||canvas.width/2)-(b.phase===2?15:5),b.y+b.h);ctx.lineTo((b.eclipseTargetX||canvas.width/2)-(b.phase===2?15:5),canvas.height);ctx.stroke();ctx.setLineDash([]);ctx.restore();} if(b.type==='eclipse'){ctx.strokeStyle=b.phase===2?'#ffb078':'#ffb5fa';ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,39+Math.sin(Date.now()*.02)*5,0,Math.PI*2);ctx.stroke();} if(b.type==='guardian'){ctx.strokeStyle='#d5fff0';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,43+Math.sin(Date.now()*0.012)*4,0,Math.PI*2);ctx.stroke();} if(b.type==='laser'){ctx.strokeStyle='#d9ffff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,-24);ctx.lineTo(0,22);ctx.stroke();} if(b.type==='rocket'){ctx.fillStyle='#fff0d0';ctx.fillRect(-4,-17,8,24);} if(b.type==='chrono'){ctx.strokeStyle='#e5c8ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,34+Math.sin(Date.now()*0.012)*4,0,Math.PI*2);ctx.stroke();} if(b.type==='bomber'){ctx.fillStyle='#fff0b0';ctx.fillRect(-8,18,16,12);} if(b.type==='mirror'){ctx.strokeStyle='#fff8b0';ctx.lineWidth=2;ctx.strokeRect(-47,-34,94,68);} const pulse=Math.sin(Date.now()*0.01)*3;ctx.fillStyle=b.type==='queen'?'#fff08a':'#00ffff';ctx.beginPath();ctx.arc(0,0,(b.type==='leviathan'?16:12)+pulse,0,Math.PI*2);ctx.fill();ctx.restore(); // Boss Health Bar Top Overlay
- ctx.fillStyle = '#222233'; ctx.fillRect(100, 15, canvas.width - 200, 14); ctx.fillStyle = '#ff0055'; ctx.fillRect(100, 15, ((b.hp / b.maxHp) * (canvas.width - 200)), 14); ctx.strokeStyle = '#ffffff'; ctx.strokeRect(100, 15, canvas.width - 200, 14); ctx.fillStyle = '#ffffff'; ctx.font = '8px "Press Start 2P"'; ctx.fillText(b.name || 'BOSS ALIEN', canvas.width / 2 - 60, 26); } // Draw Powerup Drops
+ if(bossDroneDebuffed){ctx.filter='none';ctx.strokeStyle='#ff315f';ctx.shadowColor='#ff174f';ctx.shadowBlur=18;ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(0,0,b.w*.62,b.h*.62,0,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;} ctx.fillStyle = '#222233'; ctx.fillRect(100, 15, canvas.width - 200, 14); ctx.fillStyle = '#ff0055'; ctx.fillRect(100, 15, ((b.hp / b.maxHp) * (canvas.width - 200)), 14); ctx.strokeStyle = '#ffffff'; ctx.strokeRect(100, 15, canvas.width - 200, 14); ctx.fillStyle = '#ffffff'; ctx.font = '8px "Press Start 2P"'; ctx.fillText(b.name || 'BOSS ALIEN', canvas.width / 2 - 60, 26); } // Draw Powerup Drops
  galagaState.drops.forEach(d => { const spin=performance.now()*0.0018; const styles={multishot:{c:'#ffca55',icon:'✦'},rapidfire:{c:'#ff5a68',icon:'»'},shield:{c:'#42eaff',icon:'⬡'},slowmo:{c:'#b78aff',icon:'◷'},homing:{c:'#7dff9b',icon:'⌖'},megalaser:{c:'#ff66e8',icon:'⚡'},twinlasers:{c:'#6ee7ff',icon:'🚀'},harpoon:{c:'#bd7bff',icon:'◉'},starfall:{c:'#ff9d42',icon:'☄'},drones:{c:'#62eaff',icon:'✣'}}; const st=styles[d.type]||{c:'#ffffff',icon:'+'}; ctx.save();ctx.translate(d.x,d.y);ctx.rotate(spin);ctx.fillStyle='#07101f';ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();ctx.strokeStyle=st.c;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.stroke();ctx.fillStyle=st.c;ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(st.icon,0,0.5);ctx.restore(); }); // Draw Coin Drops
  galagaState.coins.forEach(c => { ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.fillStyle = '#ffcc00'; ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#000000'; ctx.font = '7px "Press Start 2P"'; ctx.fillText('$', -3, 3); ctx.restore(); }); // Draw Explosions / Particles
  galagaState.bossDebris.forEach(d=>{ctx.save();ctx.globalAlpha=Math.min(1,d.life/24);ctx.translate(d.x,d.y);ctx.rotate(d.rot);ctx.fillStyle=d.color;ctx.shadowColor=d.color;ctx.shadowBlur=8;ctx.fillRect(-d.w/2,-d.h/2,d.w,d.h);ctx.strokeStyle='#fff2c4';ctx.lineWidth=1;ctx.strokeRect(-d.w/2,-d.h/2,d.w,d.h);ctx.restore();}); galagaState.particles.forEach(pt => { ctx.fillStyle = pt.color; ctx.globalAlpha = pt.alpha; ctx.fillRect(pt.x, pt.y, 3, 3); ctx.globalAlpha = 1.0; });
@@ -3114,7 +3395,41 @@ requestAnimationFrame(frame);
 (function(){
  // PATCHES: newest first. To log a new update, add an entry at the TOP of this list.
  // The 3 newest are shown on their own; anything older is folded into "Earlier updates".
- const PATCHES=[
+ 
+(function initRedeemCodes(){
+ const modal=document.getElementById('codesModal'),input=document.getElementById('redeemCodeInput'),status=document.getElementById('redeemCodeStatus');
+ document.getElementById('codesBtn').addEventListener('click',()=>{modal.classList.add('open');input.focus();});
+ document.getElementById('codesCloseBtn').addEventListener('click',()=>modal.classList.remove('open'));
+ function redeem(){const code=input.value.trim().toUpperCase();if(code!=='CODESADDED'){status.textContent='Invalid code. Check the spelling and try again.';return;}
+  if(ownedShips.killerdrone){status.textContent='Killer Drone ship is already unlocked!';return;}
+  ownedShips.killerdrone=true;saveOwnedShips();refreshShipCards();refreshP2ShipSelect();
+  status.textContent='CODE ACCEPTED! Secret Killer Drone ship unlocked. Equip it in the Coin Shop.';
+  playSfx('powerup');
+ }
+ document.getElementById('redeemCodeBtn').addEventListener('click',redeem);
+ input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();redeem();}e.stopPropagation();});
+})();
+const PATCHES=[
+  {version:'v25',notes:[
+   'Killer Drone secret ship now has a custom stealth-fighter design, and its homing drones have a distinct glowing-core design and trail.',
+   'Enemies affected by a Killer Drone blast turn dark/black with a red outline for the duration of the debuff; bosses show the effect during their 2-second debuff.'
+  ]},
+  {version:'v24.9',notes:[
+   'Added a redeem-code system. Enter CODESADDED to unlock the secret Killer Drone ship.',
+   'Killer Drone fires a perfectly homing explosive drone every fifth shot. Its medium-range blast deals high damage that falls off with distance; surviving regular enemies are slowed and silenced, while bosses are silenced and slowed for 2 seconds.'
+  ]},
+  {version:'v24.8',notes:[
+   'Multiplayer lobby list: when you open the multiplayer menu you can now browse open public lobbies (name, pilot count, waiting / in mission) and join one by entering its passcode.',
+   'When creating a room you can choose Public (shown in the list) or Private (code only), and give your lobby a name. A room’s 6-digit code is its passcode.'
+  ]},
+  {version:'v24.7',notes:[
+   'Multiplayer on strict Wi‑Fi: added a Network settings section in the multiplayer menu where you can save your own free relay (TURN) server, plus an "always use relay" option. Added more built-in relay servers (including TLS/443 ones for strict networks).',
+   'Joining now automatically retries through a relay if the direct link is blocked, and the failure message says exactly whether a relay could be reached.'
+  ]},
+  {version:'v24.6',notes:[
+   'Local two-player team scores now keep both players’ initials visible on the leaderboard, including entries like AAA & BBB.',
+   'Leaderboard merges this device’s saved team entries with online scores so a newly saved duo name is not hidden by older online records.'
+  ]},
   {version:'v24.5',notes:[
    'Spike Juggernaut EMP now launches a homing bomb that detonates near the pilot; controls freeze only if the blast reaches them.'
   ]},
