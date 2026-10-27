@@ -3544,7 +3544,33 @@ requestAnimationFrame(frame);
  const modal=document.getElementById('codesModal'),input=document.getElementById('redeemCodeInput'),status=document.getElementById('redeemCodeStatus');
  document.getElementById('codesBtn').addEventListener('click',()=>{modal.classList.add('open');input.focus();});
  document.getElementById('codesCloseBtn').addEventListener('click',()=>modal.classList.remove('open'));
- function redeem(){const code=input.value.trim().toUpperCase();if(code==='ADMINSHIP'){if(ownedShips.adminship){status.textContent='ADMINSHIP is already unlocked!';return;}ownedShips.adminship=true;saveOwnedShips();selectedShip='adminship';galagaState.selectedShip='adminship';try{localStorage.setItem('galactaSelectedShip_v1','adminship');}catch(e){}refreshP2ShipSelect();status.textContent='ACCESS GRANTED! ADMINSHIP unlocked and equipped. The carrier fires nuclear missiles every 2 seconds.';playSfx('powerup');return;}if(code!=='CODESADDED'){status.textContent='Invalid code. Check the spelling and try again.';return;}
+ async function getLocalAdminshipUses(){try{return Math.max(0,parseInt(localStorage.getItem('galacta_adminship_code_uses')||'0',10)||0);}catch(e){return 0;}}
+ async function incrementGlobalAdminshipUses(){
+  if(!onlineEnabled()) throw new Error('Online counter is not configured');
+  const docPath='projects/'+encodeURIComponent(ONLINE_LEADERBOARD.projectId)+'/databases/(default)/documents/admin_stats/adminship_usage';
+  const commitUrl='https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(ONLINE_LEADERBOARD.projectId)+'/databases/(default)/documents:commit?key='+encodeURIComponent(ONLINE_LEADERBOARD.apiKey);
+  const write=await fetch(commitUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({writes:[{transform:{document:docPath,fieldTransforms:[{fieldPath:'uses',increment:{integerValue:'1'}}]}}]})});
+  if(!write.ok) throw new Error('Global counter write failed');
+  const read=await fetch(firestoreBase()+'/admin_stats/adminship_usage?key='+encodeURIComponent(ONLINE_LEADERBOARD.apiKey));
+  if(!read.ok) throw new Error('Global counter read failed');
+  const doc=await read.json();
+  return Math.max(0,parseInt(doc.fields&&doc.fields.uses&&doc.fields.uses.integerValue||'0',10)||0);
+ }
+ function redeem(){const code=input.value.trim().toUpperCase();
+  // Private diagnostic code; keep it out of patch notes.
+  if(code==='ADM1NSH1PUSES'){
+   let localUses=0;try{localUses=Math.max(0,parseInt(localStorage.getItem('galacta_adminship_code_uses')||'0',10)||0);}catch(e){}
+   status.textContent='Checking usage counts…';
+   (async()=>{try{const globalUses=await (async()=>{const read=await fetch(firestoreBase()+'/admin_stats/adminship_usage?key='+encodeURIComponent(ONLINE_LEADERBOARD.apiKey));if(!read.ok)throw new Error('unavailable');const doc=await read.json();return Math.max(0,parseInt(doc.fields&&doc.fields.uses&&doc.fields.uses.integerValue||'0',10)||0);})();status.textContent='ADMINSHIP used '+localUses+' time'+(localUses===1?'':'s')+' on this browser · '+globalUses+' time'+(globalUses===1?'':'s')+' worldwide.';}catch(e){status.textContent='ADMINSHIP used '+localUses+' time'+(localUses===1?'':'s')+' on this browser · Worldwide count is currently unavailable (online counter needs database access).';}})();return;
+  }
+  if(code==='ADMINSHIP'){
+   let uses=0;try{uses=Math.max(0,parseInt(localStorage.getItem('galacta_adminship_code_uses')||'0',10)||0)+1;localStorage.setItem('galacta_adminship_code_uses',String(uses));}catch(e){}
+   // Count every entry of ADMINSHIP globally, including repeat entries after unlocking.
+   incrementGlobalAdminshipUses().catch(()=>{});
+   if(ownedShips.adminship){status.textContent='ADMINSHIP is already unlocked! Code uses on this browser: '+uses+'.';return;}
+   ownedShips.adminship=true;saveOwnedShips();selectedShip='adminship';galagaState.selectedShip='adminship';try{localStorage.setItem('galactaSelectedShip_v1','adminship');}catch(e){}refreshP2ShipSelect();status.textContent='ACCESS GRANTED! ADMINSHIP unlocked and equipped. The carrier fires nuclear missiles every 2 seconds.';playSfx('powerup');return;
+  }
+  if(code!=='CODESADDED'){status.textContent='Invalid code. Check the spelling and try again.';return;}
   if(ownedShips.killerdrone){status.textContent='Killer Drone ship is already unlocked!';return;}
   ownedShips.killerdrone=true;saveOwnedShips();refreshShipCards();refreshP2ShipSelect();
   status.textContent='CODE ACCEPTED! Secret Killer Drone ship unlocked. Equip it in the Coin Shop.';
